@@ -1,0 +1,34 @@
+﻿<Window x:Class="RB4InstrumentMapper.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RB4InstrumentMapper"
+        mc:Ignorable="d"
+        Title="RB4InstrumentMapper" Height="450" Width="800" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Grid Margin="10,10,10,10">
+        <Label Name="mainTitleLabel" Content="RockBand 4 Instrument Mapper" HorizontalAlignment="Left" Height="34" Margin="10,10,0,0" VerticalAlignment="Top" Width="783" FontSize="16" FontWeight="Bold"/>
+        <Label Name="pcapDeviceLabel" Content="Pcap Device:" HorizontalAlignment="Left" Height="29" Margin="10,49,0,0" VerticalAlignment="Top" Width="84"/>
+        <ComboBox Name="pcapDeviceCombo" HorizontalAlignment="Left" Height="28" Margin="99,49,0,0" VerticalAlignment="Top" Width="664" SelectionChanged="pcapDeviceCombo_SelectionChanged">
+        </ComboBox>
+        <Label Name="vJoyLabel" Content="vJoy Devices:" HorizontalAlignment="Left" Height="29" Margin="10,113,0,0" VerticalAlignment="Top" Width="84"/>
+        <Label Name="guitarLabel" Content="Guitar 1:" HorizontalAlignment="Left" Height="29" Margin="96,113,0,0" VerticalAlignment="Top" Width="53"/>
+        <ComboBox Name="vjoyGuitar1Combo"  HorizontalAlignment="Left" VerticalAlignment="Top" Height="28" Margin="154,113,0,0" Width="437" SelectionChanged="vjoyGuitarCombo_SelectionChanged">
+        </ComboBox>
+        <Label Name="drumLabel" Content="Drum:" HorizontalAlignment="Left" Height="29" Margin="96,195,0,0" VerticalAlignment="Top" Width="53"/>
+        <ComboBox Name="vjoyDrumCombo"  HorizontalAlignment="Left" VerticalAlignment="Top" Height="28" Margin="154,196,0,0" Width="437" SelectionChanged="vjoyDrumCombo_SelectionChanged">
+        </ComboBox>
+        <Button Name="startButton" Content="Start" HorizontalAlignment="Left" Height="28" Margin="652,245,0,0" VerticalAlignment="Top" Width="111" Click="startButton_Click"/>
+        <Label Name="messageConsoleTitle" Content="Console" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,270,0,0" Height="26" Width="53"/>
+        <TextBox Name="messageConsole" TextWrapping="Wrap" AcceptsReturn="True" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" Margin="10,296,10.333,10.667" FontSize="10" />
+        <CheckBox x:Name="packetDebugCheckBox" Content="Show Packets (for debugging)" HorizontalAlignment="Left" Height="21" Margin="99,82,0,0" VerticalAlignment="Top" Width="188" Checked="packetDebugCheckBox_Checked" Unchecked="packetDebugCheckBox_Unchecked" />
+        <Label x:Name="guitar2Label" Content="Guitar 2:" HorizontalAlignment="Left" Height="29" Margin="96,154,0,0" VerticalAlignment="Top" Width="53"/>
+        <ComboBox x:Name="vjoyGuitar2Combo"  HorizontalAlignment="Left" VerticalAlignment="Top" Height="28" Margin="154,154,0,0" Width="437" SelectionChanged="vjoyGuitar2Combo_SelectionChanged"/>
+        <TextBox x:Name="guitar1IdTextBox" HorizontalAlignment="Left" Height="28" Margin="652,113,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="111" TextChanged="guitar1IdTextBox_TextChanged"/>
+        <TextBox x:Name="guitar2IdTextBox" HorizontalAlignment="Left" Height="28" Margin="652,155,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="111" TextChanged="guitar2IdTextBox_TextChanged"/>
+        <Label x:Name="guitar1IdLabel" Content="Hex ID" HorizontalAlignment="Left" Height="28" Margin="596,113,0,0" VerticalAlignment="Top" Width="51"/>
+        <Label x:Name="guitar2IdLabel" Content="Hex ID" HorizontalAlignment="Left" Height="28" Margin="596,155,0,0" VerticalAlignment="Top" Width="51"/>
+        <TextBox x:Name="drumIdTextBox" HorizontalAlignment="Left" Height="28" Margin="652,195,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="111" TextChanged="drumIdTextBox_TextChanged"/>
+        <Label x:Name="drumIdLabel" Content="Hex ID" HorizontalAlignment="Left" Height="28" Margin="596,195,0,0" VerticalAlignment="Top" Width="51"/>
+    </Grid>
+</Window>
