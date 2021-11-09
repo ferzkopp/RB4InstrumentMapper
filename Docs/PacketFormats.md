@@ -17,7 +17,7 @@ Bytes:
 - 22-29 are undocumented
 - 30 - Buttons
   - Bit 0 (0x01) - Xbox
-  - (Bit 1 is unused)
+  - (Bit 1 is undocumented)
   - Bit 2 (0x04) - Menu button
   - Bit 3 (0x08) - Options button
 - 31 - D-pad/Strum Bar
