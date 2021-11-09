@@ -1,4 +1,4 @@
-﻿using PcapDotNet.Core;
+using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using System;
 using System.Collections.Generic;
@@ -82,6 +82,11 @@ namespace RB4InstrumentMapper
         private static byte[] guitar1InstrumentId = null;
 
         /// <summary>
+        /// Analyzed packet for guitar 1 device
+        /// </summary>
+        private static GuitarPacket guitar1Packet = new GuitarPacket();
+
+        /// <summary>
         /// Selected guitar 2 device
         /// </summary>
         private static uint guitar2DeviceIndex = 0;
@@ -92,6 +97,11 @@ namespace RB4InstrumentMapper
         private static byte[] guitar2InstrumentId = null;
 
         /// <summary>
+        /// Analyzed packet for guitar 2 device
+        /// </summary>
+        private static GuitarPacket guitar2Packet = new GuitarPacket();
+
+        /// <summary>
         /// Selected drum device.
         /// </summary>
         private static uint drumDeviceIndex = 0;
@@ -100,6 +110,11 @@ namespace RB4InstrumentMapper
         /// Packet instrument ID for drum device
         /// </summary>
         private static byte[] drumInstrumentId = null;
+
+        /// <summary>
+        /// Analyzed packet for drum device
+        /// </summary>
+        private static DrumPacket drumPacket = new DrumPacket();
 
         /// <summary>
         /// Main window handler
@@ -445,95 +460,96 @@ namespace RB4InstrumentMapper
             // Map drum (if enabled)
             if (joystick != null && drumDeviceIndex > 0)
             {
-                if (DrumPacketVjoyMapper.AnalyzeAndMap(packet.Buffer, joystick, drumDeviceIndex, drumInstrumentId))
+                if (DrumPacketReader.AnalyzePacket(packet.Buffer, out drumPacket))
                 {
-                    // Auto-populate instrument ID for drum
-                    if (drumInstrumentId == null)
+                    if (DrumPacketVjoyMapper.MapPacket(drumPacket, joystick, drumDeviceIndex, drumInstrumentId))
                     {
-                        // Allocate and copy from packet
-                        drumInstrumentId = new byte[4];
-                        packet.Buffer.BlockCopy(12, drumInstrumentId, 0, 4);
-
-                        // Update UI
-                        string drumHexString = ParsingHelpers.ByteArrayToHexString(drumInstrumentId);
-                        uiDispatcher.Invoke((Action)(() =>
+                        // Auto-populate instrument ID for drum
+                        if (drumInstrumentId == null)
                         {
-                            drumIdTextBox.Text = drumHexString;
-                        }));
-                    }
+                            // Allocate and copy from packet
+                            drumInstrumentId = new byte[4];
+                            packet.Buffer.BlockCopy(12, drumInstrumentId, 0, 4);
 
-                    // Used packet
-                    return;
+                            // Update UI
+                            string drumHexString = ParsingHelpers.ByteArrayToHexString(drumInstrumentId);
+                            uiDispatcher.Invoke((Action)(() =>
+                            {
+                                drumIdTextBox.Text = drumHexString;
+                            }));
+                        }
+
+                        // Used packet
+                        return;
+                    }
                 }
             }
 
             // Map guitar 1 (if enabled)
             if (joystick != null && guitar1DeviceIndex > 0)
             {
-                if (GuitarPacketVjoyMapper.AnalyzeAndMap(packet.Buffer, joystick, guitar1DeviceIndex, guitar1InstrumentId))
+                if (GuitarPacketReader.AnalyzePacket(packet.Buffer, out guitar1Packet))
                 {
-                    // Auto-populate instrument ID for guitar 1 if it wasn't set
-                    if (guitar1InstrumentId == null)
+                    if (GuitarPacketVjoyMapper.MapPacket(guitar1Packet, joystick, guitar1DeviceIndex, guitar1InstrumentId))
                     {
-                        // Must be different from guitar 2
-                        if (guitar2InstrumentId != null &&
-                            guitar2InstrumentId[0] == packet[15] &&
-                            guitar2InstrumentId[1] == packet[14] &&
-                            guitar2InstrumentId[2] == packet[13] &&
-                            guitar2InstrumentId[3] == packet[12])
+                        // Auto-populate instrument ID for guitar 1 if it wasn't set
+                        if (guitar1InstrumentId == null)
                         {
-                            return;
+                            // Must be different from guitar 2
+                            if (guitar2Packet.InstrumentID == guitar1Packet.InstrumentID)
+                            {
+                                return;
+                            }
+
+                            // Allocate and copy from packet
+                            guitar1InstrumentId = new byte[4];
+                            packet.Buffer.BlockCopy(12, guitar1InstrumentId, 0, 4);
+
+                            // Update UI
+                            string guitar1HexString = ParsingHelpers.ByteArrayToHexString(guitar1InstrumentId);
+                            uiDispatcher.Invoke((Action)(() =>
+                            {
+                                guitar1IdTextBox.Text = guitar1HexString;
+                            }));
                         }
 
-                        // Allocate and copy from packet
-                        guitar1InstrumentId = new byte[4];
-                        packet.Buffer.BlockCopy(12, guitar1InstrumentId, 0, 4);
-
-                        // Update UI
-                        string guitar1HexString = ParsingHelpers.ByteArrayToHexString(guitar1InstrumentId);
-                        uiDispatcher.Invoke((Action)(() =>
-                        {
-                            guitar1IdTextBox.Text = guitar1HexString;
-                        }));
+                        // Used packet
+                        return;
                     }
-
-                    // Used packet
-                    return;
                 }
             }
 
             // Map guitar 2 (if enabled)
             if (joystick != null && guitar2DeviceIndex > 0)
             {
-                if (GuitarPacketVjoyMapper.AnalyzeAndMap(packet.Buffer, joystick, guitar2DeviceIndex, guitar2InstrumentId))
+                if (GuitarPacketReader.AnalyzePacket(packet.Buffer, out guitar2Packet))
                 {
-                    // Auto-populate instrument ID for guitar 2 if it wasn't set
-                    if (guitar2InstrumentId == null)
+                    if (GuitarPacketVjoyMapper.MapPacket(guitar2Packet, joystick, guitar1DeviceIndex, guitar1InstrumentId))
                     {
-                        // Must be different from guitar 1
-                        if (guitar1InstrumentId != null &&
-                            guitar1InstrumentId[0] == packet[15] &&
-                            guitar1InstrumentId[1] == packet[14] &&
-                            guitar1InstrumentId[2] == packet[13] &&
-                            guitar1InstrumentId[3] == packet[12])
+                        // Auto-populate instrument ID for guitar 2 if it wasn't set
+                        if (guitar2InstrumentId == null)
                         {
-                            return;
+                            // Must be different from guitar 1
+                            if (guitar1Packet.InstrumentID == guitar2Packet.InstrumentID)
+                            {
+                                return;
+                            }
+
+                            // Allocate and copy from packet
+                            guitar2InstrumentId = new byte[4];
+                            packet.Buffer.BlockCopy(12, guitar2InstrumentId, 0, 4);
+
+                            // Update UI
+                            string guitar2HexString = ParsingHelpers.ByteArrayToHexString(guitar2InstrumentId);
+                            uiDispatcher.Invoke((Action)(() =>
+                            {
+                                guitar2IdTextBox.Text = guitar2HexString;
+                            }));
                         }
-                            
-                        // Allocate and copy from packet
-                        guitar2InstrumentId = new byte[4];
-                        packet.Buffer.BlockCopy(12, guitar2InstrumentId, 0, 4);
 
-                        // Update UI
-                        string guitar2HexString = ParsingHelpers.ByteArrayToHexString(guitar2InstrumentId);
-                        uiDispatcher.Invoke((Action)(() =>
-                        {
-                            guitar2IdTextBox.Text = guitar2HexString;
-                        }));
+                        // Used packet
+                        return;
                     }
-
-                    // Used packet
-                    return;
                 }
             }
         }
