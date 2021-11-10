@@ -23,7 +23,7 @@ namespace RB4InstrumentMapper
                 vigemDevice.AutoSubmitReport = false;
             }
 
-            byte[] packetId = ParsingHelpers.Int32HexStringToByteArray(packet.InstrumentID.ToString());
+            byte[] packetId = ParsingHelpers.Int32HexStringToByteArray(packet.InstrumentIDString);
 
             // Need to match instrument ID?
             if (instrumentId != null && instrumentId.Length == 4)

@@ -22,7 +22,7 @@ namespace RB4InstrumentMapper
         /// <returns>True if packet was used and converted, false otherwise.</returns>
         public static bool MapPacket(in GuitarPacket packet, vJoy joystickDevices, uint joystickDeviceIndex, byte[] instrumentId = null)
         {
-            byte[] packetId = ParsingHelpers.Int32HexStringToByteArray(packet.InstrumentID.ToString());
+            byte[] packetId = ParsingHelpers.Int32HexStringToByteArray(packet.InstrumentIDString);
 
             // Need to match instrument ID?
             if (instrumentId != null && instrumentId.Length == 4)

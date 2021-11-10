@@ -8,6 +8,7 @@ namespace RB4InstrumentMapper
     public struct DrumPacket
     {
         public uint InstrumentID;
+        public string InstrumentIDString;
 
         public bool MenuButton;
         public bool OptionsButton;
@@ -113,12 +114,14 @@ namespace RB4InstrumentMapper
             data = new DrumPacket();
             if (packet != null && packet.Length == DrumPacketLength)
             {
+                // Assign instrument ID
                 data.InstrumentID = (uint)(
                     packet[15] |
                     (packet[14] << 8) |
                     (packet[13] << 16) |
                     (packet[12] << 24)
                 );
+                data.InstrumentIDString = Convert.ToString(data.InstrumentID, 16);
 
                 // Map buttons
                 byte buttons = packet[XboxHeaderLength + (int)PacketPosition.Buttons];
