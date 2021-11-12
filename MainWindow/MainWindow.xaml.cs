@@ -79,7 +79,7 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// Packet instrument ID for guitar 1 device
         /// </summary>
-        private static byte[] guitar1InstrumentId = null;
+        private static uint guitar1InstrumentId = 0; // This assumes that an ID of 0x00000000 is invalid
 
         /// <summary>
         /// Analyzed packet for guitar 1 device
@@ -94,7 +94,7 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// Packet instrument ID for guitar 2 device
         /// </summary>
-        private static byte[] guitar2InstrumentId = null;
+        private static uint guitar2InstrumentId = 0; // This assumes that an ID of 0x00000000 is invalid
 
         /// <summary>
         /// Analyzed packet for guitar 2 device
@@ -109,7 +109,7 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// Packet instrument ID for drum device
         /// </summary>
-        private static byte[] drumInstrumentId = null;
+        private static uint drumInstrumentId = 0; // This assumes that an ID of 0x00000000 is invalid
 
         /// <summary>
         /// Analyzed packet for drum device
@@ -261,18 +261,18 @@ namespace RB4InstrumentMapper
             
             // Guitar 1
             string hexString = Properties.Settings.Default.currentGuitar1Id;
-            guitar1InstrumentId = ParsingHelpers.Int32HexStringToByteArray(hexString);
-            guitar1IdTextBox.Text = (guitar1InstrumentId == null) ? string.Empty : hexString;
+            guitar1InstrumentId = Convert.ToUInt32(hexString, 16);
+            guitar1IdTextBox.Text = (guitar1InstrumentId == 0) ? string.Empty : hexString;
             
             // Guitar 2
             hexString = Properties.Settings.Default.currentGuitar2Id;
-            guitar2InstrumentId = ParsingHelpers.Int32HexStringToByteArray(hexString);
-            guitar2IdTextBox.Text = (guitar2InstrumentId == null) ? string.Empty : hexString;
+            guitar2InstrumentId = Convert.ToUInt32(hexString, 16);
+            guitar2IdTextBox.Text = (guitar2InstrumentId == 0) ? string.Empty : hexString;
             
             // Drum
             hexString = Properties.Settings.Default.currentDrumId;
-            drumInstrumentId = ParsingHelpers.Int32HexStringToByteArray(hexString);
-            drumIdTextBox.Text = (drumInstrumentId == null) ? string.Empty : hexString;
+            drumInstrumentId = Convert.ToUInt32(hexString, 16);
+            drumIdTextBox.Text = (drumInstrumentId == 0) ? string.Empty : hexString;
         }
 
         /// <summary>
@@ -465,17 +465,15 @@ namespace RB4InstrumentMapper
                     if (DrumPacketVjoyMapper.MapPacket(drumPacket, joystick, drumDeviceIndex, drumInstrumentId))
                     {
                         // Auto-populate instrument ID for drum
-                        if (drumInstrumentId == null)
+                        if (drumInstrumentId == 0)
                         {
-                            // Allocate and copy from packet
-                            drumInstrumentId = new byte[4];
-                            packet.Buffer.BlockCopy(12, drumInstrumentId, 0, 4);
+                            // Copy from packet
+                            drumInstrumentId = drumPacket.InstrumentID;
 
                             // Update UI
-                            string drumHexString = ParsingHelpers.ByteArrayToHexString(drumInstrumentId);
                             uiDispatcher.Invoke((Action)(() =>
                             {
-                                drumIdTextBox.Text = drumHexString;
+                                drumIdTextBox.Text = (drumInstrumentId == 0) ? string.Empty : Convert.ToString(drumInstrumentId, 16);
                             }));
                         }
 
@@ -493,7 +491,7 @@ namespace RB4InstrumentMapper
                     if (GuitarPacketVjoyMapper.MapPacket(guitar1Packet, joystick, guitar1DeviceIndex, guitar1InstrumentId))
                     {
                         // Auto-populate instrument ID for guitar 1 if it wasn't set
-                        if (guitar1InstrumentId == null)
+                        if (guitar1InstrumentId == 0)
                         {
                             // Must be different from guitar 2
                             if (guitar2Packet.InstrumentID == guitar1Packet.InstrumentID)
@@ -501,15 +499,13 @@ namespace RB4InstrumentMapper
                                 return;
                             }
 
-                            // Allocate and copy from packet
-                            guitar1InstrumentId = new byte[4];
-                            packet.Buffer.BlockCopy(12, guitar1InstrumentId, 0, 4);
+                            // Copy from packet
+                            guitar1InstrumentId = guitar1Packet.InstrumentID;
 
                             // Update UI
-                            string guitar1HexString = ParsingHelpers.ByteArrayToHexString(guitar1InstrumentId);
                             uiDispatcher.Invoke((Action)(() =>
                             {
-                                guitar1IdTextBox.Text = guitar1HexString;
+                                guitar1IdTextBox.Text = (guitar1InstrumentId == 0) ? string.Empty : Convert.ToString(guitar1InstrumentId, 16);
                             }));
                         }
 
@@ -527,7 +523,7 @@ namespace RB4InstrumentMapper
                     if (GuitarPacketVjoyMapper.MapPacket(guitar2Packet, joystick, guitar1DeviceIndex, guitar1InstrumentId))
                     {
                         // Auto-populate instrument ID for guitar 2 if it wasn't set
-                        if (guitar2InstrumentId == null)
+                        if (guitar2InstrumentId == 0)
                         {
                             // Must be different from guitar 1
                             if (guitar1Packet.InstrumentID == guitar2Packet.InstrumentID)
@@ -535,15 +531,13 @@ namespace RB4InstrumentMapper
                                 return;
                             }
 
-                            // Allocate and copy from packet
-                            guitar2InstrumentId = new byte[4];
-                            packet.Buffer.BlockCopy(12, guitar2InstrumentId, 0, 4);
+                            // Copy from packet
+                            guitar2InstrumentId = guitar2Packet.InstrumentID;
 
                             // Update UI
-                            string guitar2HexString = ParsingHelpers.ByteArrayToHexString(guitar2InstrumentId);
                             uiDispatcher.Invoke((Action)(() =>
                             {
-                                guitar2IdTextBox.Text = guitar2HexString;
+                                guitar2IdTextBox.Text = (guitar2InstrumentId == 0) ? string.Empty : Convert.ToString(guitar2InstrumentId, 16);
                             }));
                         }
 
@@ -659,17 +653,20 @@ namespace RB4InstrumentMapper
             if (string.IsNullOrEmpty(hexString))
             {
                 Console.WriteLine("Cleared Hex ID for Guitar 1.");
-                guitar1InstrumentId = null;
+                guitar1InstrumentId = 0;
                 hexString = string.Empty;
             }
             else
             {
-
-                guitar1InstrumentId = ParsingHelpers.Int32HexStringToByteArray(hexString);
-                if (guitar1InstrumentId == null)
+                guitar1InstrumentId = Convert.ToUInt32(hexString, 16);
+                if (guitar1InstrumentId == 0)
                 {
                     Console.WriteLine("Invalid Hex ID for Guitar 1.");
                     hexString = string.Empty;
+                }
+                else
+                {
+                    Console.WriteLine($"Set Guitar 1 instrument ID to {guitar1InstrumentId}.");
                 }
             }
 
@@ -685,16 +682,20 @@ namespace RB4InstrumentMapper
             if (string.IsNullOrEmpty(hexString))
             {
                 Console.WriteLine("Cleared Hex ID for Guitar 2.");
-                guitar2InstrumentId = null;
+                guitar2InstrumentId = 0;
                 hexString = string.Empty;
             }
             else
             {
-                guitar2InstrumentId = ParsingHelpers.Int32HexStringToByteArray(hexString);
-                if (guitar2InstrumentId == null)
+                guitar2InstrumentId = Convert.ToUInt32(hexString, 16);
+                if (guitar2InstrumentId == 0)
                 {
                     Console.WriteLine("Invalid Hex ID for Guitar 2.");
                     hexString = string.Empty;
+                }
+                else
+                {
+                    Console.WriteLine($"Set Guitar 2 instrument ID to {guitar2InstrumentId}.");
                 }
             }
 
@@ -711,16 +712,20 @@ namespace RB4InstrumentMapper
             {
                 Console.WriteLine("Cleared Hex ID for Drum.");
                 hexString = string.Empty;
-                drumInstrumentId = null;
+                drumInstrumentId = 0;
             }
             else
             {
                 // Parse
-                drumInstrumentId = ParsingHelpers.Int32HexStringToByteArray(hexString);
-                if (drumInstrumentId == null)
+                drumInstrumentId = Convert.ToUInt32(hexString, 16);
+                if (drumInstrumentId == 0)
                 {
                     Console.WriteLine("Invalid Hex ID for Drum.");
                     hexString = string.Empty;
+                }
+                else
+                {
+                    Console.WriteLine($"Set Drums instrument ID to {drumInstrumentId}.");
                 }
             }
 

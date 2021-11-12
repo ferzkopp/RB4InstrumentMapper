@@ -20,22 +20,20 @@ namespace RB4InstrumentMapper
         /// <param name="joystickDeviceIndex">The vJoy device ID to map to.</param>
         /// <param name="instrumentId">The ID of the instrument being mapped.</param>
         /// <returns>True if packet was used and converted, false otherwise.</returns>
-        public static bool MapPacket(in DrumPacket packet, vJoy vjoyClient, uint joystickDeviceIndex, byte[] instrumentId = null)
+        public static bool MapPacket(in DrumPacket packet, vJoy vjoyClient, uint joystickDeviceIndex, uint instrumentId)
         {
-            byte[] packetId = ParsingHelpers.Int32HexStringToByteArray(packet.InstrumentIDString);
-
-            // Need to match instrument ID?
-            if (instrumentId != null && instrumentId.Length == 4)
+            // Ensure instrument ID is assigned ...
+            if(instrumentId == 0)
             {
-                // Match ID ...
-                if (instrumentId[0] != packetId[0] ||
-                    instrumentId[1] != packetId[1] ||
-                    instrumentId[2] != packetId[2] ||
-                    instrumentId[3] != packetId[3])
-                {
-                    // ... no match
-                    return false;
-                }
+                // ... not assigned
+                return false;
+            }
+
+            // Match instrument ID ...
+            if (instrumentId != packet.InstrumentID)
+            {
+                // ... no match
+                return false;
             }
 
             // Reset buttons

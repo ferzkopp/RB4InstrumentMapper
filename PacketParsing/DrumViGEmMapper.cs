@@ -15,7 +15,7 @@ namespace RB4InstrumentMapper
         /// <param name="vigemDevice">The ViGEmBus device to map to.</param>
         /// <param name="instrumentId">The instrument ID.</param>
         /// <returns>True if packet was mapped, false otherwise.</returns>
-        public static bool AnalyzeAndMap(in DrumPacket packet, IXbox360Controller vigemDevice, byte[] instrumentId = null)
+        public static bool AnalyzeAndMap(in DrumPacket packet, IXbox360Controller vigemDevice, uint instrumentId)
         {
             // Don't auto-submit input reports for performance optimization
             if (vigemDevice.AutoSubmitReport == true)
@@ -23,20 +23,18 @@ namespace RB4InstrumentMapper
                 vigemDevice.AutoSubmitReport = false;
             }
 
-            byte[] packetId = ParsingHelpers.Int32HexStringToByteArray(packet.InstrumentIDString);
-
-            // Need to match instrument ID?
-            if (instrumentId != null && instrumentId.Length == 4)
+            // Ensure instrument ID is assigned ...
+            if(instrumentId == 0)
             {
-                // Match ID ...
-                if (instrumentId[0] != packetId[0] ||
-                    instrumentId[1] != packetId[1] ||
-                    instrumentId[2] != packetId[2] ||
-                    instrumentId[3] != packetId[3])
-                {
-                    // ... no match
-                    return false;
-                }
+                // ... not assigned
+                return false;
+            }
+
+            // Match instrument ID ...
+            if (instrumentId != packet.InstrumentID)
+            {
+                // ... no match
+                return false;
             }
 
             // Reset report
