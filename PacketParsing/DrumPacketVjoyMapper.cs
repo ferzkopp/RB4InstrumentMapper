@@ -16,7 +16,7 @@ namespace RB4InstrumentMapper
         /// Maps a DrumPacket to a vJoy device.
         /// </summary>
         /// <param name="packet">The pre-analyzed data packet to map.</param>
-        /// <param name="joystickDevices">The vJoy client object reference to use.</param>
+        /// <param name="vjoyClient">The vJoy client object reference to use.</param>
         /// <param name="joystickDeviceIndex">The vJoy device ID to map to.</param>
         /// <param name="instrumentId">The ID of the instrument being mapped.</param>
         /// <returns>True if packet was used and converted, false otherwise.</returns>

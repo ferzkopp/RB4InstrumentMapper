@@ -106,7 +106,7 @@ namespace RB4InstrumentMapper
         /// Analyzes a packet and assigns its data to a GuitarPacket struct.
         /// </summary>
         /// <param name="packet">The data packet to use.</param>
-        /// <param name="instrumentId">The GuitarPacket reference to assign to.</param>
+        /// <param name="data">A returned GuitarPacket.</param>
         /// <returns>True if packet was used and analyzed, false otherwise.</returns>
         public static bool AnalyzePacket(byte[] packet, out GuitarPacket data)
         {

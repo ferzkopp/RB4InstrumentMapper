@@ -104,10 +104,10 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Analyzes a packet and maps it to a DrumPacket struct.
+        /// Analyzes a packet and assigns its data to a DrumPacket struct.
         /// </summary>
         /// <param name="packet">The data packet to be analyzed.</param>
-        /// <param name="data">The analyzed packet.</param>
+        /// <param name="data">A returned DrumPacket.</param>
         /// <returns>True if packet was used and analyzed, false otherwise.</returns>
         public static bool AnalyzePacket(byte[] packet, out DrumPacket data)
         {

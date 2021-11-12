@@ -12,7 +12,7 @@ namespace RB4InstrumentMapper
         /// Maps a DrumPacket to a ViGEmBus Xbox 360 controller.
         /// </summary>
         /// <param name="packet">The pre-analyzed data packet.</param>
-        /// <param name="vigemDevice">The ViGEmBus device to map to</param>
+        /// <param name="vigemDevice">The ViGEmBus device to map to.</param>
         /// <param name="instrumentId">The instrument ID.</param>
         /// <returns>True if packet was mapped, false otherwise.</returns>
         public static bool AnalyzeAndMap(in DrumPacket packet, IXbox360Controller vigemDevice, byte[] instrumentId = null)

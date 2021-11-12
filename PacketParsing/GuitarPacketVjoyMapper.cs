@@ -16,11 +16,11 @@ namespace RB4InstrumentMapper
         /// Maps a GuitarPacket to a vJoy device.
         /// </summary>
         /// <param name="packet">The pre-analyzed data packet to map.</param>
-        /// <param name="joystickDevices">The vJoy client object reference to use.</param>
+        /// <param name="vjoyClient">The vJoy client object reference to use.</param>
         /// <param name="joystickDeviceIndex">The vJoy device ID to map to.</param>
         /// <param name="instrumentId">The ID of the instrument being mapped.</param>
         /// <returns>True if packet was used and converted, false otherwise.</returns>
-        public static bool MapPacket(in GuitarPacket packet, vJoy joystickDevices, uint joystickDeviceIndex, byte[] instrumentId = null)
+        public static bool MapPacket(in GuitarPacket packet, vJoy vjoyClient, uint joystickDeviceIndex, byte[] instrumentId = null)
         {
             byte[] packetId = ParsingHelpers.Int32HexStringToByteArray(packet.InstrumentIDString);
 
@@ -112,7 +112,7 @@ namespace RB4InstrumentMapper
             iReport.AxisZ = packet.Tilt * 128;
 
             // Send data
-            joystickDevices.UpdateVJD(joystickDeviceIndex, ref iReport);
+            vjoyClient.UpdateVJD(joystickDeviceIndex, ref iReport);
 
             // Packet handled
             return true;
