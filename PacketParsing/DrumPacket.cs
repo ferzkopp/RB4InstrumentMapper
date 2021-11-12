@@ -115,11 +115,12 @@ namespace RB4InstrumentMapper
             if (packet != null && packet.Length == DrumPacketLength)
             {
                 // Assign instrument ID
+                // String representation: AA BB CC DD
                 data.InstrumentID = (uint)(
-                    packet[15] |
-                    (packet[14] << 8) |
-                    (packet[13] << 16) |
-                    (packet[12] << 24)
+                    packet[15] |         // DD
+                    (packet[14] << 8) |  // CC
+                    (packet[13] << 16) | // BB
+                    (packet[12] << 24)   // AA
                 );
                 data.InstrumentIDString = Convert.ToString(data.InstrumentID, 16);
 
