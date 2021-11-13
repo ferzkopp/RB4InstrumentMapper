@@ -72,7 +72,7 @@
     </Reference>
     <Reference Include="vJoyInterfaceWrap, Version=0.2.0.5, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>x64\vJoyInterfaceWrap.dll</HintPath>
+      <HintPath>Dependencies\x64\vJoyInterfaceWrap.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -149,8 +149,14 @@
   <ItemGroup>
     <Resource Include="Docs\Images\Screenshot.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Dependencies\x64\vJoyInterface.dll" />
+    <Content Include="Dependencies\x64\vJoyInterfaceWrap.dll" />
+    <Content Include="Dependencies\x86\vJoyInterface.dll" />
+    <Content Include="Dependencies\x86\vJoyInterfaceWrap.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(SolutionDir)x64\vJoyInterface.dll  $(TargetDir).</PostBuildEvent>
+    <PostBuildEvent>copy $(SolutionDir)Dependencies\x64\vJoyInterface.dll  $(TargetDir).</PostBuildEvent>
   </PropertyGroup>
 </Project>
