@@ -261,17 +261,40 @@ namespace RB4InstrumentMapper
             
             // Guitar 1
             string hexString = Properties.Settings.Default.currentGuitar1Id;
-            guitar1InstrumentId = Convert.ToUInt32(hexString, 16);
+            // Have to check for String.Empty, otherwise ToUInt32 throws an ArgumentOutOfRangeException
+            if (hexString != String.Empty)
+            {
+                guitar1InstrumentId = Convert.ToUInt32(hexString, 16);
+            }
+            else
+            {
+                guitar1InstrumentId = 0;
+            }
+
             guitar1IdTextBox.Text = (guitar1InstrumentId == 0) ? string.Empty : hexString;
             
             // Guitar 2
             hexString = Properties.Settings.Default.currentGuitar2Id;
-            guitar2InstrumentId = Convert.ToUInt32(hexString, 16);
+            if (hexString != String.Empty)
+            {
+                guitar2InstrumentId = Convert.ToUInt32(hexString, 16);
+            }
+            else
+            {
+                guitar2InstrumentId = 0;
+            }
             guitar2IdTextBox.Text = (guitar2InstrumentId == 0) ? string.Empty : hexString;
             
             // Drum
             hexString = Properties.Settings.Default.currentDrumId;
-            drumInstrumentId = Convert.ToUInt32(hexString, 16);
+            if (hexString != String.Empty)
+            {
+                drumInstrumentId = Convert.ToUInt32(hexString, 16);
+            }
+            else
+            {
+                drumInstrumentId = 0;
+            }
             drumIdTextBox.Text = (drumInstrumentId == 0) ? string.Empty : hexString;
         }
 
