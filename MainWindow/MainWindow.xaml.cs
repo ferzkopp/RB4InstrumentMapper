@@ -166,7 +166,7 @@ namespace RB4InstrumentMapper
             // Acquire the target
             if ((status == VjdStat.VJD_STAT_OWN) || ((status == VjdStat.VJD_STAT_FREE) && (!joystick.AcquireVJD(deviceId))))
             {
-                Console.WriteLine("Failed to acquire vJoy device number {0}.", deviceId);
+                Console.WriteLine($"Failed to acquire vJoy device number {deviceId}.");
                 return;
             }
             else
@@ -174,7 +174,7 @@ namespace RB4InstrumentMapper
                 // Get the number of buttons 
                 int nButtons = joystick.GetVJDButtonNumber(deviceId);
 
-                Console.WriteLine("Acquired: vJoy device number {0} with {1} buttons.", deviceId, nButtons);
+                Console.WriteLine($"Acquired: vJoy device number {deviceId} with {nButtons} buttons.");
             }
         }
 
@@ -193,7 +193,7 @@ namespace RB4InstrumentMapper
                 return;
             }
             
-            Console.WriteLine("vJoy found - Vendor: {0} Product :{1} Version Number:{2}", joystick.GetvJoyManufacturerString(), joystick.GetvJoyProductString(), joystick.GetvJoySerialNumberString());
+            Console.WriteLine($"vJoy found - Vendor: " + joystick.GetvJoyManufacturerString() + ", Product: " + joystick.GetvJoyProductString() + ", Version Number: " + joystick.GetvJoySerialNumberString());
 
             // Get default settings
             string currentGuitar1Selection = Properties.Settings.Default.currentGuitar1Selection;
@@ -204,8 +204,8 @@ namespace RB4InstrumentMapper
             int freeDeviceCount = 0;
             for (uint id = 1; id <= 16; id++)
             {
-                string deviceName = string.Format("vJoy Device {0} ", id);
-                string itemName = string.Format("{0}{1}", vjoyComboBoxItemName, id);
+                string deviceName = $"vJoy Device {id}";
+                string itemName = $"{controllerComboBoxItemName}{id}";
                 bool isEnabled = false;
 
                 // Get the state of the requested device
@@ -255,7 +255,7 @@ namespace RB4InstrumentMapper
                 vjoyDrumCombo.Items.Add(comboBoxItem);
             }
 
-            Console.WriteLine("Discovered {0} free vJoy devices.", freeDeviceCount);
+            Console.WriteLine($"Discovered {freeDeviceCount} free vJoy devices.");
 
             // Preset device IDs
             
@@ -297,14 +297,11 @@ namespace RB4InstrumentMapper
             {
                 LivePacketDevice device = allDevices[i];
                 sb.Clear();
-                string itemNumber = string.Format("{0}", i + 1);
-                sb.Append(string.Format("{0}. ", itemNumber));
-                sb.Append(device.Name);
+                string itemNumber = $"{i + 1}";
+                sb.Append($"{itemNumber}. {device.Name}");
                 if (device.Description != null)
                 {
-                    sb.Append(" (");
-                    sb.Append(device.Description);
-                    sb.Append(")");
+                    sb.Append($" ({device.Description})");
                 }
 
                 string deviceName = sb.ToString();
@@ -324,7 +321,7 @@ namespace RB4InstrumentMapper
                 packetDebugCheckBox.IsChecked = true;
             }
 
-            Console.WriteLine("Discovered {0} WinPcap devices.", allDevices.Count);
+            Console.WriteLine($"Discovered {allDevices.Count} WinPcap devices.");
         }
 
         /// <summary>
@@ -432,7 +429,7 @@ namespace RB4InstrumentMapper
             pcapCaptureThread = new Thread(ReadContinously);
             pcapCaptureThread.Start();
 
-            Console.WriteLine("Listening on " + selectedDevice.Description + "...");
+            Console.WriteLine($"Listening on {selectedDevice.Description}...");
         }
 
         /// <summary>
@@ -454,7 +451,7 @@ namespace RB4InstrumentMapper
             if (packetDebug)
             {
                 string packetHexString = ParsingHelpers.ByteArrayToHexString(packet.Buffer);
-                Console.WriteLine(packet.Timestamp.ToString("yyyy-MM-dd hh:mm:ss.fff") + " [" + packet.Length + "] " + packetHexString);
+                Console.WriteLine(packet.Timestamp.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{packet.Length}] " + packetHexString);
             }
 
             // Map drum (if enabled)
