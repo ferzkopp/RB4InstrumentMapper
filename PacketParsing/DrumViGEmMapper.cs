@@ -15,7 +15,7 @@ namespace RB4InstrumentMapper
         /// <param name="vigemDevice">The ViGEmBus device to map to.</param>
         /// <param name="instrumentId">The instrument ID.</param>
         /// <returns>True if packet was mapped, false otherwise.</returns>
-        public static bool AnalyzeAndMap(in DrumPacket packet, IXbox360Controller vigemDevice, uint instrumentId)
+        public static bool MapPacket(in DrumPacket packet, IXbox360Controller vigemDevice, uint instrumentId)
         {
             // Don't auto-submit input reports for performance optimization
             if (vigemDevice.AutoSubmitReport == true)

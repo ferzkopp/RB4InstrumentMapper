@@ -18,6 +18,8 @@ using System.Windows.Shapes;
 using vJoyInterfaceWrap;
 using System.Runtime.InteropServices;
 using System.Windows.Threading;
+using Nefarius.ViGEm.Client;
+using Nefarius.ViGEm.Client.Targets;
 
 namespace RB4InstrumentMapper
 {
@@ -64,12 +66,17 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// Common name for vjoy combo box items.
         /// </summary>
-        private const string vjoyComboBoxItemName = "vjoyComboBoxItem";
+        private const string controllerComboBoxItemName = "controllerComboBoxItem";
 
         /// <summary>
         /// Common joystick object and a position structure.
         /// </summary>
         private static vJoy joystick;
+
+        /// <summary>
+        /// ViGEmBus client.
+        /// </summary>
+        private static ViGEmClient vigemClient = null;
 
         /// <summary>
         /// Selected guitar 1 device
@@ -117,6 +124,22 @@ namespace RB4InstrumentMapper
         private static DrumPacket drumPacket = new DrumPacket();
 
         /// <summary>
+        /// Dictionary for ViGEmBus controllers.
+        /// </summary>
+        /// <remarks>
+        /// uint = identifier for the instrument (1 for guitar 1, 2 for guitar 2, and 3 for drum)
+        /// <br>IXbox360Controller = the controller associated with the instrument.</br>
+        /// </remarks>
+        private static Dictionary<uint,IXbox360Controller> vigemDictionary = new Dictionary<uint,IXbox360Controller>();
+
+        private enum VigemInstruments
+        {
+            Guitar1 = 1,
+            Guitar2 = 2,
+            Drum = 3
+        }
+
+        /// <summary>
         /// Main window handler
         /// </summary>
         public MainWindow()
@@ -139,7 +162,7 @@ namespace RB4InstrumentMapper
 
             // Initialize dropdowns
             PopulatePcapDropdown();
-            PopulateVjoyDropdowns();
+            PopulateControllerDropdowns();
         }
 
         /// <summary>
@@ -151,6 +174,12 @@ namespace RB4InstrumentMapper
         {
             // Shutdown
             StopCapture();
+
+            // Dispose of the ViGEmBus client
+            if (vigemClient != null)
+            {
+                vigemClient.Dispose();
+            }
         }
 
         /// <summary>
@@ -158,7 +187,7 @@ namespace RB4InstrumentMapper
         /// </summary>
         /// <param name="joystick">The vJoy object</param>
         /// <param name="deviceId">The device Id to acquire</param>
-        static void AcquireJoystick(vJoy joystick, uint deviceId)
+        static void AcquirevJoyDevice(vJoy joystick, uint deviceId)
         {
             // Get the state of the requested device
             VjdStat status = joystick.GetVJDStatus(deviceId);
@@ -178,84 +207,175 @@ namespace RB4InstrumentMapper
             }
         }
 
+        static void CreateViGEmDevice(uint userIndex)
+        {
+            // Don't add duplicate entries
+            if(vigemDictionary.ContainsKey(userIndex))
+            {
+                return;
+            }
+
+            vigemDictionary.Add(
+                userIndex,
+                vigemClient.CreateXbox360Controller(0x1BAD, 0x0719) // Xbox 360 Rock Band wireless instrument vendor/product IDs
+                // Rock Band Guitar: USB\VID_1BAD&PID_0719&IG_00  XUSB\TYPE_00\SUB_86\VEN_1BAD\REV_0002
+                // Rock Band Drums:  USB\VID_1BAD&PID_0719&IG_02  XUSB\TYPE_00\SUB_88\VEN_1BAD\REV_0002
+                // If subtype ID specification through ViGEmBus becomes possible at some point,
+                // the guitar should be subtype 6, and the drums should be subtype 8
+            );
+        }
+
         /// <summary>
-        /// Populate vJoy combos.
+        /// Populate controller device selection combos.
         /// </summary>
-        private void PopulateVjoyDropdowns()
+        private void PopulateControllerDropdowns()
         {
             // Create one joystick object and a position structure.
             joystick = new vJoy();
 
-            // Get the driver attributes (Vendor ID, Product ID, Version Number)
-            if (!joystick.vJoyEnabled())
+            // Check if vJoy is enabled
+            bool vjoyFound = joystick.vJoyEnabled();
+            if (!vjoyFound)
             {
-                Console.WriteLine("No vJoy driver found. Make sure vJoy is installed and configured.");
+                Console.WriteLine("No vJoy driver found, or vJoy is disabled. vJoy selections will be unavailable.");
+            }
+            else
+            {
+                // Log vJoy driver attributes (Vendor Name, Product Name, Version Number)
+                Console.WriteLine("vJoy found! - Vendor: " + joystick.GetvJoyManufacturerString() + ", Product: " + joystick.GetvJoyProductString() + ", Version Number: " + joystick.GetvJoySerialNumberString());
+            }
+
+            // Re-check if ViGEmBus is installed
+            if (vigemClient == null)
+            {
+                try
+                {
+                    vigemClient = new ViGEmClient();
+                }
+                catch(Nefarius.ViGEm.Client.Exceptions.VigemBusNotFoundException)
+                {
+                    vigemClient = null;
+                }
+            }
+
+            // Check if ViGEmBus is found
+            bool vigemFound = vigemClient != null ? true : false;
+            if (!vigemFound)
+            {
+                Console.WriteLine("ViGEmBus not found. ViGEmBus selection will be unavailable.");
+            }
+            else
+            {
+                Console.WriteLine("ViGEmBus found!");
+            }
+
+            if (!vjoyFound && !vigemFound)
+            {
+                MessageBox.Show("No controller emulators found! Please install either vJoy or ViGEmBus.", "No Controller Emulators Found", MessageBoxButton.OK);
                 return;
             }
-            
-            Console.WriteLine($"vJoy found - Vendor: " + joystick.GetvJoyManufacturerString() + ", Product: " + joystick.GetvJoyProductString() + ", Version Number: " + joystick.GetvJoySerialNumberString());
 
             // Get default settings
             string currentGuitar1Selection = Properties.Settings.Default.currentGuitar1Selection;
             string currentGuitar2Selection = Properties.Settings.Default.currentGuitar2Selection;
             string currentDrumSelection = Properties.Settings.Default.currentDrumSelection;
 
-            // Loop through IDs and populate dropdowns
+
+            // Loop through vJoy IDs and populate dropdowns
             int freeDeviceCount = 0;
             for (uint id = 1; id <= 16; id++)
             {
-                string deviceName = $"vJoy Device {id}";
-                string itemName = $"{controllerComboBoxItemName}{id}";
+                string vjoyDeviceName = $"vJoy Device {id}";
+                string vjoyItemName = $"{controllerComboBoxItemName}{id}";
                 bool isEnabled = false;
 
                 // Get the state of the requested device
-                VjdStat status = joystick.GetVJDStatus(id);
-                switch (status)
+                if (vjoyFound)
                 {
-                    case VjdStat.VJD_STAT_OWN:
-                        deviceName += " (device is already owned by this feeder)";
-                        break;
-                    case VjdStat.VJD_STAT_FREE:
-                        isEnabled = true;
-                        freeDeviceCount++;
-                        break;
-                    case VjdStat.VJD_STAT_BUSY:
-                        deviceName += " (device is already owned by this feeder)";
-                        break;
-                    case VjdStat.VJD_STAT_MISS:
-                        deviceName += " (device is not installed or disabled)";
-                        break;
-                    default:
-                        deviceName += " (general error)";
-                        break;
-                };
+                    VjdStat status = joystick.GetVJDStatus(id);
+                    switch (status)
+                    {
+                        case VjdStat.VJD_STAT_OWN:
+                            vjoyDeviceName += " (device is already owned by this feeder)";
+                            break;
+                        case VjdStat.VJD_STAT_FREE:
+                            isEnabled = true;
+                            freeDeviceCount++;
+                            break;
+                        case VjdStat.VJD_STAT_BUSY:
+                            vjoyDeviceName += " (device is already owned by this feeder)";
+                            break;
+                        case VjdStat.VJD_STAT_MISS:
+                            vjoyDeviceName += " (device is not installed or disabled)";
+                            break;
+                        default:
+                            vjoyDeviceName += " (general error)";
+                            break;
+                    };
+                }
+                else
+                {
+                    vjoyDeviceName += " (vJoy disabled/not found)";
+                }
 
                 // Guitar 1 combo item
-                ComboBoxItem comboBoxItem = new ComboBoxItem();
-                comboBoxItem.Content = deviceName;
-                comboBoxItem.Name = itemName;
-                comboBoxItem.IsEnabled = isEnabled;
-                comboBoxItem.IsSelected = itemName.Equals(currentGuitar1Selection) && isEnabled;
-                vjoyGuitar1Combo.Items.Add(comboBoxItem);
+                ComboBoxItem vjoyComboBoxItem = new ComboBoxItem();
+                vjoyComboBoxItem.Content = vjoyDeviceName;
+                vjoyComboBoxItem.Name = vjoyItemName;
+                vjoyComboBoxItem.IsEnabled = isEnabled;
+                vjoyComboBoxItem.IsSelected = vjoyItemName.Equals(currentGuitar1Selection) && isEnabled;
+                vjoyGuitar1Combo.Items.Add(vjoyComboBoxItem);
 
                 // Guitar 2 combo item
-                comboBoxItem = new ComboBoxItem();
-                comboBoxItem.Content = deviceName;
-                comboBoxItem.Name = itemName;
-                comboBoxItem.IsEnabled = isEnabled;
-                comboBoxItem.IsSelected = itemName.Equals(currentGuitar2Selection) && isEnabled;
-                vjoyGuitar2Combo.Items.Add(comboBoxItem);
+                vjoyComboBoxItem = new ComboBoxItem();
+                vjoyComboBoxItem.Content = vjoyDeviceName;
+                vjoyComboBoxItem.Name = vjoyItemName;
+                vjoyComboBoxItem.IsEnabled = isEnabled;
+                vjoyComboBoxItem.IsSelected = vjoyItemName.Equals(currentGuitar2Selection) && isEnabled;
+                vjoyGuitar2Combo.Items.Add(vjoyComboBoxItem);
 
                 // Drum combo item
-                comboBoxItem = new ComboBoxItem();
-                comboBoxItem.Content = deviceName;
-                comboBoxItem.Name = itemName;
-                comboBoxItem.IsEnabled = isEnabled;
-                comboBoxItem.IsSelected = itemName.Equals(currentDrumSelection) && isEnabled;
-                vjoyDrumCombo.Items.Add(comboBoxItem);
+                vjoyComboBoxItem = new ComboBoxItem();
+                vjoyComboBoxItem.Content = vjoyDeviceName;
+                vjoyComboBoxItem.Name = vjoyItemName;
+                vjoyComboBoxItem.IsEnabled = isEnabled;
+                vjoyComboBoxItem.IsSelected = vjoyItemName.Equals(currentDrumSelection) && isEnabled;
+                vjoyDrumCombo.Items.Add(vjoyComboBoxItem);
             }
 
             Console.WriteLine($"Discovered {freeDeviceCount} free vJoy devices.");
+
+            // Create ViGEmBus device dropdown item
+            string vigemDeviceName = $"ViGEmBus Device";
+            if (!vigemFound)
+            {
+                vigemDeviceName += " (ViGEmBus not found)";
+            }
+            string vigemItemName = $"{controllerComboBoxItemName}17";
+
+            // Guitar 1 combo item
+            ComboBoxItem vigemComboBoxItem = new ComboBoxItem();
+            vigemComboBoxItem.Content = vigemDeviceName;
+            vigemComboBoxItem.Name = vigemItemName;
+            vigemComboBoxItem.IsEnabled = vigemFound;
+            vigemComboBoxItem.IsSelected = vigemItemName.Equals(currentGuitar1Selection) && vigemFound;
+            vjoyGuitar1Combo.Items.Add(vigemComboBoxItem);
+
+            // Guitar 2 combo item
+            vigemComboBoxItem = new ComboBoxItem();
+            vigemComboBoxItem.Content = vigemDeviceName;
+            vigemComboBoxItem.Name = vigemItemName;
+            vigemComboBoxItem.IsEnabled = vigemFound;
+            vigemComboBoxItem.IsSelected = vigemItemName.Equals(currentGuitar2Selection) && vigemFound;
+            vjoyGuitar2Combo.Items.Add(vigemComboBoxItem);
+
+            // Drum combo item
+            vigemComboBoxItem = new ComboBoxItem();
+            vigemComboBoxItem.Content = vigemDeviceName;
+            vigemComboBoxItem.Name = vigemItemName;
+            vigemComboBoxItem.IsEnabled = vigemFound;
+            vigemComboBoxItem.IsSelected = vigemItemName.Equals(currentDrumSelection) && vigemFound;
+            vjoyDrumCombo.Items.Add(vigemComboBoxItem);
 
             // Preset device IDs
             
@@ -382,7 +502,7 @@ namespace RB4InstrumentMapper
             string itemName = typeItem.Name;
 
             // Get index of selected guitar device
-            if (uint.TryParse(typeItem.Name.Substring(vjoyComboBoxItemName.Length), out guitar1DeviceIndex))
+            if (uint.TryParse(typeItem.Name.Substring(controllerComboBoxItemName.Length), out guitar1DeviceIndex))
             {
                 // Remember selected guitar device
                 Properties.Settings.Default.currentGuitar1Selection = itemName;
@@ -402,7 +522,7 @@ namespace RB4InstrumentMapper
             string itemName = typeItem.Name;
 
             // Get index of selected guitar device
-            if (uint.TryParse(typeItem.Name.Substring(vjoyComboBoxItemName.Length), out guitar2DeviceIndex))
+            if (uint.TryParse(typeItem.Name.Substring(controllerComboBoxItemName.Length), out guitar2DeviceIndex))
             {
                 // Remember selected guitar device
                 Properties.Settings.Default.currentGuitar2Selection = itemName;
@@ -422,7 +542,7 @@ namespace RB4InstrumentMapper
             string itemName = typeItem.Name;
 
             // Get index of selected drum device
-            if (uint.TryParse(typeItem.Name.Substring(vjoyComboBoxItemName.Length), out drumDeviceIndex))
+            if (uint.TryParse(typeItem.Name.Substring(controllerComboBoxItemName.Length), out drumDeviceIndex))
             {
                 // Remember selected drum device
                 Properties.Settings.Default.currentDrumSelection = itemName;
@@ -477,92 +597,92 @@ namespace RB4InstrumentMapper
                 Console.WriteLine(packet.Timestamp.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{packet.Length}] " + packetHexString);
             }
 
-            // Map drum (if enabled)
-            if (joystick != null && drumDeviceIndex > 0)
-            {
-                if (DrumPacketReader.AnalyzePacket(packet.Buffer, out drumPacket))
-                {
-                    if (DrumPacketVjoyMapper.MapPacket(drumPacket, joystick, drumDeviceIndex, drumInstrumentId))
-                    {
-                        // Auto-populate instrument ID for drum
-                        if (drumInstrumentId == 0)
-                        {
-                            // Copy from packet
-                            drumInstrumentId = drumPacket.InstrumentID;
-
-                            // Update UI
-                            uiDispatcher.Invoke((Action)(() =>
-                            {
-                                drumIdTextBox.Text = (drumInstrumentId == 0) ? string.Empty : Convert.ToString(drumInstrumentId, 16);
-                            }));
-                        }
-
-                        // Used packet
-                        return;
-                    }
-                }
-            }
-
             // Map guitar 1 (if enabled)
-            if (joystick != null && guitar1DeviceIndex > 0)
+            if (guitar1DeviceIndex > 0 && guitar1InstrumentId != 0)
             {
+                // Instrument ID must be unique
+                if (guitar1InstrumentId == guitar2InstrumentId)
+                {
+                    return;
+                }
+
                 if (GuitarPacketReader.AnalyzePacket(packet.Buffer, out guitar1Packet))
                 {
-                    if (GuitarPacketVjoyMapper.MapPacket(guitar1Packet, joystick, guitar1DeviceIndex, guitar1InstrumentId))
+                    // vJoy
+                    if (guitar1DeviceIndex < 17 && joystick != null)
                     {
-                        // Auto-populate instrument ID for guitar 1 if it wasn't set
-                        if (guitar1InstrumentId == 0)
+                        if (GuitarPacketVjoyMapper.MapPacket(guitar1Packet, joystick, guitar1DeviceIndex, guitar1InstrumentId))
                         {
-                            // Must be different from guitar 2
-                            if (guitar2Packet.InstrumentID == guitar1Packet.InstrumentID)
-                            {
-                                return;
-                            }
-
-                            // Copy from packet
-                            guitar1InstrumentId = guitar1Packet.InstrumentID;
-
-                            // Update UI
-                            uiDispatcher.Invoke((Action)(() =>
-                            {
-                                guitar1IdTextBox.Text = (guitar1InstrumentId == 0) ? string.Empty : Convert.ToString(guitar1InstrumentId, 16);
-                            }));
+                            // Used packet
+                            return;
                         }
-
-                        // Used packet
-                        return;
+                    }
+                    // ViGEmBus
+                    else if (guitar1DeviceIndex == 17 && vigemClient != null)
+                    {
+                        if (GuitarPacketViGEmMapper.MapPacket(guitar1Packet, vigemDictionary[(uint)VigemInstruments.Guitar1], guitar1InstrumentId))
+                        {
+                            // Used packet
+                            return;
+                        }
                     }
                 }
             }
 
             // Map guitar 2 (if enabled)
-            if (joystick != null && guitar2DeviceIndex > 0)
+            if (guitar2DeviceIndex > 0 && guitar2InstrumentId != 0)
             {
+                // Instrument ID must be unique
+                if (guitar2InstrumentId == guitar1InstrumentId)
+                {
+                    return;
+                }
+
                 if (GuitarPacketReader.AnalyzePacket(packet.Buffer, out guitar2Packet))
                 {
-                    if (GuitarPacketVjoyMapper.MapPacket(guitar2Packet, joystick, guitar1DeviceIndex, guitar1InstrumentId))
+                    // vJoy
+                    if (guitar2DeviceIndex < 17 && joystick != null)
                     {
-                        // Auto-populate instrument ID for guitar 2 if it wasn't set
-                        if (guitar2InstrumentId == 0)
+                        if (GuitarPacketVjoyMapper.MapPacket(guitar2Packet, joystick, guitar2DeviceIndex, guitar2InstrumentId))
                         {
-                            // Must be different from guitar 1
-                            if (guitar1Packet.InstrumentID == guitar2Packet.InstrumentID)
-                            {
-                                return;
-                            }
-
-                            // Copy from packet
-                            guitar2InstrumentId = guitar2Packet.InstrumentID;
-
-                            // Update UI
-                            uiDispatcher.Invoke((Action)(() =>
-                            {
-                                guitar2IdTextBox.Text = (guitar2InstrumentId == 0) ? string.Empty : Convert.ToString(guitar2InstrumentId, 16);
-                            }));
+                            // Used packet
+                            return;
                         }
+                    }
+                    // ViGEmBus
+                    else if (guitar2DeviceIndex == 17 && vigemClient != null)
+                    {
+                        if (GuitarPacketViGEmMapper.MapPacket(guitar2Packet, vigemDictionary[(uint)VigemInstruments.Guitar2], guitar2InstrumentId))
+                        {
+                            // Used packet
+                            return;
+                        }
+                    }
+                }
+            }
 
-                        // Used packet
-                        return;
+            // Map drum (if enabled)
+            if (drumDeviceIndex > 0 && drumInstrumentId != 0)
+            {
+                if (DrumPacketReader.AnalyzePacket(packet.Buffer, out drumPacket))
+                {
+                    // vJoy
+                    if (drumDeviceIndex < 17 && joystick != null)
+                    {
+                        if (DrumPacketVjoyMapper.MapPacket(drumPacket, joystick, drumDeviceIndex, drumInstrumentId))
+                        {
+                            // Used packet
+                            return;
+                        }
+                    }
+                    // ViGEmBus
+                    else if (drumDeviceIndex == 17 && vigemClient != null)
+                    {
+                        if (DrumPacketViGEmMapper.MapPacket(drumPacket, vigemDictionary[(uint)VigemInstruments.Drum], drumInstrumentId))
+                        {
+                            // Used packet
+                            return;
+                        }
                     }
                 }
             }
@@ -598,6 +718,19 @@ namespace RB4InstrumentMapper
             {
                 joystick.RelinquishVJD(guitar1DeviceIndex);
             }
+
+            // Disconnect ViGEmBus controllers
+            if (vigemDictionary.Count != 0)
+            {
+                for (uint i = 0; i < vigemDictionary.Count; i++)
+                {
+                    if (vigemDictionary.ContainsKey(i) && vigemDictionary[i] != null)
+                    {
+                        vigemDictionary[i].Disconnect();
+                    }
+                }
+            }
+            vigemDictionary.Clear();
         }
 
         /// <summary>
@@ -614,19 +747,38 @@ namespace RB4InstrumentMapper
                 joystick.ResetAll();
 
                 // Acquire vJoy devices
-                if (guitar1DeviceIndex > 0)
+                if (guitar1DeviceIndex > 0 && guitar1DeviceIndex < 17)
                 {
-                    AcquireJoystick(joystick, guitar1DeviceIndex);
+                    AcquirevJoyDevice(joystick, guitar1DeviceIndex);
                 }
 
-                if (guitar2DeviceIndex > 0)
+                if (guitar2DeviceIndex > 0 && guitar2DeviceIndex < 17)
                 {
-                    AcquireJoystick(joystick, guitar2DeviceIndex);
+                    AcquirevJoyDevice(joystick, guitar2DeviceIndex);
                 }
 
-                if (drumDeviceIndex > 0)
+                if (drumDeviceIndex > 0 && drumDeviceIndex < 17)
                 {
-                    AcquireJoystick(joystick, drumDeviceIndex);
+                    AcquirevJoyDevice(joystick, drumDeviceIndex);
+                }
+            }
+
+            if (vigemClient != null)
+            {
+                // Create ViGEmBus devices for each
+                if (guitar1DeviceIndex == 17)
+                {
+                    CreateViGEmDevice((uint)VigemInstruments.Guitar1);
+                }
+
+                if (guitar2DeviceIndex == 17)
+                {
+                    CreateViGEmDevice((uint)VigemInstruments.Guitar2);
+                }
+
+                if (drumDeviceIndex == 17)
+                {
+                    CreateViGEmDevice((uint)VigemInstruments.Drum);
                 }
             }
 
