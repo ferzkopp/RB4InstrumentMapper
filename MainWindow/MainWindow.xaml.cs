@@ -54,7 +54,7 @@ namespace RB4InstrumentMapper
         private Thread pcapCaptureThread;
 
         /// <summary>
-        /// Flasg indicating if packets should be shown.
+        /// Flag indicating if packets should be shown.
         /// </summary>
         private static bool packetDebug = false;
 
@@ -132,6 +132,9 @@ namespace RB4InstrumentMapper
         /// </remarks>
         private static Dictionary<uint,IXbox360Controller> vigemDictionary = new Dictionary<uint,IXbox360Controller>();
 
+        /// <summary>
+        /// Enumeration for ViGEmBus controller dictionary keys.
+        /// </summary>
         private enum VigemInstruments
         {
             Guitar1 = 1,
@@ -158,7 +161,7 @@ namespace RB4InstrumentMapper
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Connect to console
-            TextBoxConsole.RedirectConsoleToTextBox(messageConsole);
+            TextBoxConsole.RedirectConsoleToTextBox(messageConsole, displayLinesInReverseOrder: false);
 
             // Initialize dropdowns
             PopulatePcapDropdown();
@@ -476,6 +479,13 @@ namespace RB4InstrumentMapper
         {
             // Get selected pcap device
             ComboBoxItem typeItem = (ComboBoxItem)pcapDeviceCombo.SelectedItem;
+            // Attempting to use typeItem's properties while null will cause a NullReferenceException
+            if (typeItem == null)
+            {
+                Properties.Settings.Default.currentPcapSelection = String.Empty;
+                Properties.Settings.Default.Save();
+                return;
+            }
             string itemName = typeItem.Name;
 
             // Get index of selected pcap device
@@ -497,8 +507,29 @@ namespace RB4InstrumentMapper
         /// <param name="e"></param>
         private void vjoyGuitarCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Only allow a device to be selected by one selection, unless it is the ViGEmBus device selection
+            if (guitar1Combo.SelectedIndex != 16)
+            {
+                if (guitar1Combo.SelectedIndex == guitar2Combo.SelectedIndex)
+                {
+                    guitar2Combo.SelectedIndex = -1;
+                }
+
+                if (guitar1Combo.SelectedIndex == drumCombo.SelectedIndex)
+                {
+                    drumCombo.SelectedIndex = -1;
+                }
+            }
+
             // Get selected guitar device
-            ComboBoxItem typeItem = (ComboBoxItem)vjoyGuitar1Combo.SelectedItem;
+            ComboBoxItem typeItem = (ComboBoxItem)guitar1Combo.SelectedItem;
+            // Attempting to use typeItem's properties while null will cause a NullReferenceException
+            if (typeItem == null)
+            {
+                Properties.Settings.Default.currentGuitar1Selection = String.Empty;
+                Properties.Settings.Default.Save();
+                return;
+            }
             string itemName = typeItem.Name;
 
             // Get index of selected guitar device
@@ -517,8 +548,29 @@ namespace RB4InstrumentMapper
         /// <param name="e"></param>
         private void vjoyGuitar2Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Only allow a device to be selected by one selection, unless it is the ViGEmBus device selection
+            if (guitar2Combo.SelectedIndex != 16)
+            {
+                if (guitar2Combo.SelectedIndex == guitar1Combo.SelectedIndex)
+                {
+                    guitar1Combo.SelectedIndex = -1;
+                }
+
+                if (guitar2Combo.SelectedIndex == drumCombo.SelectedIndex)
+                {
+                    drumCombo.SelectedIndex = -1;
+                }
+            }
+
             // Get selected guitar device
-            ComboBoxItem typeItem = (ComboBoxItem)vjoyGuitar2Combo.SelectedItem;
+            ComboBoxItem typeItem = (ComboBoxItem)guitar2Combo.SelectedItem;
+            // Attempting to use typeItem's properties while null will cause a NullReferenceException
+            if (typeItem == null)
+            {
+                Properties.Settings.Default.currentGuitar2Selection = String.Empty;
+                Properties.Settings.Default.Save();
+                return;
+            }
             string itemName = typeItem.Name;
 
             // Get index of selected guitar device
@@ -537,8 +589,29 @@ namespace RB4InstrumentMapper
         /// <param name="e"></param>
         private void vjoyDrumCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Only allow a device to be selected by one selection, unless it is the ViGEmBus device selection
+            if (drumCombo.SelectedIndex != 16)
+            {
+                if (drumCombo.SelectedIndex == guitar1Combo.SelectedIndex)
+                {
+                    guitar1Combo.SelectedIndex = -1;
+                }
+
+                if (drumCombo.SelectedIndex == guitar2Combo.SelectedIndex)
+                {
+                    guitar2Combo.SelectedIndex = -1;
+                }
+            }
+
             // Get selected drum device
-            ComboBoxItem typeItem = (ComboBoxItem)vjoyDrumCombo.SelectedItem;
+            ComboBoxItem typeItem = (ComboBoxItem)drumCombo.SelectedItem;
+            // Attempting to use typeItem's properties while null will cause a NullReferenceException
+            if (typeItem == null)
+            {
+                Properties.Settings.Default.currentDrumSelection = String.Empty;
+                Properties.Settings.Default.Save();
+                return;
+            }
             string itemName = typeItem.Name;
 
             // Get index of selected drum device
@@ -590,6 +663,12 @@ namespace RB4InstrumentMapper
         /// <param name="packet">The received packet</param>
         private void PacketHandler(Packet packet)
         {
+            // Don't use null packets
+            if (packet == null)
+            {
+                return;
+            }
+
             // Debugging (if enabled)
             if (packetDebug)
             {
@@ -713,10 +792,16 @@ namespace RB4InstrumentMapper
                 joystick.RelinquishVJD(drumDeviceIndex);
             }
 
-            // Release guitar device
+            // Release guitar 1 device
             if (joystick != null && guitar1DeviceIndex > 0)
             {
                 joystick.RelinquishVJD(guitar1DeviceIndex);
+            }
+
+            // Release guitar 2 device
+            if (joystick != null && guitar2DeviceIndex > 0)
+            {
+                joystick.RelinquishVJD(guitar2DeviceIndex);
             }
 
             // Disconnect ViGEmBus controllers
@@ -824,21 +909,33 @@ namespace RB4InstrumentMapper
             string hexString = guitar1IdTextBox.Text;
             if (string.IsNullOrEmpty(hexString))
             {
+                // Clear ID
                 Console.WriteLine("Cleared Hex ID for Guitar 1.");
                 guitar1InstrumentId = 0;
                 hexString = string.Empty;
             }
             else
             {
-                guitar1InstrumentId = Convert.ToUInt32(hexString, 16);
-                if (guitar1InstrumentId == 0)
+                // Parse input string
+                uint enteredId = Convert.ToUInt32(hexString, 16);
+                if (enteredId == 0)
                 {
-                    Console.WriteLine("Invalid Hex ID for Guitar 1.");
+                    // Clear ID
+                    Console.WriteLine("Cleared Hex ID for Guitar 1.");
+                    guitar1InstrumentId = 0;
                     hexString = string.Empty;
+                }
+                else if (enteredId == guitar2InstrumentId)
+                {
+                    // Enforce unique guitar instrument ID
+                    Console.WriteLine("Guitar 1 ID must be different from Guitar 2 ID.");
+                    return;
                 }
                 else
                 {
-                    Console.WriteLine($"Set Guitar 1 instrument ID to {guitar1InstrumentId}.");
+                    // Set ID
+                    guitar1InstrumentId = enteredId;
+                    Console.WriteLine($"Set Guitar 1 instrument ID to {enteredId}.");
                 }
             }
 
@@ -853,21 +950,33 @@ namespace RB4InstrumentMapper
             string hexString = guitar2IdTextBox.Text;
             if (string.IsNullOrEmpty(hexString))
             {
+                // Clear ID
                 Console.WriteLine("Cleared Hex ID for Guitar 2.");
                 guitar2InstrumentId = 0;
                 hexString = string.Empty;
             }
             else
             {
-                guitar2InstrumentId = Convert.ToUInt32(hexString, 16);
-                if (guitar2InstrumentId == 0)
+                // Parse input string
+                uint enteredId = Convert.ToUInt32(hexString, 16);
+                if (enteredId == 0)
                 {
-                    Console.WriteLine("Invalid Hex ID for Guitar 2.");
+                    // Clear ID
+                    Console.WriteLine("Cleared Hex ID for Guitar 2.");
+                    guitar2InstrumentId = 0;
                     hexString = string.Empty;
+                }
+                else if (enteredId == guitar1InstrumentId)
+                {
+                    // Enforce unique guitar instrument ID
+                    Console.WriteLine("Guitar 2 ID must be different from Guitar 1 ID.");
+                    return;
                 }
                 else
                 {
-                    Console.WriteLine($"Set Guitar 2 instrument ID to {guitar2InstrumentId}.");
+                    // Set ID
+                    guitar2InstrumentId = enteredId;
+                    Console.WriteLine($"Set Guitar 2 instrument ID to {enteredId}.");
                 }
             }
 
@@ -882,22 +991,27 @@ namespace RB4InstrumentMapper
             string hexString = drumIdTextBox.Text;
             if (string.IsNullOrEmpty(hexString))
             {
+                // Clear ID
                 Console.WriteLine("Cleared Hex ID for Drum.");
                 hexString = string.Empty;
                 drumInstrumentId = 0;
             }
             else
             {
-                // Parse
-                drumInstrumentId = Convert.ToUInt32(hexString, 16);
-                if (drumInstrumentId == 0)
+                // Parse input string
+                uint enteredId = Convert.ToUInt32(hexString, 16);
+                if (enteredId == 0)
                 {
-                    Console.WriteLine("Invalid Hex ID for Drum.");
+                    // Clear ID
+                    Console.WriteLine("Cleared Hex ID for Drum.");
                     hexString = string.Empty;
+                    drumInstrumentId = 0;
                 }
                 else
                 {
-                    Console.WriteLine($"Set Drums instrument ID to {drumInstrumentId}.");
+                    // Set ID
+                    guitar1InstrumentId = enteredId;
+                    Console.WriteLine($"Set Drum instrument ID to {enteredId}.");
                 }
             }
 
