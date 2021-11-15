@@ -59,6 +59,19 @@ namespace RB4InstrumentMapper
         private static bool packetDebug = false;
 
         /// <summary>
+        /// Flag indicating that guitar 1 ID auto assigning is in progress.
+        /// </summary>
+        private static bool packetGuitar1AutoAssign = false;
+        /// <summary>
+        /// Flag indicating that guitar 2 ID auto assigning is in progress.
+        /// </summary>
+        private static bool packetGuitar2AutoAssign = false;
+        /// <summary>
+        /// Flag indicating that drum ID auto assigning is in progress.
+        /// </summary>
+        private static bool packetDrumAutoAssign = false;
+
+        /// <summary>
         /// Common name for pcap combo box items.
         /// </summary>
         private const string pcapComboBoxItemName = "pcapDeviceComboBoxItem";
@@ -231,6 +244,9 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// Populate controller device selection combos.
         /// </summary>
+        /// <remarks>
+        /// Used both when initializing, and when refreshing.
+        /// </remarks>
         private void PopulateControllerDropdowns()
         {
             // Create one joystick object and a position structure.
@@ -283,6 +299,10 @@ namespace RB4InstrumentMapper
             string currentGuitar2Selection = Properties.Settings.Default.currentGuitar2Selection;
             string currentDrumSelection = Properties.Settings.Default.currentDrumSelection;
 
+            // Reset combo boxes
+            guitar1Combo.Items.Clear();
+            guitar2Combo.Items.Clear();
+            drumCombo.Items.Clear();
 
             // Loop through vJoy IDs and populate dropdowns
             int freeDeviceCount = 0;
@@ -327,7 +347,7 @@ namespace RB4InstrumentMapper
                 vjoyComboBoxItem.Name = vjoyItemName;
                 vjoyComboBoxItem.IsEnabled = isEnabled;
                 vjoyComboBoxItem.IsSelected = vjoyItemName.Equals(currentGuitar1Selection) && isEnabled;
-                vjoyGuitar1Combo.Items.Add(vjoyComboBoxItem);
+                guitar1Combo.Items.Add(vjoyComboBoxItem);
 
                 // Guitar 2 combo item
                 vjoyComboBoxItem = new ComboBoxItem();
@@ -335,7 +355,7 @@ namespace RB4InstrumentMapper
                 vjoyComboBoxItem.Name = vjoyItemName;
                 vjoyComboBoxItem.IsEnabled = isEnabled;
                 vjoyComboBoxItem.IsSelected = vjoyItemName.Equals(currentGuitar2Selection) && isEnabled;
-                vjoyGuitar2Combo.Items.Add(vjoyComboBoxItem);
+                guitar2Combo.Items.Add(vjoyComboBoxItem);
 
                 // Drum combo item
                 vjoyComboBoxItem = new ComboBoxItem();
@@ -343,7 +363,7 @@ namespace RB4InstrumentMapper
                 vjoyComboBoxItem.Name = vjoyItemName;
                 vjoyComboBoxItem.IsEnabled = isEnabled;
                 vjoyComboBoxItem.IsSelected = vjoyItemName.Equals(currentDrumSelection) && isEnabled;
-                vjoyDrumCombo.Items.Add(vjoyComboBoxItem);
+                drumCombo.Items.Add(vjoyComboBoxItem);
             }
 
             Console.WriteLine($"Discovered {freeDeviceCount} free vJoy devices.");
@@ -362,7 +382,7 @@ namespace RB4InstrumentMapper
             vigemComboBoxItem.Name = vigemItemName;
             vigemComboBoxItem.IsEnabled = vigemFound;
             vigemComboBoxItem.IsSelected = vigemItemName.Equals(currentGuitar1Selection) && vigemFound;
-            vjoyGuitar1Combo.Items.Add(vigemComboBoxItem);
+            guitar1Combo.Items.Add(vigemComboBoxItem);
 
             // Guitar 2 combo item
             vigemComboBoxItem = new ComboBoxItem();
@@ -370,7 +390,7 @@ namespace RB4InstrumentMapper
             vigemComboBoxItem.Name = vigemItemName;
             vigemComboBoxItem.IsEnabled = vigemFound;
             vigemComboBoxItem.IsSelected = vigemItemName.Equals(currentGuitar2Selection) && vigemFound;
-            vjoyGuitar2Combo.Items.Add(vigemComboBoxItem);
+            guitar2Combo.Items.Add(vigemComboBoxItem);
 
             // Drum combo item
             vigemComboBoxItem = new ComboBoxItem();
@@ -378,7 +398,7 @@ namespace RB4InstrumentMapper
             vigemComboBoxItem.Name = vigemItemName;
             vigemComboBoxItem.IsEnabled = vigemFound;
             vigemComboBoxItem.IsSelected = vigemItemName.Equals(currentDrumSelection) && vigemFound;
-            vjoyDrumCombo.Items.Add(vigemComboBoxItem);
+            drumCombo.Items.Add(vigemComboBoxItem);
 
             // Preset device IDs
             
@@ -424,6 +444,9 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// Populate WinPcap device combos.
         /// </summary>
+        /// <remarks>
+        /// Used both when initializing, and when refreshing.
+        /// </remarks>
         private void PopulatePcapDropdown()
         {
             // Retrieve the device list from the local machine
@@ -438,6 +461,7 @@ namespace RB4InstrumentMapper
             string currentPcapSelection = Properties.Settings.Default.currentPcapSelection;
 
             // Populate combo and print the list
+            pcapDeviceCombo.Items.Clear();
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < allDevices.Count; i++)
             {
@@ -505,7 +529,7 @@ namespace RB4InstrumentMapper
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void vjoyGuitarCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void guitar1Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Only allow a device to be selected by one selection, unless it is the ViGEmBus device selection
             if (guitar1Combo.SelectedIndex != 16)
@@ -546,7 +570,7 @@ namespace RB4InstrumentMapper
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void vjoyGuitar2Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void guitar2Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Only allow a device to be selected by one selection, unless it is the ViGEmBus device selection
             if (guitar2Combo.SelectedIndex != 16)
@@ -587,7 +611,7 @@ namespace RB4InstrumentMapper
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void vjoyDrumCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void drumCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Only allow a device to be selected by one selection, unless it is the ViGEmBus device selection
             if (drumCombo.SelectedIndex != 16)
@@ -903,6 +927,16 @@ namespace RB4InstrumentMapper
             Properties.Settings.Default.Save();
         }
 
+        private void pcapRefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            PopulatePcapDropdown();
+        }
+
+        private void controllerRefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            PopulateControllerDropdowns();
+        }
+
         private void guitar1IdTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             // Set new ID
@@ -1018,6 +1052,272 @@ namespace RB4InstrumentMapper
             // Remember drum ID
             Properties.Settings.Default.currentDrumId = hexString;
             Properties.Settings.Default.Save();
+        }
+
+        private void pcapAutoDetectButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Prompt user to unplug their receiver
+            if (MessageBox.Show("Unplug your receiver, then click OK.", "Auto-Detect Receiver", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+            {
+                // Get the list of devices for when receiver is unplugged
+                IList<LivePacketDevice> notPlugged = LivePacketDevice.AllLocalMachine;
+
+                // Prompt user to plug in their receiver
+                if (MessageBox.Show("Now plug in your receiver, then click OK.", "Auto-Detect Receiver", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                {
+                    // Get the list of devices for when receiver is plugged in
+                    IList<LivePacketDevice> plugged = LivePacketDevice.AllLocalMachine;
+
+                    // Check for devices in the new list that aren't in the initial list
+                    // Have to check names specifically, because doing `notPlugged.Contains(newDevice)`
+                    // always adds every device in the list, even if it's not new
+
+                    // Get device names for both not plugged and plugged lists
+                    List<string> notPluggedNames = new List<string>();
+                    List<string> pluggedNames = new List<string>();
+                    foreach (LivePacketDevice oldDevice in notPlugged)
+                    {
+                        notPluggedNames.Add(oldDevice.Name);
+                    }
+                    foreach (LivePacketDevice newDevice in plugged)
+                    {
+                        pluggedNames.Add(newDevice.Name);
+                    }
+
+                    // Compare the lists and find what notPlugged doesn't contain
+                    List<string> newNames = new List<string>();
+                    foreach (string pluggedName in pluggedNames)
+                    {
+                        if (!notPluggedNames.Contains(pluggedName))
+                        {
+                            newNames.Add(pluggedName);
+                        }
+                    }
+
+                    // Create a list of new devices based on the list of new device names
+                    List<LivePacketDevice> newDevices = new List<LivePacketDevice>();
+                    foreach (LivePacketDevice newDevice in plugged)
+                    {
+                        if (newNames.Contains(newDevice.Name))
+                        {
+                            newDevices.Add(newDevice);
+                        }
+                    }
+
+                    // Refresh the dropdown
+                    PopulatePcapDropdown();
+
+                    // If there's (strictly) one new device, assign it
+                    if (newDevices.Count == 1)
+                    {
+                        // Create a new pcapDeviceCombo item for the new device
+                        LivePacketDevice device = newDevices.First();
+
+                        // Check dropdown for the device to be assigned
+                        foreach (ComboBoxItem item in pcapDeviceCombo.Items)
+                        {
+                            if (((string)item.Content).Contains(device.Name))
+                            {
+                                pcapDeviceCombo.SelectedItem = item;
+                                Properties.Settings.Default.currentPcapSelection = item.Name;
+                            }
+                        }
+
+                        return;
+                    }
+                    else
+                    {
+                        // If there's more than one, don't auto-assign any of them
+                        if (newDevices.Count > 1)
+                        {
+                            MessageBox.Show("Could not auto-assign, more than one new device was detected.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return;
+                        }
+                        // If there's no new ones, don't do anything
+                        else if (newDevices.Count == 0)
+                        {
+                            MessageBox.Show("Could not auto-assign, no new devices were detected.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void guitar1IdAutoDetectButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Set auto-assign flag
+            packetGuitar1AutoAssign = true;
+
+            // Auto-detect ID
+            AutoDetectID();
+        }
+
+        private void guitar2IdAutoDetectButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Set auto-assign flag
+            packetGuitar2AutoAssign = true;
+
+            // Auto-detect ID
+            AutoDetectID();
+        }
+
+        private void drumIdAutoDetectButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Set auto-assign flag
+            packetDrumAutoAssign = true;
+
+            // Auto-detect ID
+            AutoDetectID();
+        }
+
+        private async void AutoDetectID()
+        {
+            // Disable all controls and show the auto-assign instruction label
+            pcapDeviceCombo.IsEnabled = false;
+            pcapAutoDetectButton.IsEnabled = false;
+            pcapRefreshButton.IsEnabled = false;
+            packetDebugCheckBox.IsEnabled = false;
+
+            guitar1Combo.IsEnabled = false;
+            guitar1IdTextBox.IsEnabled = false;
+            guitar1IdAutoDetectButton.IsEnabled = false;
+
+            guitar2Combo.IsEnabled = false;
+            guitar2IdTextBox.IsEnabled = false;
+            guitar2IdAutoDetectButton.IsEnabled = false;
+
+            drumCombo.IsEnabled = false;
+            drumIdTextBox.IsEnabled = false;
+            drumIdAutoDetectButton.IsEnabled = false;
+
+            controllerRefreshButton.IsEnabled = false;
+            controllerAutoAssignLabel.Visibility = Visibility.Visible;
+
+            startButton.IsEnabled = false;
+
+            // Await the result of auto-assignment
+            bool result = await Task.Run(Read_AutoDetectID);
+            if (!result)
+            {
+                MessageBox.Show("Failed to auto-assign ID.", "Auto-Assign ID", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+
+            // Once flag is unset, re-enable all controls and hide the auto-assign instruction label
+            pcapDeviceCombo.IsEnabled = true;
+            pcapAutoDetectButton.IsEnabled = true;
+            pcapRefreshButton.IsEnabled = true;
+            packetDebugCheckBox.IsEnabled = true;
+
+            guitar1Combo.IsEnabled = true;
+            guitar1IdTextBox.IsEnabled = true;
+            guitar1IdAutoDetectButton.IsEnabled = true;
+
+            guitar2Combo.IsEnabled = true;
+            guitar2IdTextBox.IsEnabled = true;
+            guitar2IdAutoDetectButton.IsEnabled = true;
+
+            drumCombo.IsEnabled = true;
+            drumIdTextBox.IsEnabled = true;
+            drumIdAutoDetectButton.IsEnabled = true;
+
+            controllerRefreshButton.IsEnabled = true;
+            controllerAutoAssignLabel.Visibility = Visibility.Hidden;
+
+            startButton.IsEnabled = true;
+        }
+
+        private bool Read_AutoDetectID()
+        {
+            // Retrieve the device list from the local machine
+            IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
+
+            // Take the selected adapter
+            PacketDevice selectedDevice = allDevices[pcapDeviceIndex];
+
+            // Open the device
+            pcapCommunicator =
+                selectedDevice.Open(
+                    45, // small packets
+                    PacketDeviceOpenAttributes.Promiscuous | PacketDeviceOpenAttributes.MaximumResponsiveness, // promiscuous mode with maximum speed
+                    DefaultPacketCaptureTimeoutMilliseconds // read timeout
+                );
+
+            // Receive packet
+            Packet packet;
+            pcapCommunicator.ReceivePacket(out packet);
+            if (packet == null)
+            {
+                return false;
+            }
+
+            // Check assignment flags and packet length
+            if (packetGuitar1AutoAssign && packet.Length == 40)
+            {
+                // Assign instrument ID
+                // String representation: AA BB CC DD
+                uint id = (uint)(
+                    packet[15] |         // DD
+                    (packet[14] << 8) |  // CC
+                    (packet[13] << 16) | // BB
+                    (packet[12] << 24)   // AA
+                );
+                string idString = Convert.ToString(id, 16);
+
+                guitar1IdTextBox.Text = idString;
+                packetGuitar1AutoAssign = false;
+
+                pcapCommunicator.Break();
+                pcapCommunicator = null;
+
+                return true;
+            }
+
+            if (packetGuitar2AutoAssign && packet.Length == 40)
+            {
+                // Assign instrument ID
+                // String representation: AA BB CC DD
+                uint id = (uint)(
+                    packet[15] |         // DD
+                    (packet[14] << 8) |  // CC
+                    (packet[13] << 16) | // BB
+                    (packet[12] << 24)   // AA
+                );
+                string idString = Convert.ToString(id, 16);
+
+                guitar2IdTextBox.Text = idString;
+                packetGuitar2AutoAssign = false;
+
+                pcapCommunicator.Break();
+                pcapCommunicator = null;
+
+                return true;
+            }
+
+            if (packetDrumAutoAssign && packet.Length == 36)
+            {
+                // Assign instrument ID
+                // String representation: AA BB CC DD
+                uint id = (uint)(
+                    packet[15] |         // DD
+                    (packet[14] << 8) |  // CC
+                    (packet[13] << 16) | // BB
+                    (packet[12] << 24)   // AA
+                );
+                string idString = Convert.ToString(id, 16);
+
+                drumIdTextBox.Text = idString;
+                packetDrumAutoAssign = false;
+
+                pcapCommunicator.Break();
+                pcapCommunicator = null;
+
+                return true;
+            }
+            
+            pcapCommunicator.Break();
+            pcapCommunicator = null;
+            return false;
         }
     }
 }
