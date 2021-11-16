@@ -122,7 +122,7 @@ namespace RB4InstrumentMapper
                     (packet[13] << 16) | // BB
                     (packet[12] << 24)   // AA
                 );
-                data.InstrumentIDString = Convert.ToString(data.InstrumentID, 16);
+                data.InstrumentIDString = ParsingHelpers.UInt32ToHexString(data.InstrumentID, isID: true);
 
                 // Map buttons
                 byte buttons = packet[XboxHeaderLength + (int)PacketPosition.Buttons];

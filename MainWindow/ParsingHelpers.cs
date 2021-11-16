@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace RB4InstrumentMapper
         {
             byte[] byteArray = null;
             uint number;
-            if (uint.TryParse(hexString, System.Globalization.NumberStyles.AllowHexSpecifier, null, out number))
+            if (uint.TryParse(hexString, NumberStyles.AllowHexSpecifier, NumberFormatInfo.CurrentInfo, out number))
             {
                 byteArray = BitConverter.GetBytes(number);
             }
@@ -39,6 +40,40 @@ namespace RB4InstrumentMapper
             }
 
             return hexString;
+        }
+
+        /// <summary>
+        /// Converts a string representing a 32-bit hexadecimal number into a 32-bit unsigned integer.
+        /// </summary>
+        /// <param name="hexString">The string to be converted.</param>
+        /// <param name="number">The converted number.</param>
+        /// <returns>True if the conversion was successful, or false if it failed.</returns>
+        public static bool HexStringToUInt32(string hexString, out uint number)
+        {
+            if (hexString.StartsWith("0x") || hexString.StartsWith("&h"))
+            {
+                hexString = hexString.Remove(0, 2);
+            }
+
+            return uint.TryParse(hexString, NumberStyles.HexNumber, NumberFormatInfo.CurrentInfo, out number);
+        }
+
+        /// <summary>
+        /// Converts a 32-bit unsigned integer into a string representing a 32-bit hexadecimal number.
+        /// </summary>
+        /// <param name="number">The number to be converted.</param>
+        /// <param name="isID">Flag indicating if this is an instrument ID.</param>
+        /// <returns>String representing the input number, or String.Empty if the input is 0 and isID is set.</returns>
+        public static string UInt32ToHexString(uint number, bool isID)
+        {
+            if (isID)
+            {
+                return number == 0 ? String.Empty : Convert.ToString(number, 16);
+            }
+            else
+            {
+                return Convert.ToString(number, 16);
+            }
         }
     }
 }

@@ -404,39 +404,49 @@ namespace RB4InstrumentMapper
             
             // Guitar 1
             string hexString = Properties.Settings.Default.currentGuitar1Id;
-            // Have to check for String.Empty, otherwise ToUInt32 throws an ArgumentOutOfRangeException
-            if (hexString != String.Empty)
+            if (!ParsingHelpers.HexStringToUInt32(hexString, out guitar1InstrumentId))
             {
-                guitar1InstrumentId = Convert.ToUInt32(hexString, 16);
+                if (String.IsNullOrEmpty(hexString))
+                {
+                    guitar1InstrumentId = 0;
+                }
+                else
+                {
+                    guitar1InstrumentId = 0;
+                    Console.WriteLine("Attempted to load an invalid Guitar 1 instrument ID. The ID has been reset.");
+                }
             }
-            else
-            {
-                guitar1InstrumentId = 0;
-            }
-
             guitar1IdTextBox.Text = (guitar1InstrumentId == 0) ? string.Empty : hexString;
             
             // Guitar 2
             hexString = Properties.Settings.Default.currentGuitar2Id;
-            if (hexString != String.Empty)
+            if (!ParsingHelpers.HexStringToUInt32(hexString, out guitar2InstrumentId))
             {
-                guitar2InstrumentId = Convert.ToUInt32(hexString, 16);
-            }
-            else
-            {
-                guitar2InstrumentId = 0;
+                if (String.IsNullOrEmpty(hexString))
+                {
+                    guitar2InstrumentId = 0;
+                }
+                else
+                {
+                    guitar2InstrumentId = 0;
+                    Console.WriteLine("Attempted to load an invalid Guitar 2 instrument ID. The ID has been reset.");
+                }
             }
             guitar2IdTextBox.Text = (guitar2InstrumentId == 0) ? string.Empty : hexString;
             
             // Drum
             hexString = Properties.Settings.Default.currentDrumId;
-            if (hexString != String.Empty)
+            if (!ParsingHelpers.HexStringToUInt32(hexString, out drumInstrumentId))
             {
-                drumInstrumentId = Convert.ToUInt32(hexString, 16);
-            }
-            else
-            {
-                drumInstrumentId = 0;
+                if (String.IsNullOrEmpty(hexString))
+                {
+                    drumInstrumentId = 0;
+                }
+                else
+                {
+                    drumInstrumentId = 0;
+                    Console.WriteLine("Attempted to load an invalid Drum instrument ID. The ID has been reset.");
+                }
             }
             drumIdTextBox.Text = (drumInstrumentId == 0) ? string.Empty : hexString;
         }
@@ -941,17 +951,9 @@ namespace RB4InstrumentMapper
         {
             // Set new ID
             string hexString = guitar1IdTextBox.Text;
-            if (string.IsNullOrEmpty(hexString))
+            uint enteredId;
+            if (ParsingHelpers.HexStringToUInt32(hexString, out enteredId))
             {
-                // Clear ID
-                Console.WriteLine("Cleared Hex ID for Guitar 1.");
-                guitar1InstrumentId = 0;
-                hexString = string.Empty;
-            }
-            else
-            {
-                // Parse input string
-                uint enteredId = Convert.ToUInt32(hexString, 16);
                 if (enteredId == 0)
                 {
                     // Clear ID
@@ -972,6 +974,18 @@ namespace RB4InstrumentMapper
                     Console.WriteLine($"Set Guitar 1 instrument ID to {enteredId}.");
                 }
             }
+            else if (String.IsNullOrEmpty(hexString))
+            {
+                // Clear ID
+                Console.WriteLine("Cleared Hex ID for Guitar 1.");
+                guitar1InstrumentId = 0;
+                hexString = string.Empty;
+            }
+            else
+            {
+                Console.WriteLine("Invalid ID entered for Guitar 1.");
+                return;
+            }
 
             // Remember guitar 1 ID
             Properties.Settings.Default.currentGuitar1Id = hexString;
@@ -982,17 +996,9 @@ namespace RB4InstrumentMapper
         {
             // Set new ID
             string hexString = guitar2IdTextBox.Text;
-            if (string.IsNullOrEmpty(hexString))
+            uint enteredId;
+            if (ParsingHelpers.HexStringToUInt32(hexString, out enteredId))
             {
-                // Clear ID
-                Console.WriteLine("Cleared Hex ID for Guitar 2.");
-                guitar2InstrumentId = 0;
-                hexString = string.Empty;
-            }
-            else
-            {
-                // Parse input string
-                uint enteredId = Convert.ToUInt32(hexString, 16);
                 if (enteredId == 0)
                 {
                     // Clear ID
@@ -1000,7 +1006,7 @@ namespace RB4InstrumentMapper
                     guitar2InstrumentId = 0;
                     hexString = string.Empty;
                 }
-                else if (enteredId == guitar1InstrumentId)
+                else if (enteredId == guitar2InstrumentId)
                 {
                     // Enforce unique guitar instrument ID
                     Console.WriteLine("Guitar 2 ID must be different from Guitar 1 ID.");
@@ -1013,6 +1019,18 @@ namespace RB4InstrumentMapper
                     Console.WriteLine($"Set Guitar 2 instrument ID to {enteredId}.");
                 }
             }
+            else if (String.IsNullOrEmpty(hexString))
+            {
+                // Clear ID
+                Console.WriteLine("Cleared Hex ID for Guitar 2.");
+                guitar2InstrumentId = 0;
+                hexString = string.Empty;
+            }
+            else
+            {
+                Console.WriteLine("Invalid ID entered for Guitar 2.");
+                return;
+            }
 
             // Remember guitar 2 ID
             Properties.Settings.Default.currentGuitar2Id = hexString;
@@ -1023,30 +1041,34 @@ namespace RB4InstrumentMapper
         {
             // Set new ID
             string hexString = drumIdTextBox.Text;
-            if (string.IsNullOrEmpty(hexString))
+            uint enteredId;
+            if (ParsingHelpers.HexStringToUInt32(hexString, out enteredId))
             {
-                // Clear ID
-                Console.WriteLine("Cleared Hex ID for Drum.");
-                hexString = string.Empty;
-                drumInstrumentId = 0;
-            }
-            else
-            {
-                // Parse input string
-                uint enteredId = Convert.ToUInt32(hexString, 16);
                 if (enteredId == 0)
                 {
                     // Clear ID
                     Console.WriteLine("Cleared Hex ID for Drum.");
-                    hexString = string.Empty;
                     drumInstrumentId = 0;
+                    hexString = string.Empty;
                 }
                 else
                 {
                     // Set ID
-                    guitar1InstrumentId = enteredId;
+                    drumInstrumentId = enteredId;
                     Console.WriteLine($"Set Drum instrument ID to {enteredId}.");
                 }
+            }
+            else if (String.IsNullOrEmpty(hexString))
+            {
+                // Clear ID
+                Console.WriteLine("Cleared Hex ID for Drum.");
+                drumInstrumentId = 0;
+                hexString = string.Empty;
+            }
+            else
+            {
+                Console.WriteLine("Invalid ID entered for Drum.");
+                return;
             }
 
             // Remember drum ID
