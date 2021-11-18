@@ -153,11 +153,12 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// Enumeration for ViGEmBus controller dictionary keys.
         /// </summary>
-        private enum VigemInstruments
+        private enum VigemEnum
         {
             Guitar1 = 1,
             Guitar2 = 2,
-            Drum = 3
+            Drum = 3,
+            DeviceIndex = 17
         }
 
         /// <summary>
@@ -559,7 +560,7 @@ namespace RB4InstrumentMapper
         private void guitar1Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Only allow a device to be selected by one selection, unless it is the ViGEmBus device selection
-            if (guitar1Combo.SelectedIndex != 16)
+            if (guitar1Combo.SelectedIndex != (int)VigemEnum.DeviceIndex)
             {
                 if (guitar1Combo.SelectedIndex == guitar2Combo.SelectedIndex)
                 {
@@ -600,7 +601,7 @@ namespace RB4InstrumentMapper
         private void guitar2Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Only allow a device to be selected by one selection, unless it is the ViGEmBus device selection
-            if (guitar2Combo.SelectedIndex != 16)
+            if (guitar2Combo.SelectedIndex != (int)VigemEnum.DeviceIndex)
             {
                 if (guitar2Combo.SelectedIndex == guitar1Combo.SelectedIndex)
                 {
@@ -641,7 +642,7 @@ namespace RB4InstrumentMapper
         private void drumCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Only allow a device to be selected by one selection, unless it is the ViGEmBus device selection
-            if (drumCombo.SelectedIndex != 16)
+            if (drumCombo.SelectedIndex != (int)VigemEnum.DeviceIndex)
             {
                 if (drumCombo.SelectedIndex == guitar1Combo.SelectedIndex)
                 {
