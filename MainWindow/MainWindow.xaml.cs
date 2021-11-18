@@ -322,8 +322,20 @@ namespace RB4InstrumentMapper
                             vjoyDeviceName += " (device is already owned by this feeder)";
                             break;
                         case VjdStat.VJD_STAT_FREE:
-                            isEnabled = true;
-                            freeDeviceCount++;
+                            // Check that vJoy device is configured correctly
+                            if(joystick.GetVJDButtonNumber(id) >= 16 &&
+                               joystick.GetVJDContPovNumber(id) >= 1 &&
+                               joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_X) && // X axis
+                               joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Y) && // Y axis
+                               joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Z))   // Z axis
+                            {
+                                isEnabled = true;
+                                freeDeviceCount++;
+                            }
+                            else
+                            {
+                                vjoyDeviceName += " (device misconfigured)";
+                            }
                             break;
                         case VjdStat.VJD_STAT_BUSY:
                             vjoyDeviceName += " (device is already owned by this feeder)";
