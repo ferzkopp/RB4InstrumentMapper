@@ -1,4 +1,5 @@
-﻿using vJoyInterfaceWrap;
+﻿using System;
+using vJoyInterfaceWrap;
 
 namespace RB4InstrumentMapper
 {
@@ -11,6 +12,47 @@ namespace RB4InstrumentMapper
         /// The vJoy device state.
         /// </summary>
         static private vJoy.JoystickState iReport;
+
+        [Flags]
+        /// <summary>
+        /// Button flags enum.
+        /// </summary>
+        private enum Buttons : uint
+        {
+            // For the pads, roughly follows the layout of an Xbox 360 drumkit as viewed through Joy.cpl
+            GreenDrum = 0x0001, // Button 1
+            RedDrum = 0x0002, // Button 2
+            BlueDrum = 0x0004, // Button 3
+            YellowDrum = 0x0008, // Button 4
+            GreenCymbal = 0x0010, // Button 5
+            BlueCymbal = 0x0020, // Button 6
+            YellowCymbal = 0x0040, // Button 7
+            BassOne = 0x0080, // Button 8
+            BassTwo = 0x0100, // Button 9
+
+            Menu = 0x4000, // Button 15
+            Options = 0x8000 // Button 16
+        }
+
+        /*
+        Discrete PoV hat reference:
+            None = 0xFFFFFFFF,
+            Up = 0,
+            Down = 2,
+            Left = 3,
+            Right = 1
+        */
+
+        /*
+        Continuous PoV hat reference:
+            Ranges from 0 to 35999 (measured in 1/100 of a degree), goes clockwise
+
+            None = 0xFFFFFFFF,
+            Up = 0,
+            Down = 18000,
+            Left = 27000,
+            Right = 9000
+        */
 
         /// <summary>
         /// Maps a DrumPacket to a vJoy device.
@@ -36,94 +78,109 @@ namespace RB4InstrumentMapper
                 return false;
             }
 
-            // Reset buttons
-            iReport.Buttons = 0;
+            // Reset report and assign device index
+            iReport = new vJoy.JoystickState();
             iReport.bDevice = (byte)joystickDeviceIndex;
 
             // Menu
             if (packet.MenuButton)
             {
-                iReport.Buttons |= 0x4000; // Button 15
+                iReport.Buttons |= (uint)Buttons.Menu;
             }
             // Options
             if (packet.OptionsButton)
             {
-                iReport.Buttons |= 0x8000; // Button 16
+                iReport.Buttons |= (uint)Buttons.Options;
             }
             // Xbox - not mapped
 
-            // TODO: Look into using the PoV hat (iReport.bHats) instead of assigning d-pad to buttons
-            // Dpad Up
-            if (packet.DpadUp)
-            {
-                iReport.Buttons |= 0x0400; // Button 11
-            }
-            // Dpad Down
-            if (packet.DpadDown)
-            {
-                iReport.Buttons |= 0x0800; // Button 12
-            }
-            // Dpad Left
-            if (packet.DpadLeft)
-            {
-                iReport.Buttons |= 0x1000; // Button 13
-            }
-            // Dpad Right
-            if (packet.DpadRight)
-            {
-                iReport.Buttons |= 0x2000; // Button 14
-            }
+            // D-pad
+            // Create an X-Y system for converting 4-direction d-pad to continuous PoV hat (using only 8 directions)
+            int x = 0; // Left (-), Right (+)
+            int y = 0; // Up (+), Down (-)
+            // Left + Right will cancel each other out, same with Up/Down
+
+            y += packet.DpadUp ? 1 : 0;
+            y -= packet.DpadDown ? 1 : 0;
+            x -= packet.DpadLeft ? 1 : 0;
+            x += packet.DpadRight ? 1 : 0;
+
+            // Ternaray operator mess:
+            iReport.bHats = (
+                // If d-pad is unpressed,
+                (x + y == 0)
+                // set the PoV hat to neutral.
+                ? 0xFFFFFFFF
+                // Else,
+                : (
+                    // If left/right are pressed,
+                    (x != 0
+                    // set the PoV hat to either left or right, plus or minus 45 degrees if up or down are pressed.
+                    ? (uint)(18000 - (9000 * x) - (4500 * (y * x)))
+                    // Else,
+                    :
+                        // If up/down are pressed,
+                        (y != 0
+                        // set the PoV hat to up or down.
+                        ? (uint)(9000 - (9000 * y))
+                        // Else, set the d-pad to neutral.
+                        // (Should be impossible to get here, but the ternary operator requires an else. So be it.)
+                        : 0xFFFFFFFF
+                        )
+                    )
+                )
+            );
 
             // Red drum
             if (packet.RedDrum)
             {
-                iReport.Buttons |= 0x0001; // Button 1
+                iReport.Buttons |= (uint)Buttons.RedDrum;
             }
 
             // Yellow drum
             if (packet.YellowDrum)
             {
-                iReport.Buttons |= 0x0002; // Button 2
+                iReport.Buttons |= (uint)Buttons.YellowDrum;
             }
 
             // Blue drum
             if (packet.BlueDrum)
             {
-                iReport.Buttons |= 0x0004; // Button 3
+                iReport.Buttons |= (uint)Buttons.BlueDrum;
             }
 
             // Green drum
             if (packet.GreenDrum)
             {
-                iReport.Buttons |= 0x0008; // Button 4
+                iReport.Buttons |= (uint)Buttons.GreenDrum;
             }
 
             // Bass drums
             if (packet.BassOne)
             {
-                iReport.Buttons |= 0x0010; // Button 5
+                iReport.Buttons |= (uint)Buttons.BassOne;
             }
             if (packet.BassTwo)
             {
-                iReport.Buttons |= 0x0020; // Button 6
+                iReport.Buttons |= (uint)Buttons.BassTwo;
             }
 
             // Yellow cymbal
             if (packet.YellowCymbal)
             {
-                iReport.Buttons |= 0x0040; // Button 7
+                iReport.Buttons |= (uint)Buttons.YellowCymbal;
             }
 
             // Blue cymbal
             if (packet.BlueCymbal)
             {
-                iReport.Buttons |= 0x0080; // Button 8
+                iReport.Buttons |= (uint)Buttons.BlueCymbal;
             }
 
             // Green cymbal
             if (packet.GreenCymbal)
             {
-                iReport.Buttons |= 0x0100; // Button 9
+                iReport.Buttons |= (uint)Buttons.GreenCymbal;
             }
 
             // Send data
