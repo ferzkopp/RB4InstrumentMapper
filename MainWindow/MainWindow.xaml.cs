@@ -296,7 +296,8 @@ namespace RB4InstrumentMapper
 
             if (!vjoyFound && !vigemFound)
             {
-                MessageBox.Show("No controller emulators found! Please install either vJoy or ViGEmBus.", "No Controller Emulators Found", MessageBoxButton.OK);
+                MessageBox.Show("No controller emulators found! Please install either vJoy or ViGEmBus.\nThe program will now shut down.", "No Controller Emulators Found", MessageBoxButton.OK, MessageBoxImage.Error);
+                Application.Current.Shutdown();
                 return;
             }
 
