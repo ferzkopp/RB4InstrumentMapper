@@ -54,6 +54,11 @@ namespace RB4InstrumentMapper
         private Thread pcapCaptureThread;
 
         /// <summary>
+        /// Flag indicating that packet capture is active.
+        /// </summary>
+        private static bool packetCaptureActive = false;
+
+        /// <summary>
         /// Flag indicating if packets should be shown.
         /// </summary>
         private static bool packetDebug = false;
@@ -675,6 +680,73 @@ namespace RB4InstrumentMapper
         /// <param name="deviceIndex">pcap device index</param>
         private void StartCapture(int deviceIndex)
         {
+            // Enable packet capture active flag
+            packetCaptureActive = true;
+
+            // Disable window controls
+            pcapDeviceCombo.IsEnabled = false;
+            pcapAutoDetectButton.IsEnabled = false;
+            pcapRefreshButton.IsEnabled = false;
+            packetDebugCheckBox.IsEnabled = false;
+
+            guitar1Combo.IsEnabled = false;
+            guitar1IdTextBox.IsEnabled = false;
+            guitar1IdAutoDetectButton.IsEnabled = false;
+
+            guitar2Combo.IsEnabled = false;
+            guitar2IdTextBox.IsEnabled = false;
+            guitar2IdAutoDetectButton.IsEnabled = false;
+
+            drumCombo.IsEnabled = false;
+            drumIdTextBox.IsEnabled = false;
+            drumIdAutoDetectButton.IsEnabled = false;
+
+            controllerRefreshButton.IsEnabled = false;
+            startButton.Content = "Stop";
+
+            // Initialize vJoy
+            if (joystick != null)
+            {
+                // Reset buttons and axis
+                joystick.ResetAll();
+
+                // Acquire vJoy devices
+                if (guitar1DeviceIndex > 0 && guitar1DeviceIndex < (int)VigemEnum.DeviceIndex)
+                {
+                    AcquirevJoyDevice(joystick, guitar1DeviceIndex);
+                }
+
+                if (guitar2DeviceIndex > 0 && guitar2DeviceIndex < (int)VigemEnum.DeviceIndex)
+                {
+                    AcquirevJoyDevice(joystick, guitar2DeviceIndex);
+                }
+
+                if (drumDeviceIndex > 0 && drumDeviceIndex < (int)VigemEnum.DeviceIndex)
+                {
+                    AcquirevJoyDevice(joystick, drumDeviceIndex);
+                }
+            }
+
+            // Initialize ViGEmBus devices
+            if (vigemClient != null)
+            {
+                // Create ViGEmBus devices for each
+                if (guitar1DeviceIndex == (int)VigemEnum.DeviceIndex)
+                {
+                    CreateViGEmDevice((uint)VigemEnum.Guitar1);
+                }
+
+                if (guitar2DeviceIndex == (int)VigemEnum.DeviceIndex)
+                {
+                    CreateViGEmDevice((uint)VigemEnum.Guitar2);
+                }
+
+                if (drumDeviceIndex == (int)VigemEnum.DeviceIndex)
+                {
+                    CreateViGEmDevice((uint)VigemEnum.Drum);
+                }
+            }
+
             // Retrieve the device list from the local machine
             IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
 
@@ -687,6 +759,7 @@ namespace RB4InstrumentMapper
                     45, // small packets
                     PacketDeviceOpenAttributes.Promiscuous | PacketDeviceOpenAttributes.MaximumResponsiveness, // promiscuous mode with maximum speed
                     DefaultPacketCaptureTimeoutMilliseconds); // read timeout
+
             // Read data
             pcapCaptureThread = new Thread(ReadContinously);
             pcapCaptureThread.Start();
@@ -862,6 +935,30 @@ namespace RB4InstrumentMapper
                 }
             }
             vigemDictionary.Clear();
+            
+            // Disable packet capture active flag
+            packetCaptureActive = false;
+
+            // Enable window controls
+            pcapDeviceCombo.IsEnabled = true;
+            pcapAutoDetectButton.IsEnabled = true;
+            pcapRefreshButton.IsEnabled = true;
+            packetDebugCheckBox.IsEnabled = true;
+
+            guitar1Combo.IsEnabled = true;
+            guitar1IdTextBox.IsEnabled = true;
+            guitar1IdAutoDetectButton.IsEnabled = true;
+
+            guitar2Combo.IsEnabled = true;
+            guitar2IdTextBox.IsEnabled = true;
+            guitar2IdAutoDetectButton.IsEnabled = true;
+
+            drumCombo.IsEnabled = true;
+            drumIdTextBox.IsEnabled = true;
+            drumIdAutoDetectButton.IsEnabled = true;
+
+            controllerRefreshButton.IsEnabled = true;
+            startButton.Content = "Start";
         }
 
         /// <summary>
@@ -871,53 +968,14 @@ namespace RB4InstrumentMapper
         /// <param name="e"></param>
         private void startButton_Click(object sender, RoutedEventArgs e)
         {
-            // Initialize vJoy
-            if (joystick != null)
+            if (!packetCaptureActive)
             {
-                // Reset buttons and axis
-                joystick.ResetAll();
-
-                // Acquire vJoy devices
-                if (guitar1DeviceIndex > 0 && guitar1DeviceIndex < 17)
-                {
-                    AcquirevJoyDevice(joystick, guitar1DeviceIndex);
-                }
-
-                if (guitar2DeviceIndex > 0 && guitar2DeviceIndex < 17)
-                {
-                    AcquirevJoyDevice(joystick, guitar2DeviceIndex);
-                }
-
-                if (drumDeviceIndex > 0 && drumDeviceIndex < 17)
-                {
-                    AcquirevJoyDevice(joystick, drumDeviceIndex);
-                }
+                StartCapture(pcapDeviceIndex);
             }
-
-            if (vigemClient != null)
+            else
             {
-                // Create ViGEmBus devices for each
-                if (guitar1DeviceIndex == 17)
-                {
-                    CreateViGEmDevice((uint)VigemInstruments.Guitar1);
-                }
-
-                if (guitar2DeviceIndex == 17)
-                {
-                    CreateViGEmDevice((uint)VigemInstruments.Guitar2);
-                }
-
-                if (drumDeviceIndex == 17)
-                {
-                    CreateViGEmDevice((uint)VigemInstruments.Drum);
-                }
+                StopCapture();
             }
-
-            // Start capture
-            StartCapture(pcapDeviceIndex);
-
-            // Only allow to start once
-            startButton.IsEnabled = false;
         }
 
         /// <summary>
