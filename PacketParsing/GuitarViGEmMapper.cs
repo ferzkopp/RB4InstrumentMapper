@@ -23,23 +23,22 @@ namespace RB4InstrumentMapper
                 vigemDevice.AutoSubmitReport = false;
             }
 
-            // Ensure instrument ID is assigned ...
+            // Ensure instrument ID is assigned
             if(instrumentId == 0)
             {
-                // ... not assigned
                 return false;
             }
 
-            // Match instrument ID ...
+            // Match instrument ID
             if (instrumentId != packet.InstrumentID)
             {
-                // ... no match
                 return false;
             }
 
             // Reset report
             vigemDevice.ResetReport();
 
+            // Face buttons
             // Menu
             vigemDevice.SetButtonState(Xbox360Button.Start,
                                         packet.MenuButton);
@@ -50,6 +49,7 @@ namespace RB4InstrumentMapper
             vigemDevice.SetButtonState(Xbox360Button.Guide,
                                         packet.XboxButton);
 
+            // D-pad
             // Dpad Up
             vigemDevice.SetButtonState(Xbox360Button.Up,
                                         packet.DpadUp);
@@ -63,6 +63,7 @@ namespace RB4InstrumentMapper
             vigemDevice.SetButtonState(Xbox360Button.Right,
                                         packet.DpadRight);
 
+            // Frets
             // Fret Green
             vigemDevice.SetButtonState(Xbox360Button.A,
                                         packet.UpperGreen ||
@@ -91,18 +92,14 @@ namespace RB4InstrumentMapper
                                         packet.LowerBlue ||
                                         packet.LowerOrange);
 
+            // Axes
             // Whammy
             vigemDevice.SetAxisValue(Xbox360Axis.RightThumbX,
                                         (short)((packet.WhammyBar * 257) - 32768));
-                                        // Multiply by 257 to scale into a ushort (255 * 257 - 65535),
-                                        // then subtract by 32768 to shift into a signed short (65535 - 32768 = 32767, 0 - 32768 = -32768)
-
+                                        // Multiply by 257 to scale into a ushort, then subtract by 32768 to shift into a signed short
             // Tilt
             vigemDevice.SetAxisValue(Xbox360Axis.RightThumbY,
                                         (short)((packet.Tilt * 257) - 32768));
-                                        // Multiply by 257 to scale into a ushort (255 * 257 - 65535),
-                                        // then subtract by 32768 to shift into a signed short (65535 - 32768 = 32767, 0 - 32768 = -32768)
-
             // Pickup Switch
             vigemDevice.SetSliderValue(Xbox360Slider.LeftTrigger,
                                         packet.PickupSwitch);

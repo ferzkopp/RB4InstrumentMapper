@@ -41,7 +41,7 @@
         <Button Name="startButton" Content="Start" Margin="0,359,10,0" Click="startButton_Click" HorizontalAlignment="Right" Width="124" Height="42" VerticalAlignment="Top" FontSize="18"/>
         <GroupBox Header="Console" Margin="10,406,10,10">
             <Grid Margin="10,10,10,10">
-                <TextBox Name="messageConsole" Margin="0,0,0,0" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Visible" FontSize="10"/>
+                <TextBox Name="messageConsole" Margin="0,0,0,0" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Visible" IsReadOnly="True" FontSize="10"/>
             </Grid>
         </GroupBox>
     </Grid>

@@ -39,14 +39,14 @@ namespace RB4InstrumentMapper
         private static FixedSizeConcurrentQueue<string> visibleTextCache = null;
 
         /// <summary>
-        /// Text box handle that displays text
+        /// Text box handle that displays text.
         /// </summary>
         private TextBox textBox = null;
 
         /// <summary>
-        /// Display lines in reverse order (newest first) if set. Defaults to true.
+        /// Display lines in reverse order (newest first) if set. Defaults to false.
         /// </summary>
-        private bool displayLinesInReverseOrder = true;
+        private bool displayLinesInReverseOrder = false;
 
         /// <summary>
         /// Display timestamp for each line. Defaults to true.
@@ -54,7 +54,7 @@ namespace RB4InstrumentMapper
         private bool displayLinesWithTimestamp = true;
 
         /// <summary>
-        /// Connect Console output given text box.
+        /// Connects console output to a given text box.
         /// </summary>
         /// <param name="textBox">Text box to receive console output.</param>
         /// <param name="maxNumberOfLines">Maximum number of lines to display in the text box. Defaults to 100.</param>
@@ -63,8 +63,9 @@ namespace RB4InstrumentMapper
         public static void RedirectConsoleToTextBox(
             TextBox textBox,
             int maxNumberOfLines = DefaultMaxNumberLines,
-            bool displayLinesInReverseOrder = true,
-            bool displayLinesWithTimestamp = true)
+            bool displayLinesInReverseOrder = false,
+            bool displayLinesWithTimestamp = true
+        )
         {
             TextBoxConsole textBoxOutputter = new TextBoxConsole(textBox, displayLinesInReverseOrder, displayLinesWithTimestamp);
             Console.SetOut(textBoxOutputter);
@@ -73,11 +74,11 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Create a TextBoxOutputter instance
+        /// Creates a TextBoxOutputter instance.
         /// </summary>
         /// <param name="output">Target text box</param>
         /// <param name="reverse"> Reverse text.</param>
-        public TextBoxConsole(TextBox output, bool reverse, bool timestamp)
+        public TextBoxConsole(TextBox output, bool reverse = false, bool timestamp = true)
         {
             textBox = output;
             displayLinesInReverseOrder = reverse;
@@ -85,7 +86,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Write text to outputter
+        /// Write text to outputter.
         /// </summary>
         /// <param name="value"></param>
         public override void Write(char value)
@@ -129,7 +130,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Set encoding of outputter
+        /// Gets the encoding of the outputter.
         /// </summary>
         public override Encoding Encoding
         {

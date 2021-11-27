@@ -15,7 +15,7 @@ namespace RB4InstrumentMapper
 
         [Flags]
         /// <summary>
-        /// Button flags enum.
+        /// Button flag definitions.
         /// </summary>
         private enum Buttons : uint
         {
@@ -26,6 +26,7 @@ namespace RB4InstrumentMapper
             YellowFret = 0x0008, // Button 4
             OrangeFret = 0x0010, // Button 5
 
+            //Xbox = 0x2000, // Button 14
             Menu = 0x4000, // Button 15
             Options = 0x8000 // Button 16
         }
@@ -54,23 +55,21 @@ namespace RB4InstrumentMapper
         /// Maps a GuitarPacket to a vJoy device.
         /// </summary>
         /// <param name="packet">The pre-analyzed data packet to map.</param>
-        /// <param name="vjoyClient">The vJoy client object reference to use.</param>
+        /// <param name="vjoyClient">The vJoy client to use.</param>
         /// <param name="joystickDeviceIndex">The vJoy device ID to map to.</param>
         /// <param name="instrumentId">The ID of the instrument being mapped.</param>
         /// <returns>True if packet was used and converted, false otherwise.</returns>
         public static bool MapPacket(in GuitarPacket packet, vJoy vjoyClient, uint joystickDeviceIndex, uint instrumentId)
         {
-            // Ensure instrument ID is assigned ...
+            // Ensure instrument ID is assigned
             if(instrumentId == 0)
             {
-                // ... not assigned
                 return false;
             }
 
-            // Match instrument ID ...
+            // Match instrument ID
             if (instrumentId != packet.InstrumentID)
             {
-                // ... no match
                 return false;
             }
 
@@ -78,55 +77,58 @@ namespace RB4InstrumentMapper
             iReport = new vJoy.JoystickState();
             iReport.bDevice = (byte)joystickDeviceIndex;
 
+            // Face buttons
             // Menu
             if (packet.MenuButton)
             {
                 iReport.Buttons |= (uint)Buttons.Menu;
             }
+
             // Options
             if (packet.OptionsButton)
             {
                 iReport.Buttons |= (uint)Buttons.Options;
             }
+
             // Xbox - not mapped
+            //if (packet.XboxButton)
+            //{
+            //    iReport.Buttons |= (uint)Buttons.Xbox;
+            //}
+
 
             // D-pad
             // Create an X-Y system for converting 4-direction d-pad to continuous PoV hat (using only 8 directions)
-            int x = 0; // Left (-), Right (+)
-            int y = 0; // Up (+), Down (-)
             // Left + Right will cancel each other out, same with Up/Down
-
-            y += packet.DpadUp ? 1 : 0;
+            int y = packet.DpadUp ? 1 : 0;
             y -= packet.DpadDown ? 1 : 0;
-            x -= packet.DpadLeft ? 1 : 0;
+            int x = packet.DpadLeft ? 1 : 0;
             x += packet.DpadRight ? 1 : 0;
 
-            // Ternaray operator mess:
-            iReport.bHats = (
-                // If d-pad is unpressed,
-                (x + y == 0)
-                // set the PoV hat to neutral.
-                ? 0xFFFFFFFF
-                // Else,
-                : (
-                    // If left/right are pressed,
-                    (x != 0
-                    // set the PoV hat to either left or right, plus or minus 45 degrees if up or down are pressed.
-                    ? (uint)(18000 - (9000 * x) - (4500 * (y * x)))
-                    // Else,
-                    :
-                        // If up/down are pressed,
-                        (y != 0
-                        // set the PoV hat to up or down.
-                        ? (uint)(9000 - (9000 * y))
-                        // Else, set the d-pad to neutral.
-                        // (Should be impossible to get here, but the ternary operator requires an else. So be it.)
-                        : 0xFFFFFFFF
-                        )
-                    )
-                )
-            );
+            // Assign to PoV hat
+            // Left/right pressed
+            if (x != 0)
+            {
+                // Initialize to down, then rotate either left or right 90 degrees depending on the value of x,
+                // rhen add or subract 45 degrees depending on the value of y * x
+                // (multiply y by x to account for the rotation direction towards up or down being different depending on if it's left or right)
+                iReport.bHats = (uint)(18000 - (9000 * x) - (4500 * (y * x)));
+            }
+            // Up/down pressed
+            else if (y != 0)
+            {
+                // Initialize to right, then rotate either left or right 90 degrees depending on the value of y
+                iReport.bHats = (uint)(9000 - (9000 * y));
+            }
+            // D-pad unpressed
+            else
+            {
+                // Set the PoV hat to neutral
+                iReport.bHats = 0xFFFFFFFF;
+            }
 
+
+            // Frets
             // Fret Green
             if (packet.UpperGreen || packet.LowerGreen)
             {
@@ -153,6 +155,8 @@ namespace RB4InstrumentMapper
                 iReport.Buttons |= (uint)Buttons.OrangeFret;
             }
 
+
+            // Axes
             // Map pickup switch to X-axis
             // Multiply the byte into a 32-bit uint, then subtract the max positive of an int + 1 to get a signed int
             iReport.AxisX = (int)((packet.PickupSwitch * 16843009) - 2147483648);

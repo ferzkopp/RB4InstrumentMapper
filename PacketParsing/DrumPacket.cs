@@ -38,7 +38,7 @@ namespace RB4InstrumentMapper
     public class DrumPacketReader
     {
         /// <summary>
-        /// Packet definitions for the pads/cymbals.
+        /// Packet definitions for the drums/cymbals/kicks.
         /// </summary>
         public enum Drums : byte
         {

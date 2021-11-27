@@ -23,17 +23,15 @@ namespace RB4InstrumentMapper
                 vigemDevice.AutoSubmitReport = false;
             }
 
-            // Ensure instrument ID is assigned ...
+            // Ensure instrument ID is assigned
             if(instrumentId == 0)
             {
-                // ... not assigned
                 return false;
             }
 
-            // Match instrument ID ...
+            // Match instrument ID
             if (instrumentId != packet.InstrumentID)
             {
-                // ... no match
                 return false;
             }
 

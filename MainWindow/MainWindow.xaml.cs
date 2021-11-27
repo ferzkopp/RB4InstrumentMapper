@@ -34,22 +34,22 @@ namespace RB4InstrumentMapper
         private static Dispatcher uiDispatcher = null;
 
         /// <summary>
-        /// Default pcap packet capture timeout in milliseconds.
+        /// Default Pcap packet capture timeout in milliseconds.
         /// </summary>
         private const int DefaultPacketCaptureTimeoutMilliseconds = 50;
 
         /// <summary>
-        /// Selected pCap device.
+        /// Index of the selected Pcap device.
         /// </summary>
         private int pcapDeviceIndex = -1;
 
         /// <summary>
-        /// Communicator object that continously reads the WinPcap of selected device.
+        /// Pcap packet communicator.
         /// </summary>
         private PacketCommunicator pcapCommunicator;
 
         /// <summary>
-        /// Thread that handles the capture
+        /// Thread that handles Pcap capture.
         /// </summary>
         private Thread pcapCaptureThread;
 
@@ -77,17 +77,17 @@ namespace RB4InstrumentMapper
         private static bool packetDrumAutoAssign = false;
 
         /// <summary>
-        /// Common name for pcap combo box items.
+        /// Common name for Pcap combo box items.
         /// </summary>
         private const string pcapComboBoxItemName = "pcapDeviceComboBoxItem";
 
         /// <summary>
-        /// Common name for vjoy combo box items.
+        /// Common name for controller combo box items.
         /// </summary>
         private const string controllerComboBoxItemName = "controllerComboBoxItem";
 
         /// <summary>
-        /// Common joystick object and a position structure.
+        /// vJoy client.
         /// </summary>
         private static vJoy joystick;
 
@@ -97,47 +97,56 @@ namespace RB4InstrumentMapper
         private static ViGEmClient vigemClient = null;
 
         /// <summary>
-        /// Selected guitar 1 device
+        /// Index of the selected guitar 1 device.
         /// </summary>
         private static uint guitar1DeviceIndex = 0;
 
         /// <summary>
-        /// Packet instrument ID for guitar 1 device
+        /// Instrument ID for guitar 1.
         /// </summary>
-        private static uint guitar1InstrumentId = 0; // This assumes that an ID of 0x00000000 is invalid
+        /// <remarks>
+        /// An ID of 0x00000000 is assumed to be invalid.
+        /// </remarks>
+        private static uint guitar1InstrumentId = 0;
 
         /// <summary>
-        /// Analyzed packet for guitar 1 device
+        /// Analyzed packet for guitar 1.
         /// </summary>
         private static GuitarPacket guitar1Packet = new GuitarPacket();
 
         /// <summary>
-        /// Selected guitar 2 device
+        /// Index of the selected guitar 2 device.
         /// </summary>
         private static uint guitar2DeviceIndex = 0;
 
         /// <summary>
-        /// Packet instrument ID for guitar 2 device
+        /// Instrument ID for guitar 2.
         /// </summary>
-        private static uint guitar2InstrumentId = 0; // This assumes that an ID of 0x00000000 is invalid
+        /// <remarks>
+        /// An ID of 0x00000000 is assumed to be invalid.
+        /// </remarks>
+        private static uint guitar2InstrumentId = 0;
 
         /// <summary>
-        /// Analyzed packet for guitar 2 device
+        /// Analyzed packet for guitar 2.
         /// </summary>
         private static GuitarPacket guitar2Packet = new GuitarPacket();
 
         /// <summary>
-        /// Selected drum device.
+        /// Index of the selected drum device.
         /// </summary>
         private static uint drumDeviceIndex = 0;
 
         /// <summary>
-        /// Packet instrument ID for drum device
+        /// Instrument ID for the drumkit.
         /// </summary>
-        private static uint drumInstrumentId = 0; // This assumes that an ID of 0x00000000 is invalid
+        /// <remarks>
+        /// An ID of 0x00000000 is assumed to be invalid.
+        /// </remarks>
+        private static uint drumInstrumentId = 0;
 
         /// <summary>
-        /// Analyzed packet for drum device
+        /// Analyzed packet for the drumkit.
         /// </summary>
         private static DrumPacket drumPacket = new DrumPacket();
 
@@ -151,7 +160,7 @@ namespace RB4InstrumentMapper
         private static Dictionary<uint,IXbox360Controller> vigemDictionary = new Dictionary<uint,IXbox360Controller>();
 
         /// <summary>
-        /// Enumeration for ViGEmBus controller dictionary keys.
+        /// Enumeration for ViGEmBus stuff.
         /// </summary>
         private enum VigemEnum
         {
@@ -162,7 +171,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Main window handler
+        /// Initializes a new MainWindow.
         /// </summary>
         public MainWindow()
         {
@@ -173,14 +182,14 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Startup program
+        /// Called when the window loads.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Connect to console
-            TextBoxConsole.RedirectConsoleToTextBox(messageConsole, displayLinesInReverseOrder: false);
+            TextBoxConsole.RedirectConsoleToTextBox(messageConsole);
 
             // Initialize dropdowns
             PopulatePcapDropdown();
@@ -188,7 +197,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Shutdown program
+        /// Called when the window has closed.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -205,16 +214,16 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Acquire vJoy device
+        /// Acquires a vJoy device.
         /// </summary>
-        /// <param name="joystick">The vJoy object</param>
-        /// <param name="deviceId">The device Id to acquire</param>
+        /// <param name="joystick">The vJoy client to use.</param>
+        /// <param name="deviceId">The device ID of the vJoy device to acquire.</param>
         static void AcquirevJoyDevice(vJoy joystick, uint deviceId)
         {
             // Get the state of the requested device
             VjdStat status = joystick.GetVJDStatus(deviceId);
 
-            // Acquire the target
+            // Acquire the device
             if ((status == VjdStat.VJD_STAT_OWN) || ((status == VjdStat.VJD_STAT_FREE) && (!joystick.AcquireVJD(deviceId))))
             {
                 Console.WriteLine($"Failed to acquire vJoy device number {deviceId}.");
@@ -225,14 +234,18 @@ namespace RB4InstrumentMapper
                 // Get the number of buttons 
                 int nButtons = joystick.GetVJDButtonNumber(deviceId);
 
-                Console.WriteLine($"Acquired: vJoy device number {deviceId} with {nButtons} buttons.");
+                Console.WriteLine($"Acquired vJoy device number {deviceId} with {nButtons} buttons.");
             }
         }
 
-        static void CreateViGEmDevice(uint userIndex)
+        /// <summary>
+        /// Creates a ViGEmBus device.
+        /// </summary>
+        /// <param name="joystick">The user index to index into the ViGEm dictionary.</param>
+        static void CreateVigemDevice(uint userIndex)
         {
             // Don't add duplicate entries
-            if(vigemDictionary.ContainsKey(userIndex))
+            if (vigemDictionary.ContainsKey(userIndex))
             {
                 return;
             }
@@ -248,14 +261,14 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Populate controller device selection combos.
+        /// Populates controller device selection combos.
         /// </summary>
         /// <remarks>
-        /// Used both when initializing, and when refreshing.
+        /// Used both when initializing and when refreshing.
         /// </remarks>
         private void PopulateControllerDropdowns()
         {
-            // Create one joystick object and a position structure.
+            // Initialize the vJoy client
             joystick = new vJoy();
 
             // Check if vJoy is enabled
@@ -270,28 +283,26 @@ namespace RB4InstrumentMapper
                 Console.WriteLine("vJoy found! - Vendor: " + joystick.GetvJoyManufacturerString() + ", Product: " + joystick.GetvJoyProductString() + ", Version Number: " + joystick.GetvJoySerialNumberString());
             }
 
-            // Re-check if ViGEmBus is installed
+            // Check if ViGEmBus is installed
+            bool vigemFound = false;
             if (vigemClient == null)
             {
                 try
                 {
                     vigemClient = new ViGEmClient();
+                    vigemFound = true;
+                    Console.WriteLine("ViGEmBus found!");
                 }
                 catch(Nefarius.ViGEm.Client.Exceptions.VigemBusNotFoundException)
                 {
                     vigemClient = null;
+                    vigemFound = false;
+                    Console.WriteLine("ViGEmBus not found. ViGEmBus selection will be unavailable.");
                 }
-            }
-
-            // Check if ViGEmBus is found
-            bool vigemFound = vigemClient != null ? true : false;
-            if (!vigemFound)
-            {
-                Console.WriteLine("ViGEmBus not found. ViGEmBus selection will be unavailable.");
             }
             else
             {
-                Console.WriteLine("ViGEmBus found!");
+                vigemFound = true;
             }
 
             if (!vjoyFound && !vigemFound)
@@ -330,11 +341,12 @@ namespace RB4InstrumentMapper
                             break;
                         case VjdStat.VJD_STAT_FREE:
                             // Check that vJoy device is configured correctly
-                            if(joystick.GetVJDButtonNumber(id) >= 16 &&
+                            if (joystick.GetVJDButtonNumber(id) >= 16 &&
                                joystick.GetVJDContPovNumber(id) >= 1 &&
                                joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_X) && // X axis
                                joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Y) && // Y axis
-                               joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Z))   // Z axis
+                               joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Z)    // Z axis
+                            )
                             {
                                 isEnabled = true;
                                 freeDeviceCount++;
@@ -345,7 +357,7 @@ namespace RB4InstrumentMapper
                             }
                             break;
                         case VjdStat.VJD_STAT_BUSY:
-                            vjoyDeviceName += " (device is already owned by this feeder)";
+                            vjoyDeviceName += " (device is already owned by another feeder)";
                             break;
                         case VjdStat.VJD_STAT_MISS:
                             vjoyDeviceName += " (device is not installed or disabled)";
@@ -360,7 +372,8 @@ namespace RB4InstrumentMapper
                     vjoyDeviceName += " (vJoy disabled/not found)";
                 }
 
-                // Guitar 1 combo item
+                // Add combo item to combos
+                // Guitar 1 combo
                 ComboBoxItem vjoyComboBoxItem = new ComboBoxItem();
                 vjoyComboBoxItem.Content = vjoyDeviceName;
                 vjoyComboBoxItem.Name = vjoyItemName;
@@ -368,7 +381,7 @@ namespace RB4InstrumentMapper
                 vjoyComboBoxItem.IsSelected = vjoyItemName.Equals(currentGuitar1Selection) && isEnabled;
                 guitar1Combo.Items.Add(vjoyComboBoxItem);
 
-                // Guitar 2 combo item
+                // Guitar 2 combo
                 vjoyComboBoxItem = new ComboBoxItem();
                 vjoyComboBoxItem.Content = vjoyDeviceName;
                 vjoyComboBoxItem.Name = vjoyItemName;
@@ -376,7 +389,7 @@ namespace RB4InstrumentMapper
                 vjoyComboBoxItem.IsSelected = vjoyItemName.Equals(currentGuitar2Selection) && isEnabled;
                 guitar2Combo.Items.Add(vjoyComboBoxItem);
 
-                // Drum combo item
+                // Drum combo
                 vjoyComboBoxItem = new ComboBoxItem();
                 vjoyComboBoxItem.Content = vjoyDeviceName;
                 vjoyComboBoxItem.Name = vjoyItemName;
@@ -395,7 +408,8 @@ namespace RB4InstrumentMapper
             }
             string vigemItemName = $"{controllerComboBoxItemName}17";
 
-            // Guitar 1 combo item
+            // Add ViGEmBus combo item
+            // Guitar 1 combo
             ComboBoxItem vigemComboBoxItem = new ComboBoxItem();
             vigemComboBoxItem.Content = vigemDeviceName;
             vigemComboBoxItem.Name = vigemItemName;
@@ -403,7 +417,7 @@ namespace RB4InstrumentMapper
             vigemComboBoxItem.IsSelected = vigemItemName.Equals(currentGuitar1Selection) && vigemFound;
             guitar1Combo.Items.Add(vigemComboBoxItem);
 
-            // Guitar 2 combo item
+            // Guitar 2 combo
             vigemComboBoxItem = new ComboBoxItem();
             vigemComboBoxItem.Content = vigemDeviceName;
             vigemComboBoxItem.Name = vigemItemName;
@@ -411,7 +425,7 @@ namespace RB4InstrumentMapper
             vigemComboBoxItem.IsSelected = vigemItemName.Equals(currentGuitar2Selection) && vigemFound;
             guitar2Combo.Items.Add(vigemComboBoxItem);
 
-            // Drum combo item
+            // Drum combo
             vigemComboBoxItem = new ComboBoxItem();
             vigemComboBoxItem.Content = vigemDeviceName;
             vigemComboBoxItem.Name = vigemItemName;
@@ -419,8 +433,7 @@ namespace RB4InstrumentMapper
             vigemComboBoxItem.IsSelected = vigemItemName.Equals(currentDrumSelection) && vigemFound;
             drumCombo.Items.Add(vigemComboBoxItem);
 
-            // Preset device IDs
-            
+            // Load default device IDs
             // Guitar 1
             string hexString = Properties.Settings.Default.currentGuitar1Id;
             if (!ParsingHelpers.HexStringToUInt32(hexString, out guitar1InstrumentId))
@@ -452,7 +465,7 @@ namespace RB4InstrumentMapper
                 }
             }
             guitar2IdTextBox.Text = (guitar2InstrumentId == 0) ? string.Empty : hexString;
-            
+
             // Drum
             hexString = Properties.Settings.Default.currentDrumId;
             if (!ParsingHelpers.HexStringToUInt32(hexString, out drumInstrumentId))
@@ -471,7 +484,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Populate WinPcap device combos.
+        /// Populates the WinPcap device combo.
         /// </summary>
         /// <remarks>
         /// Used both when initializing, and when refreshing.
@@ -524,13 +537,13 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Handle pcap device selection changes
+        /// Handles Pcap device selection changes.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void pcapDeviceCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Get selected pcap device
+            // Get selected Pcap device
             ComboBoxItem typeItem = (ComboBoxItem)pcapDeviceCombo.SelectedItem;
             // Attempting to use typeItem's properties while null will cause a NullReferenceException
             if (typeItem == null)
@@ -541,20 +554,20 @@ namespace RB4InstrumentMapper
             }
             string itemName = typeItem.Name;
 
-            // Get index of selected pcap device
+            // Get index of selected Pcapdevice
             if (int.TryParse(itemName.Substring(pcapComboBoxItemName.Length), out pcapDeviceIndex))
             {
                 // Adjust index count (UI->Logical)
                 pcapDeviceIndex -= 1;
 
-                // Remember selected pcap device
+                // Remember selected Pcapdevice
                 Properties.Settings.Default.currentPcapSelection = itemName;
                 Properties.Settings.Default.Save();
             }
         }
 
         /// <summary>
-        /// Handle guitar selection changes
+        /// Handles guitar 1 controller selection changes.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -595,7 +608,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Handle guitar 2 selection changes
+        /// Handles guitar 2 controller selection changes.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -636,7 +649,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Handle drum selection changes
+        /// Handles drum controller selection changes.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -677,9 +690,9 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Configure pcap device and start packet capture.
+        /// Configures the Pcap device and controller devices, and starts packet capture.
         /// </summary>
-        /// <param name="deviceIndex">pcap device index</param>
+        /// <param name="deviceIndex">The index of the Pcap device to use.</param>
         private void StartCapture(int deviceIndex)
         {
             // Enable packet capture active flag
@@ -735,17 +748,17 @@ namespace RB4InstrumentMapper
                 // Create ViGEmBus devices for each
                 if (guitar1DeviceIndex == (int)VigemEnum.DeviceIndex)
                 {
-                    CreateViGEmDevice((uint)VigemEnum.Guitar1);
+                    CreateVigemDevice((uint)VigemEnum.Guitar1);
                 }
 
                 if (guitar2DeviceIndex == (int)VigemEnum.DeviceIndex)
                 {
-                    CreateViGEmDevice((uint)VigemEnum.Guitar2);
+                    CreateVigemDevice((uint)VigemEnum.Guitar2);
                 }
 
                 if (drumDeviceIndex == (int)VigemEnum.DeviceIndex)
                 {
-                    CreateViGEmDevice((uint)VigemEnum.Drum);
+                    CreateVigemDevice((uint)VigemEnum.Drum);
                 }
             }
 
@@ -770,7 +783,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Continously read messages from pcap device while it is active.
+        /// Continously reads packets from the Pcap device.
         /// </summary>
         private void ReadContinously()
         {
@@ -898,7 +911,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Stop capture and mapping of packets
+        /// Stops packet capture/mapping and resets Pcap/controller objects.
         /// </summary>
         private void StopCapture()
         {
@@ -973,7 +986,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Handle 'Start' button click
+        /// Handles the click of the Start button.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -990,7 +1003,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Handle packet debug checkbox: enable packet output
+        /// Handles the packet debug checkbox being checked.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -998,14 +1011,14 @@ namespace RB4InstrumentMapper
         {
             packetDebug = true;
 
-            // Remember selected pcap debugging state
+            // Remember selected packet debug state
             Properties.Settings.Default.currentPacketDebugState = "true";
             Properties.Settings.Default.Save();
 
         }
 
         /// <summary>
-        /// Handle packet debug checkbox: disable packet output
+        /// Handles the packet debug checkbox being unchecked.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -1013,21 +1026,38 @@ namespace RB4InstrumentMapper
         {
             packetDebug = false;
 
-            // Remember selected pcap debugging state
+            // Remember selected packet debug state
             Properties.Settings.Default.currentPacketDebugState = "false";
             Properties.Settings.Default.Save();
         }
 
+        /// <summary>
+        /// Handles the click of the Pcap Refresh button.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void pcapRefreshButton_Click(object sender, RoutedEventArgs e)
         {
+            // Re-populate dropdown
             PopulatePcapDropdown();
         }
 
+        /// <summary>
+        /// Handles the click of the controller Refresh button.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void controllerRefreshButton_Click(object sender, RoutedEventArgs e)
         {
+            // Re-populate dropdowns
             PopulateControllerDropdowns();
         }
 
+        /// <summary>
+        /// Handles the guitar 1 instrument ID textbox having its text changed.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void guitar1IdTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             // Set new ID
@@ -1073,6 +1103,11 @@ namespace RB4InstrumentMapper
             Properties.Settings.Default.Save();
         }
 
+        /// <summary>
+        /// Handles the guitar 2 instrument ID textbox having its text changed.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void guitar2IdTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             // Set new ID
@@ -1118,6 +1153,11 @@ namespace RB4InstrumentMapper
             Properties.Settings.Default.Save();
         }
 
+        /// <summary>
+        /// Handles the drum instrument ID textbox having its text changed.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void drumIdTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             // Set new ID
@@ -1157,6 +1197,11 @@ namespace RB4InstrumentMapper
             Properties.Settings.Default.Save();
         }
 
+        /// <summary>
+        /// Handles the Pcap auto-detect button being clicked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void pcapAutoDetectButton_Click(object sender, RoutedEventArgs e)
         {
             // Prompt user to unplug their receiver
@@ -1247,6 +1292,11 @@ namespace RB4InstrumentMapper
             }
         }
 
+        /// <summary>
+        /// Handles the guitar 1 ID auto-detect button being clicked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void guitar1IdAutoDetectButton_Click(object sender, RoutedEventArgs e)
         {
             // Set auto-assign flag
@@ -1256,6 +1306,11 @@ namespace RB4InstrumentMapper
             AutoDetectID();
         }
 
+        /// <summary>
+        /// Handles the guitar 2 ID auto-detect button being clicked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void guitar2IdAutoDetectButton_Click(object sender, RoutedEventArgs e)
         {
             // Set auto-assign flag
@@ -1265,6 +1320,11 @@ namespace RB4InstrumentMapper
             AutoDetectID();
         }
 
+        /// <summary>
+        /// Handles the drum ID auto-detect button being clicked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void drumIdAutoDetectButton_Click(object sender, RoutedEventArgs e)
         {
             // Set auto-assign flag
@@ -1274,6 +1334,11 @@ namespace RB4InstrumentMapper
             AutoDetectID();
         }
 
+        /// <summary>
+        /// Automatically detects the instrument ID of a given packet.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void AutoDetectID()
         {
             // Disable all controls and show the auto-assign instruction label
@@ -1306,7 +1371,7 @@ namespace RB4InstrumentMapper
                 MessageBox.Show("Failed to auto-assign ID.", "Auto-Assign ID", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
-            // Once flag is unset, re-enable all controls and hide the auto-assign instruction label
+            // Re-enable all controls and hide the auto-assign instruction label
             pcapDeviceCombo.IsEnabled = true;
             pcapAutoDetectButton.IsEnabled = true;
             pcapRefreshButton.IsEnabled = true;
@@ -1330,6 +1395,11 @@ namespace RB4InstrumentMapper
             startButton.IsEnabled = true;
         }
 
+        /// <summary>
+        /// Task function for auto-detecting an instrument ID.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private bool Read_AutoDetectID()
         {
             // Retrieve the device list from the local machine
@@ -1370,6 +1440,7 @@ namespace RB4InstrumentMapper
                 guitar1IdTextBox.Text = idString;
                 packetGuitar1AutoAssign = false;
 
+                // Stop packet reading
                 pcapCommunicator.Break();
                 pcapCommunicator = null;
 
@@ -1391,6 +1462,7 @@ namespace RB4InstrumentMapper
                 guitar2IdTextBox.Text = idString;
                 packetGuitar2AutoAssign = false;
 
+                // Stop packet reading
                 pcapCommunicator.Break();
                 pcapCommunicator = null;
 
@@ -1412,12 +1484,14 @@ namespace RB4InstrumentMapper
                 drumIdTextBox.Text = idString;
                 packetDrumAutoAssign = false;
 
+                // Stop packet reading
                 pcapCommunicator.Break();
                 pcapCommunicator = null;
 
                 return true;
             }
             
+            // Stop packet reading
             pcapCommunicator.Break();
             pcapCommunicator = null;
             return false;

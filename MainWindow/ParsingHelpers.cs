@@ -10,10 +10,10 @@ namespace RB4InstrumentMapper
     public static class ParsingHelpers
     {
         /// <summary>
-        /// Convert an 32bit integer represented as a hex string into a byte array.
+        /// Converts a hex string representing a 32-bit integer into a byte array.
         /// </summary>
-        /// <param name="hexString">32bit integer hex string to convert.</param>
-        /// <returns>Byte array representing the integer hex string, or null if conversion failed.</returns>
+        /// <param name="hexString">The string to be converted.</param>
+        /// <returns>A byte array converted from the hex string, or null if the conversion failed.</returns>
         public static byte[] Int32HexStringToByteArray(string hexString)
         {
             byte[] byteArray = null;
@@ -27,10 +27,10 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Convert a byte array into a hex string.
+        /// Converts a byte array into a hex string.
         /// </summary>
-        /// <param name="byteArray">Byte array to convert</param>
-        /// <returns>Hex string representing the byte array, or null if input is null or empty.</returns>
+        /// <param name="byteArray">The byte array to converted.</param>
+        /// <returns>A hex string representing the byte array, or null if input is null or empty.</returns>
         public static string ByteArrayToHexString(byte[] byteArray)
         {
             string hexString = null;
@@ -62,8 +62,8 @@ namespace RB4InstrumentMapper
         /// Converts a 32-bit unsigned integer into a string representing a 32-bit hexadecimal number.
         /// </summary>
         /// <param name="number">The number to be converted.</param>
-        /// <param name="isID">Flag indicating if this is an instrument ID.</param>
-        /// <returns>String representing the input number, or String.Empty if the input is 0 and isID is set.</returns>
+        /// <param name="isID">A flag indicating if this is an instrument ID.</param>
+        /// <returns>A string representing the input number, or String.Empty if the input is 0 and isID is set.</returns>
         public static string UInt32ToHexString(uint number, bool isID)
         {
             if (isID)
