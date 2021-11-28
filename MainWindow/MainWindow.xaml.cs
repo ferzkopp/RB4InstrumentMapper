@@ -1,4 +1,4 @@
-using PcapDotNet.Core;
+﻿using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using System;
 using System.Collections.Generic;
@@ -189,7 +189,7 @@ namespace RB4InstrumentMapper
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Connect to console
-            TextBoxConsole.RedirectConsoleToTextBox(messageConsole);
+            TextBoxConsole.RedirectConsoleToTextBox(messageConsole, displayLinesWithTimestamp: false);
 
             // Initialize dropdowns
             try // PcapDotNet can't be loaded if WinPcap isn't installed, so it will cause a run-time exception here
@@ -272,6 +272,8 @@ namespace RB4InstrumentMapper
                 // If subtype ID specification through ViGEmBus becomes possible at some point,
                 // the guitar should be subtype 6, and the drums should be subtype 8
             );
+
+            Console.WriteLine($"Created new ViGEmBus device with user index {vigemDictionary[userIndex].UserIndex}");
         }
 
         /// <summary>
@@ -319,7 +321,8 @@ namespace RB4InstrumentMapper
                 vigemFound = true;
             }
 
-            if (!vjoyFound && !vigemFound)
+            // Check if neither vJoy nor ViGEmBus were found
+            if (!(vjoyFound || vigemFound))
             {
                 MessageBox.Show("No controller emulators found! Please install either vJoy or ViGEmBus.\nThe program will now shut down.", "No Controller Emulators Found", MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.Shutdown();
@@ -447,6 +450,32 @@ namespace RB4InstrumentMapper
             vigemComboBoxItem.IsSelected = vigemItemName.Equals(currentDrumSelection) && vigemFound;
             drumCombo.Items.Add(vigemComboBoxItem);
 
+            // Add None option
+            // Guitar 1 combo
+            string noneItemName = $"{controllerComboBoxItemName}0";
+            ComboBoxItem noneComboBoxItem = new ComboBoxItem();
+            noneComboBoxItem.Content = "None";
+            noneComboBoxItem.Name = noneItemName;
+            noneComboBoxItem.IsEnabled = true;
+            noneComboBoxItem.IsSelected = noneItemName.Equals(currentGuitar1Selection) || String.IsNullOrEmpty(currentGuitar1Selection); // Default to this selection
+            guitar1Combo.Items.Add(noneComboBoxItem);
+
+            // Guitar 2 combo
+            noneComboBoxItem = new ComboBoxItem();
+            noneComboBoxItem.Content = "None";
+            noneComboBoxItem.Name = noneItemName;
+            noneComboBoxItem.IsEnabled = true;
+            noneComboBoxItem.IsSelected = noneItemName.Equals(currentGuitar2Selection) || String.IsNullOrEmpty(currentGuitar2Selection); // Default to this selection
+            guitar2Combo.Items.Add(noneComboBoxItem);
+
+            // Drum combo
+            noneComboBoxItem = new ComboBoxItem();
+            noneComboBoxItem.Content = "None";
+            noneComboBoxItem.Name = noneItemName;
+            noneComboBoxItem.IsEnabled = true;
+            noneComboBoxItem.IsSelected = noneItemName.Equals(currentDrumSelection) || String.IsNullOrEmpty(currentDrumSelection); // Default to this selection
+            drumCombo.Items.Add(noneComboBoxItem);
+
             // Load default device IDs
             // Guitar 1
             string hexString = Properties.Settings.Default.currentGuitar1Id;
@@ -536,11 +565,12 @@ namespace RB4InstrumentMapper
                 LivePacketDevice device = allDevices[i];
                 sb.Clear();
                 string itemNumber = $"{i + 1}";
-                sb.Append($"{itemNumber}. {device.Name}");
+                sb.Append($"{itemNumber}. ");
                 if (device.Description != null)
                 {
-                    sb.Append($" ({device.Description})");
+                    sb.Append(device.Description);
                 }
+                sb.Append($" ({device.Name})");
 
                 string deviceName = sb.ToString();
                 string itemName = pcapComboBoxItemName + itemNumber;
@@ -599,8 +629,8 @@ namespace RB4InstrumentMapper
         /// <param name="e"></param>
         private void guitar1Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Only allow a device to be selected by one selection, unless it is the ViGEmBus device selection
-            if (guitar1Combo.SelectedIndex != (int)VigemEnum.DeviceIndex)
+            // Only allow a device to be selected by one selection, unless it is the None or ViGEmBus Device selections
+            if (guitar1Combo.SelectedIndex < (int)VigemEnum.DeviceIndex)
             {
                 if (guitar1Combo.SelectedIndex == guitar2Combo.SelectedIndex)
                 {
@@ -640,8 +670,8 @@ namespace RB4InstrumentMapper
         /// <param name="e"></param>
         private void guitar2Combo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Only allow a device to be selected by one selection, unless it is the ViGEmBus device selection
-            if (guitar2Combo.SelectedIndex != (int)VigemEnum.DeviceIndex)
+            // Only allow a device to be selected by one selection, unless it is the None or ViGEmBus Device selections
+            if (guitar2Combo.SelectedIndex < (int)VigemEnum.DeviceIndex)
             {
                 if (guitar2Combo.SelectedIndex == guitar1Combo.SelectedIndex)
                 {
@@ -681,8 +711,8 @@ namespace RB4InstrumentMapper
         /// <param name="e"></param>
         private void drumCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Only allow a device to be selected by one selection, unless it is the ViGEmBus device selection
-            if (drumCombo.SelectedIndex != (int)VigemEnum.DeviceIndex)
+            // Only allow a device to be selected by one selection, unless it is the None or ViGEmBus Device selections
+            if (drumCombo.SelectedIndex < (int)VigemEnum.DeviceIndex)
             {
                 if (drumCombo.SelectedIndex == guitar1Combo.SelectedIndex)
                 {
@@ -1419,6 +1449,11 @@ namespace RB4InstrumentMapper
             controllerAutoAssignLabel.Visibility = Visibility.Hidden;
 
             startButton.IsEnabled = true;
+
+            // Disable auto-assignment flags
+            packetGuitar1AutoAssign = false;
+            packetGuitar2AutoAssign = false;
+            packetDrumAutoAssign = false;
         }
 
         /// <summary>
@@ -1450,6 +1485,13 @@ namespace RB4InstrumentMapper
                 return false;
             }
 
+            // Debugging (if enabled)
+            if (packetDebug)
+            {
+                string packetHexString = ParsingHelpers.ByteArrayToHexString(packet.Buffer);
+                Console.WriteLine(packet.Timestamp.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{packet.Length}] " + packetHexString);
+            }
+
             // Check assignment flags and packet length
             if (packetGuitar1AutoAssign && packet.Length == 40)
             {
@@ -1464,7 +1506,6 @@ namespace RB4InstrumentMapper
                 string idString = Convert.ToString(id, 16);
 
                 guitar1IdTextBox.Text = idString;
-                packetGuitar1AutoAssign = false;
 
                 // Stop packet reading
                 pcapCommunicator.Break();
@@ -1486,7 +1527,6 @@ namespace RB4InstrumentMapper
                 string idString = Convert.ToString(id, 16);
 
                 guitar2IdTextBox.Text = idString;
-                packetGuitar2AutoAssign = false;
 
                 // Stop packet reading
                 pcapCommunicator.Break();
@@ -1508,7 +1548,6 @@ namespace RB4InstrumentMapper
                 string idString = Convert.ToString(id, 16);
 
                 drumIdTextBox.Text = idString;
-                packetDrumAutoAssign = false;
 
                 // Stop packet reading
                 pcapCommunicator.Break();
