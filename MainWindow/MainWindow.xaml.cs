@@ -192,7 +192,16 @@ namespace RB4InstrumentMapper
             TextBoxConsole.RedirectConsoleToTextBox(messageConsole);
 
             // Initialize dropdowns
-            PopulatePcapDropdown();
+            try // PcapDotNet can't be loaded if WinPcap isn't installed, so it will cause a run-time exception here
+            {
+                PopulatePcapDropdown();
+            }
+            catch(System.IO.FileNotFoundException)
+            {
+                MessageBox.Show("Could not load WinPcap interface.\nThe program will now shut down.", "Error Starting Program", MessageBoxButton.OK, MessageBoxImage.Error);
+                Application.Current.Shutdown();
+                return;
+            }
             PopulateControllerDropdowns();
         }
 
@@ -204,7 +213,12 @@ namespace RB4InstrumentMapper
         private void Window_Closed(object sender, EventArgs e)
         {
             // Shutdown
-            StopCapture();
+            if (packetCaptureActive)
+            {
+                // Same situation as PopulatePcapDropdown can happen here,
+                // but this function will only be called if the program successfully starts in the first place due to the if(packetCaptureActive)
+                StopCapture();
+            }
 
             // Dispose of the ViGEmBus client
             if (vigemClient != null)
@@ -491,11 +505,24 @@ namespace RB4InstrumentMapper
         /// </remarks>
         private void PopulatePcapDropdown()
         {
+            // Clear combo list
+            pcapDeviceCombo.Items.Clear();
+
             // Retrieve the device list from the local machine
-            IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
-            if (allDevices.Count == 0)
+            IList<LivePacketDevice> allDevices;
+            try
             {
-                Console.WriteLine("No WinPcap interfaces found! Make sure WinPcap is installed.");
+                allDevices = LivePacketDevice.AllLocalMachine;
+            }
+            catch(InvalidOperationException)
+            {
+                Console.WriteLine("Could not retrieve list of WinPcap interfaces.");
+                return;
+            }
+
+            if (allDevices == null || allDevices.Count == 0)
+            {
+                Console.WriteLine("No WinPcap interfaces found!");
                 return;
             }
 
@@ -503,7 +530,6 @@ namespace RB4InstrumentMapper
             string currentPcapSelection = Properties.Settings.Default.currentPcapSelection;
 
             // Populate combo and print the list
-            pcapDeviceCombo.Items.Clear();
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < allDevices.Count; i++)
             {
