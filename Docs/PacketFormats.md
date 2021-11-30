@@ -1,5 +1,7 @@
 # Xbox One RB4 Instrument Data Packets
 
+This documentation isn't fully comprehensive yet, and it also needs some better formatting than just long lists.
+
 ## Packet Frames
 
 - Bytes 0-21: Xbox Header
