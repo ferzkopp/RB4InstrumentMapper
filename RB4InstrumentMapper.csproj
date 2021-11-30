@@ -147,7 +147,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Docs\Images\Screenshot.png" />
+    <Resource Include="Docs\Images\ProgramScreenshot.png" />
+    <Resource Include="Docs\Images\vJoyConfiguration.png" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Dependencies\x64\vJoyInterface.dll" />
