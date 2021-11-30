@@ -3,14 +3,13 @@
 ## Packet Frames
 
 - Bytes 0-21: Xbox Header
-  - Bytes 0-11: `8811A0006245B4E9D18A7EED`
   - Bytes 12-15: Unique Instrument ID
-  - Bytes 16-21: `6245B4E9D18A`
 - Bytes 22 onward: Input Data
 
 ## Guitar Input Data
 
 40 bytes long, including the Xbox header
+31 bytes long when the Xbox button is pressed
 
 Bytes:
 
