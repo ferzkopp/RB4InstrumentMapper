@@ -357,12 +357,17 @@ namespace RB4InstrumentMapper
                             vjoyDeviceName += " (device is already owned by this feeder)";
                             break;
                         case VjdStat.VJD_STAT_FREE:
+                            int numButtons = joystick.GetVJDButtonNumber(id);
+                            int numContPov = joystick.GetVJDContPovNumber(id);
+                            bool xExists = joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_X); // X axis
+                            bool yExists = joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Y); // Y axis
+                            bool zExists = joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Z); // Z axis
                             // Check that vJoy device is configured correctly
-                            if (joystick.GetVJDButtonNumber(id) >= 16 &&
-                               joystick.GetVJDContPovNumber(id) >= 1 &&
-                               joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_X) && // X axis
-                               joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Y) && // Y axis
-                               joystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Z)    // Z axis
+                            if (numButtons >= 16 &&
+                               numContPov >= 1 &&
+                               xExists &&
+                               yExists &&
+                               zExists
                             )
                             {
                                 isEnabled = true;
@@ -370,7 +375,7 @@ namespace RB4InstrumentMapper
                             }
                             else
                             {
-                                vjoyDeviceName += " (device misconfigured)";
+                                vjoyDeviceName += " (device misconfigured, use 16 buttons, X/Y/Z axes, and 1 continuous POV)";
                             }
                             break;
                         case VjdStat.VJD_STAT_BUSY:
@@ -1117,7 +1122,7 @@ namespace RB4InstrumentMapper
         private void guitar1IdTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             // Set new ID
-            string hexString = guitar1IdTextBox.Text;
+            string hexString = guitar1IdTextBox.Text.ToUpperInvariant();
             uint enteredId;
             if (ParsingHelpers.HexStringToUInt32(hexString, out enteredId))
             {
@@ -1167,7 +1172,7 @@ namespace RB4InstrumentMapper
         private void guitar2IdTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             // Set new ID
-            string hexString = guitar2IdTextBox.Text;
+            string hexString = guitar2IdTextBox.Text.ToUpperInvariant();
             uint enteredId;
             if (ParsingHelpers.HexStringToUInt32(hexString, out enteredId))
             {
@@ -1217,7 +1222,7 @@ namespace RB4InstrumentMapper
         private void drumIdTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             // Set new ID
-            string hexString = drumIdTextBox.Text;
+            string hexString = drumIdTextBox.Text.ToUpperInvariant();
             uint enteredId;
             if (ParsingHelpers.HexStringToUInt32(hexString, out enteredId))
             {
@@ -1503,9 +1508,12 @@ namespace RB4InstrumentMapper
                     (packet[13] << 16) | // BB
                     (packet[12] << 24)   // AA
                 );
-                string idString = Convert.ToString(id, 16);
+                string idString = Convert.ToString(id, 16).ToUpperInvariant();
 
-                guitar1IdTextBox.Text = idString;
+                uiDispatcher.Invoke((Action)(() =>
+                {
+                    guitar1IdTextBox.Text = idString;
+                }));
 
                 // Stop packet reading
                 pcapCommunicator.Break();
@@ -1524,9 +1532,12 @@ namespace RB4InstrumentMapper
                     (packet[13] << 16) | // BB
                     (packet[12] << 24)   // AA
                 );
-                string idString = Convert.ToString(id, 16);
+                string idString = Convert.ToString(id, 16).ToUpperInvariant();
 
-                guitar2IdTextBox.Text = idString;
+                uiDispatcher.Invoke((Action)(() =>
+                {
+                    guitar2IdTextBox.Text = idString;
+                }));
 
                 // Stop packet reading
                 pcapCommunicator.Break();
@@ -1545,9 +1556,12 @@ namespace RB4InstrumentMapper
                     (packet[13] << 16) | // BB
                     (packet[12] << 24)   // AA
                 );
-                string idString = Convert.ToString(id, 16);
+                string idString = Convert.ToString(id, 16).ToUpperInvariant();
 
-                drumIdTextBox.Text = idString;
+                uiDispatcher.Invoke((Action)(() =>
+                {
+                    drumIdTextBox.Text = idString;
+                }));
 
                 // Stop packet reading
                 pcapCommunicator.Break();
