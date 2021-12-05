@@ -41,7 +41,6 @@ namespace RB4InstrumentMapper
     /// </summary>
     public class GuitarPacketReader
     {
-
         /// <summary>
         /// Packet definitions for the frets.
         /// </summary>
@@ -108,9 +107,8 @@ namespace RB4InstrumentMapper
         /// <param name="packet">The data packet to use.</param>
         /// <param name="data">A returned GuitarPacket.</param>
         /// <returns>True if packet was used and analyzed, false otherwise.</returns>
-        public static bool AnalyzePacket(byte[] packet, out GuitarPacket data)
+        public static bool AnalyzePacket(byte[] packet, ref GuitarPacket data)
         {
-            data = new GuitarPacket();
             // Check packet
             if (packet != null && packet.Length == GuitarPacketLength)
             {
@@ -122,49 +120,57 @@ namespace RB4InstrumentMapper
                     (packet[13] << 16) | // BB
                     (packet[12] << 24)   // AA
                 );
-                data.InstrumentIDString = ParsingHelpers.UInt32ToHexString(data.InstrumentID, isID: true);
 
                 // Map buttons
                 byte buttons = packet[XboxHeaderLength + (int)PacketPosition.Buttons];
 
-                    // Menu
-                    data.MenuButton = (buttons & (byte)Buttons.Menu) != 0;
-                    // Options
-                    data.OptionsButton = (buttons & (byte)Buttons.Options) != 0;
-                    // Xbox
-                    data.XboxButton = (buttons & (byte)Buttons.Xbox) != 0;
+                // Menu
+                data.MenuButton = (buttons & (byte)Buttons.Menu) != 0;
+                
+                // Options
+                data.OptionsButton = (buttons & (byte)Buttons.Options) != 0;
+                
+                // Xbox
+                data.XboxButton = (buttons & (byte)Buttons.Xbox) != 0;
 
                 // Map Dpad
                 byte dpad = packet[XboxHeaderLength + (int)PacketPosition.Dpad];
 
-                    // Dpad Up
-                    data.DpadUp = (dpad & (byte)Dpad.Up) != 0;
-                    // Dpad Down
-                    data.DpadDown = (dpad & (byte)Dpad.Down) != 0;
-                    // Dpad Left
-                    data.DpadLeft = (dpad & (byte)Dpad.Left) != 0;
-                    // Dpad Right
-                    data.DpadRight = (dpad & (byte)Dpad.Right) != 0;
+                // Dpad Up
+                data.DpadUp = (dpad & (byte)Dpad.Up) != 0;
+                
+                // Dpad Down
+                data.DpadDown = (dpad & (byte)Dpad.Down) != 0;
+                
+                // Dpad Left
+                data.DpadLeft = (dpad & (byte)Dpad.Left) != 0;
+                
+                // Dpad Right
+                data.DpadRight = (dpad & (byte)Dpad.Right) != 0;
 
                 // Frets
                 byte upperFret = packet[XboxHeaderLength + (int)PacketPosition.UpperFret];
                 byte lowerFret = packet[XboxHeaderLength + (int)PacketPosition.LowerFret];
 
-                    // Fret Green
-                    data.UpperGreen = (upperFret & (byte)Frets.Green) != 0;
-                    data.LowerGreen = (lowerFret & (byte)Frets.Green) != 0;
-                    // Fret Red
-                    data.UpperRed = (upperFret & (byte)Frets.Red) != 0;
-                    data.LowerRed = (lowerFret & (byte)Frets.Red) != 0;
-                    // Fret Yellow
-                    data.UpperYellow = (upperFret & (byte)Frets.Yellow) != 0;
-                    data.LowerYellow = (lowerFret & (byte)Frets.Yellow) != 0;
-                    // Fret Blue
-                    data.UpperBlue = (upperFret & (byte)Frets.Blue) != 0;
-                    data.LowerBlue = (lowerFret & (byte)Frets.Blue) != 0;
-                    // Fret Orange
-                    data.UpperOrange = (upperFret & (byte)Frets.Orange) != 0;
-                    data.LowerOrange = (lowerFret & (byte)Frets.Orange) != 0;
+                // Fret Green
+                data.UpperGreen = (upperFret & (byte)Frets.Green) != 0;
+                data.LowerGreen = (lowerFret & (byte)Frets.Green) != 0;
+                
+                // Fret Red
+                data.UpperRed = (upperFret & (byte)Frets.Red) != 0;
+                data.LowerRed = (lowerFret & (byte)Frets.Red) != 0;
+                
+                // Fret Yellow
+                data.UpperYellow = (upperFret & (byte)Frets.Yellow) != 0;
+                data.LowerYellow = (lowerFret & (byte)Frets.Yellow) != 0;
+                
+                // Fret Blue
+                data.UpperBlue = (upperFret & (byte)Frets.Blue) != 0;
+                data.LowerBlue = (lowerFret & (byte)Frets.Blue) != 0;
+                
+                // Fret Orange
+                data.UpperOrange = (upperFret & (byte)Frets.Orange) != 0;
+                data.LowerOrange = (lowerFret & (byte)Frets.Orange) != 0;
 
                 // Pickup Switch
                 data.PickupSwitch = packet[XboxHeaderLength + (int)PacketPosition.Slider];
