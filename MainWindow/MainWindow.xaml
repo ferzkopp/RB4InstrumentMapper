@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="RB4InstrumentMapper" Height="631" Width="800" Loaded="Window_Loaded" Closed="Window_Closed" ResizeMode="CanMinimize">
     <Grid Margin="10,10,10,10">
-        <Label Name="mainTitleLabel" Content="Rock Band 4 Instrument Mapper" HorizontalAlignment="Left" Height="44" VerticalAlignment="Top" Width="771" FontSize="24" FontWeight="Bold" Margin="9,0,0,0"/>
+        <Label Name="mainTitleLabel" Content="Rock Band 4 Instrument Mapper" HorizontalAlignment="Left" Height="44" VerticalAlignment="Top" Width="618" FontSize="24" FontWeight="Bold" Margin="9,0,0,0"/>
         <GroupBox Header="Pcap" Margin="10,44,10,0" Height="107" VerticalAlignment="Top">
             <Grid Margin="10,10,10,10">
                 <Label Name="pcapDeviceLabel" Content="Devices:" HorizontalAlignment="Left" Height="29" Margin="0,0,0,0" VerticalAlignment="Top" Width="74"/>
@@ -47,5 +47,6 @@
                 <TextBox Name="messageConsole" Margin="0,0,0,0" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Visible" IsReadOnly="True" FontSize="10"/>
             </Grid>
         </GroupBox>
+        <Label x:Name="guitar1IdLabel_Copy" Content="v1.0.20211204" HorizontalAlignment="Right" Height="28" Margin="0,13,9.667,0" VerticalAlignment="Top" Width="103" IsEnabled="False"/>
     </Grid>
 </Window>
