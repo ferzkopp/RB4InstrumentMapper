@@ -10,7 +10,9 @@ Almost all features for guitars and drums are supported.
 
 - Xbox One Wireless Receiver
 - Xbox One RB4 Guitars (up to 2)
+  - For Jaguar guitars, you will need to install a [firmware update](https://bit.ly/2UHzonU).
 - Xbox One RB4 Drums
+  - Note that PDP drums don't seem to work, they turn off after syncing to the receiver.
 - Windows 10 64-bit
 - Npcap in WinPcap compatibility mode, or WinPcap
 - USBPcap
