@@ -8,7 +8,6 @@ namespace RB4InstrumentMapper
     public struct DrumPacket
     {
         public uint InstrumentID;
-        public string InstrumentIDString;
 
         public bool MenuButton;
         public bool OptionsButton;
@@ -109,9 +108,8 @@ namespace RB4InstrumentMapper
         /// <param name="packet">The data packet to be analyzed.</param>
         /// <param name="data">A returned DrumPacket.</param>
         /// <returns>True if packet was used and analyzed, false otherwise.</returns>
-        public static bool AnalyzePacket(byte[] packet, out DrumPacket data)
+        public static bool AnalyzePacket(byte[] packet, ref DrumPacket data)
         {
-            data = new DrumPacket();
             if (packet != null && packet.Length == DrumPacketLength)
             {
                 // Assign instrument ID
@@ -122,29 +120,33 @@ namespace RB4InstrumentMapper
                     (packet[13] << 16) | // BB
                     (packet[12] << 24)   // AA
                 );
-                data.InstrumentIDString = ParsingHelpers.UInt32ToHexString(data.InstrumentID, isID: true);
 
                 // Map buttons
                 byte buttons = packet[XboxHeaderLength + (int)PacketPosition.Buttons];
 
-                    // Menu
-                    data.MenuButton = (buttons & (byte)Buttons.Menu) != 0;
-                    // Options
-                    data.OptionsButton = (buttons & (byte)Buttons.Options) != 0;
-                    // Xbox
-                    data.XboxButton = (buttons & (byte)Buttons.Xbox) != 0;
+                // Menu
+                data.MenuButton = (buttons & (byte)Buttons.Menu) != 0;
+ 
+                // Options
+                data.OptionsButton = (buttons & (byte)Buttons.Options) != 0;
+                
+                // Xbox
+                data.XboxButton = (buttons & (byte)Buttons.Xbox) != 0;
 
                 // Map Dpad
                 byte dpad = packet[XboxHeaderLength + (int)PacketPosition.Dpad];
 
-                    // Dpad Up
-                    data.DpadUp = (dpad & (byte)Dpad.Up) != 0;
-                    // Dpad Down
-                    data.DpadDown = (dpad & (byte)Dpad.Down) != 0;
-                    // Dpad Left
-                    data.DpadLeft = (dpad & (byte)Dpad.Left) != 0;
-                    // Dpad Right
-                    data.DpadRight = (dpad & (byte)Dpad.Right) != 0;
+                // Dpad Up
+                data.DpadUp = (dpad & (byte)Dpad.Up) != 0;
+                
+                // Dpad Down
+                data.DpadDown = (dpad & (byte)Dpad.Down) != 0;
+                
+                // Dpad Left
+                data.DpadLeft = (dpad & (byte)Dpad.Left) != 0;
+                
+                // Dpad Right
+                data.DpadRight = (dpad & (byte)Dpad.Right) != 0;
 
                 // Map drums
                 byte redGreenDrum = packet[XboxHeaderLength + (int)PacketPosition.RedGreenDrum];
@@ -152,29 +154,34 @@ namespace RB4InstrumentMapper
                 byte blueDrum = packet[XboxHeaderLength + (int)PacketPosition.BlueDrum];
                 byte bassDrum = packet[XboxHeaderLength + (int)PacketPosition.BassPedal];
 
-                    // Red drum
-                    data.RedDrum = (redGreenDrum & (byte)Drums.RedDrum) != 0;
-                    // Yellow drum
-                    data.YellowDrum = (yellowDrum & (byte)Drums.YellowDrum) != 0;
-                    // Blue drum
-                    data.BlueDrum = (blueDrum & (byte)Drums.BlueDrum) != 0;
-                    // Green drum
-                    data.GreenDrum = (redGreenDrum & (byte)Drums.GreenDrum) != 0;
+                // Red drum
+                data.RedDrum = (redGreenDrum & (byte)Drums.RedDrum) != 0;
+                
+                // Yellow drum
+                data.YellowDrum = (yellowDrum & (byte)Drums.YellowDrum) != 0;
+                
+                // Blue drum
+                data.BlueDrum = (blueDrum & (byte)Drums.BlueDrum) != 0;
+                
+                // Green drum
+                data.GreenDrum = (redGreenDrum & (byte)Drums.GreenDrum) != 0;
 
-                    // Bass drums
-                    data.BassOne = (bassDrum & (byte)Drums.BassOne) != 0;
-                    data.BassTwo = (bassDrum & (byte)Drums.BassTwo) != 0;
+                // Bass drums
+                data.BassOne = (bassDrum & (byte)Drums.BassOne) != 0;
+                data.BassTwo = (bassDrum & (byte)Drums.BassTwo) != 0;
 
                 // Map cymbals
                 byte yellowBlueCymbal = packet[XboxHeaderLength + (int)PacketPosition.YellowBlueCymbal];
                 byte greenCymbal = packet[XboxHeaderLength + (int)PacketPosition.GreenCymbal];
 
-                    // Yellow cymbal
-                    data.YellowCymbal = (yellowBlueCymbal & (byte)Drums.YellowCymbal) != 0;
-                    // Blue cymbal
-                    data.BlueCymbal = (yellowBlueCymbal & (byte)Drums.BlueCymbal) != 0;
-                    // Green cymbal
-                    data.GreenCymbal = (greenCymbal & (byte)Drums.GreenCymbal) != 0;
+                // Yellow cymbal
+                data.YellowCymbal = (yellowBlueCymbal & (byte)Drums.YellowCymbal) != 0;
+
+                // Blue cymbal                
+                data.BlueCymbal = (yellowBlueCymbal & (byte)Drums.BlueCymbal) != 0;
+                
+                // Green cymbal
+                data.GreenCymbal = (greenCymbal & (byte)Drums.GreenCymbal) != 0;
 
                 // Packet handled
                 return true;
