@@ -36,7 +36,7 @@ Almost all features for guitars and drums are supported.
 ## Usage
 
 1. Configure the selected Pcap device:
-   - Click the Auto-Detect button and follow its instructions.
+   - Click the `Auto-Detect Pcap` button and follow its instructions.
 2. Configure the selected controller device for each guitar and drumkit:
    - If you installed vJoy:
      - Pick one of the vJoy devices that you configured for each instrument you will be using.
@@ -44,7 +44,9 @@ Almost all features for guitars and drums are supported.
      - Pick the `ViGEmBus Device` item in the dropdown for each instrument you will be using. One emulated Xbox 360 controller will be created for each instrument that has this selected.
 3. Connect your instruments if you haven't yet.
 4. Assign the instrument ID for each instrument:
-   - Click the Auto-Detect button next to each ID field, and do an action on the instrument you are assigning.
+   - Click the `Auto-Detect ID` button next to each ID field.
+     - Guitars should auto-detect automatically as they are constantly sending packets. Retry if duplicate IDs were detected (and rejected).
+     - Drums require an action such as a button press on the instrument you are assigning within 2 seconds after 'Auto-Detect' was clicked.
 5. Click the Start button.
 6. Map the controls for each instrument in Clone Hero:
    1. Press Space on the main menu.

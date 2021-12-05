@@ -151,6 +151,11 @@ namespace RB4InstrumentMapper
         private static DrumPacket drumPacket = new DrumPacket();
 
         /// <summary>
+        /// Counter for processed packets.
+        /// </summary>
+        private static ulong processedPacketCount = 0;
+
+        /// <summary>
         /// Dictionary for ViGEmBus controllers.
         /// </summary>
         /// <remarks>
@@ -462,7 +467,7 @@ namespace RB4InstrumentMapper
             noneComboBoxItem.Content = "None";
             noneComboBoxItem.Name = noneItemName;
             noneComboBoxItem.IsEnabled = true;
-            noneComboBoxItem.IsSelected = noneItemName.Equals(currentGuitar1Selection) || String.IsNullOrEmpty(currentGuitar1Selection); // Default to this selection
+            noneComboBoxItem.IsSelected = noneItemName.Equals(currentGuitar1Selection) || string.IsNullOrEmpty(currentGuitar1Selection); // Default to this selection
             guitar1Combo.Items.Add(noneComboBoxItem);
 
             // Guitar 2 combo
@@ -470,7 +475,7 @@ namespace RB4InstrumentMapper
             noneComboBoxItem.Content = "None";
             noneComboBoxItem.Name = noneItemName;
             noneComboBoxItem.IsEnabled = true;
-            noneComboBoxItem.IsSelected = noneItemName.Equals(currentGuitar2Selection) || String.IsNullOrEmpty(currentGuitar2Selection); // Default to this selection
+            noneComboBoxItem.IsSelected = noneItemName.Equals(currentGuitar2Selection) || string.IsNullOrEmpty(currentGuitar2Selection); // Default to this selection
             guitar2Combo.Items.Add(noneComboBoxItem);
 
             // Drum combo
@@ -478,7 +483,7 @@ namespace RB4InstrumentMapper
             noneComboBoxItem.Content = "None";
             noneComboBoxItem.Name = noneItemName;
             noneComboBoxItem.IsEnabled = true;
-            noneComboBoxItem.IsSelected = noneItemName.Equals(currentDrumSelection) || String.IsNullOrEmpty(currentDrumSelection); // Default to this selection
+            noneComboBoxItem.IsSelected = noneItemName.Equals(currentDrumSelection) || string.IsNullOrEmpty(currentDrumSelection); // Default to this selection
             drumCombo.Items.Add(noneComboBoxItem);
 
             // Load default device IDs
@@ -486,7 +491,7 @@ namespace RB4InstrumentMapper
             string hexString = Properties.Settings.Default.currentGuitar1Id;
             if (!ParsingHelpers.HexStringToUInt32(hexString, out guitar1InstrumentId))
             {
-                if (String.IsNullOrEmpty(hexString))
+                if (string.IsNullOrEmpty(hexString))
                 {
                     guitar1InstrumentId = 0;
                 }
@@ -502,7 +507,7 @@ namespace RB4InstrumentMapper
             hexString = Properties.Settings.Default.currentGuitar2Id;
             if (!ParsingHelpers.HexStringToUInt32(hexString, out guitar2InstrumentId))
             {
-                if (String.IsNullOrEmpty(hexString))
+                if (string.IsNullOrEmpty(hexString))
                 {
                     guitar2InstrumentId = 0;
                 }
@@ -518,7 +523,7 @@ namespace RB4InstrumentMapper
             hexString = Properties.Settings.Default.currentDrumId;
             if (!ParsingHelpers.HexStringToUInt32(hexString, out drumInstrumentId))
             {
-                if (String.IsNullOrEmpty(hexString))
+                if (string.IsNullOrEmpty(hexString))
                 {
                     drumInstrumentId = 0;
                 }
@@ -539,6 +544,11 @@ namespace RB4InstrumentMapper
         /// </remarks>
         private void PopulatePcapDropdown()
         {
+            // Disable auto-detect ID buttons
+            guitar1IdAutoDetectButton.IsEnabled = false;
+            guitar2IdAutoDetectButton.IsEnabled = false;
+            drumIdAutoDetectButton.IsEnabled = false;
+
             // Clear combo list
             pcapDeviceCombo.Items.Clear();
 
@@ -582,8 +592,17 @@ namespace RB4InstrumentMapper
                 ComboBoxItem comboBoxItem = new ComboBoxItem();
                 comboBoxItem.Name = itemName;
                 comboBoxItem.Content = deviceName;
-                comboBoxItem.IsEnabled = true;
-                comboBoxItem.IsSelected = itemName.Equals(currentPcapSelection);
+                comboBoxItem.IsEnabled = true;                
+                bool isSelected = itemName.Equals(currentPcapSelection);
+                comboBoxItem.IsSelected = isSelected;
+                if (isSelected)
+                {
+                    // Re-enable auto-detect ID buttons
+                    guitar1IdAutoDetectButton.IsEnabled = true;
+                    guitar2IdAutoDetectButton.IsEnabled = true;
+                    drumIdAutoDetectButton.IsEnabled = true;
+                }
+
                 pcapDeviceCombo.Items.Add(comboBoxItem);
             }
 
@@ -620,6 +639,11 @@ namespace RB4InstrumentMapper
             {
                 // Adjust index count (UI->Logical)
                 pcapDeviceIndex -= 1;
+
+                // Enable auto-detect ID buttons
+                guitar1IdAutoDetectButton.IsEnabled = true;
+                guitar2IdAutoDetectButton.IsEnabled = true;
+                drumIdAutoDetectButton.IsEnabled = true;
 
                 // Remember selected Pcapdevice
                 Properties.Settings.Default.currentPcapSelection = itemName;
@@ -780,6 +804,12 @@ namespace RB4InstrumentMapper
             controllerRefreshButton.IsEnabled = false;
             startButton.Content = "Stop";
 
+            // Enable packet count display
+            packetsProcessedLabel.Visibility = Visibility.Visible;
+            packetsProcessedCountLabel.Visibility = Visibility.Visible;
+            packetsProcessedCountLabel.Content = "0";
+            processedPacketCount = 0;
+
             // Initialize vJoy
             if (joystick != null)
             {
@@ -871,6 +901,19 @@ namespace RB4InstrumentMapper
                 Console.WriteLine(packet.Timestamp.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{packet.Length}] " + packetHexString);
             }
 
+            // Status reporting (slow)
+            if ((processedPacketCount < 10) ||
+               ((processedPacketCount < 100) && (processedPacketCount % 10 == 0)) ||
+                (processedPacketCount % 100 == 0))
+            {
+                // Update UI
+                uiDispatcher.Invoke(() =>
+                {
+                    string ulongString = processedPacketCount.ToString("N0");
+                    packetsProcessedCountLabel.Content = ulongString;
+                });
+            }
+
             // Map guitar 1 (if enabled)
             if (guitar1DeviceIndex > 0 && guitar1InstrumentId != 0)
             {
@@ -890,6 +933,7 @@ namespace RB4InstrumentMapper
                             if (GuitarPacketVjoyMapper.MapPacket(guitar1Packet, joystick, guitar1DeviceIndex, guitar1InstrumentId))
                             {
                                 // Used packet
+                                processedPacketCount++;
                                 return;
                             }
                         }
@@ -899,6 +943,7 @@ namespace RB4InstrumentMapper
                             if (GuitarPacketViGEmMapper.MapPacket(guitar1Packet, vigemDictionary[(uint)VigemEnum.Guitar1], guitar1InstrumentId))
                             {
                                 // Used packet
+                                processedPacketCount++;
                                 return;
                             }
                         }
@@ -925,6 +970,7 @@ namespace RB4InstrumentMapper
                             if (GuitarPacketVjoyMapper.MapPacket(guitar2Packet, joystick, guitar2DeviceIndex, guitar2InstrumentId))
                             {
                                 // Used packet
+                                processedPacketCount++;
                                 return;
                             }
                         }
@@ -934,6 +980,7 @@ namespace RB4InstrumentMapper
                             if (GuitarPacketViGEmMapper.MapPacket(guitar2Packet, vigemDictionary[(uint)VigemEnum.Guitar2], guitar2InstrumentId))
                             {
                                 // Used packet
+                                processedPacketCount++;
                                 return;
                             }
                         }
@@ -954,6 +1001,7 @@ namespace RB4InstrumentMapper
                             if (DrumPacketVjoyMapper.MapPacket(drumPacket, joystick, drumDeviceIndex, drumInstrumentId))
                             {
                                 // Used packet
+                                processedPacketCount++;
                                 return;
                             }
                         }
@@ -963,6 +1011,7 @@ namespace RB4InstrumentMapper
                             if (DrumPacketViGEmMapper.MapPacket(drumPacket, vigemDictionary[(uint)VigemEnum.Drum], drumInstrumentId))
                             {
                                 // Used packet
+                                processedPacketCount++;
                                 return;
                             }
                         }
@@ -1044,6 +1093,13 @@ namespace RB4InstrumentMapper
 
             controllerRefreshButton.IsEnabled = true;
             startButton.Content = "Start";
+
+            // Disable packet count display
+            packetsProcessedLabel.Visibility = Visibility.Hidden;
+            packetsProcessedCountLabel.Visibility = Visibility.Hidden;
+            packetsProcessedCountLabel.Content = string.Empty;
+            processedPacketCount = 0;
+
         }
 
         /// <summary>
@@ -1121,6 +1177,9 @@ namespace RB4InstrumentMapper
         /// <param name="e"></param>
         private void guitar1IdTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            // Reset assignment
+            guitar1InstrumentId = 0;
+
             // Set new ID
             string hexString = guitar1IdTextBox.Text.ToUpperInvariant();
             uint enteredId;
@@ -1130,34 +1189,38 @@ namespace RB4InstrumentMapper
                 {
                     // Clear ID
                     Console.WriteLine("Cleared Hex ID for Guitar 1.");
-                    guitar1InstrumentId = 0;
                     hexString = string.Empty;
                 }
                 else if (enteredId == guitar2InstrumentId)
                 {
                     // Enforce unique guitar instrument ID
                     Console.WriteLine("Guitar 1 ID must be different from Guitar 2 ID.");
-                    return;
+                    hexString = string.Empty;
                 }
                 else
                 {
                     // Set ID
                     guitar1InstrumentId = enteredId;
-                    Console.WriteLine($"Set Guitar 1 instrument ID to {enteredId}.");
+                    Console.WriteLine($"Guitar 1 instrument Hex ID set to {hexString}.");
                 }
             }
-            else if (String.IsNullOrEmpty(hexString))
+            else if (string.IsNullOrEmpty(hexString))
             {
                 // Clear ID
                 Console.WriteLine("Cleared Hex ID for Guitar 1.");
-                guitar1InstrumentId = 0;
                 hexString = string.Empty;
             }
             else
             {
-                Console.WriteLine("Invalid ID entered for Guitar 1.");
-                return;
+                Console.WriteLine("Invalid Hex ID entered for Guitar 1.");
+                hexString = string.Empty;
             }
+
+            // Update UI
+            uiDispatcher.Invoke(() =>
+            {
+                guitar1IdTextBox.Text = hexString;
+            });
 
             // Remember guitar 1 ID
             Properties.Settings.Default.currentGuitar1Id = hexString;
@@ -1171,6 +1234,9 @@ namespace RB4InstrumentMapper
         /// <param name="e"></param>
         private void guitar2IdTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            // Reset assignment
+            guitar2InstrumentId = 0;
+
             // Set new ID
             string hexString = guitar2IdTextBox.Text.ToUpperInvariant();
             uint enteredId;
@@ -1180,34 +1246,38 @@ namespace RB4InstrumentMapper
                 {
                     // Clear ID
                     Console.WriteLine("Cleared Hex ID for Guitar 2.");
-                    guitar2InstrumentId = 0;
                     hexString = string.Empty;
                 }
-                else if (enteredId == guitar2InstrumentId)
+                else if (enteredId == guitar1InstrumentId)
                 {
                     // Enforce unique guitar instrument ID
                     Console.WriteLine("Guitar 2 ID must be different from Guitar 1 ID.");
-                    return;
+                    hexString = string.Empty;
                 }
                 else
                 {
                     // Set ID
                     guitar2InstrumentId = enteredId;
-                    Console.WriteLine($"Set Guitar 2 instrument ID to {enteredId}.");
+                    Console.WriteLine($"Guitar 2 instrument Hex ID set to {hexString}.");
                 }
             }
-            else if (String.IsNullOrEmpty(hexString))
+            else if (string.IsNullOrEmpty(hexString))
             {
                 // Clear ID
                 Console.WriteLine("Cleared Hex ID for Guitar 2.");
-                guitar2InstrumentId = 0;
                 hexString = string.Empty;
             }
             else
             {
-                Console.WriteLine("Invalid ID entered for Guitar 2.");
-                return;
+                Console.WriteLine("Invalid Hex ID entered for Guitar 2.");
+                hexString = string.Empty;
             }
+
+            // Update UI
+            uiDispatcher.Invoke(() =>
+            {
+                guitar2IdTextBox.Text = hexString;
+            });
 
             // Remember guitar 2 ID
             Properties.Settings.Default.currentGuitar2Id = hexString;
@@ -1221,6 +1291,9 @@ namespace RB4InstrumentMapper
         /// <param name="e"></param>
         private void drumIdTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            // Reset assignment
+            drumInstrumentId = 0;
+
             // Set new ID
             string hexString = drumIdTextBox.Text.ToUpperInvariant();
             uint enteredId;
@@ -1230,28 +1303,32 @@ namespace RB4InstrumentMapper
                 {
                     // Clear ID
                     Console.WriteLine("Cleared Hex ID for Drum.");
-                    drumInstrumentId = 0;
                     hexString = string.Empty;
                 }
                 else
                 {
                     // Set ID
                     drumInstrumentId = enteredId;
-                    Console.WriteLine($"Set Drum instrument ID to {enteredId}.");
+                    Console.WriteLine($"Drum instrument Hex ID set to {hexString}.");
                 }
             }
-            else if (String.IsNullOrEmpty(hexString))
+            else if (string.IsNullOrEmpty(hexString))
             {
                 // Clear ID
                 Console.WriteLine("Cleared Hex ID for Drum.");
-                drumInstrumentId = 0;
                 hexString = string.Empty;
             }
             else
             {
-                Console.WriteLine("Invalid ID entered for Drum.");
-                return;
+                Console.WriteLine("Invalid Hex ID entered for Drum.");
+                hexString = string.Empty;
             }
+
+            // Update UI
+            uiDispatcher.Invoke(() =>
+            {
+                drumIdTextBox.Text = hexString;
+            });
 
             // Remember drum ID
             Properties.Settings.Default.currentDrumId = hexString;
@@ -1339,13 +1416,13 @@ namespace RB4InstrumentMapper
                         // If there's more than one, don't auto-assign any of them
                         if (newDevices.Count > 1)
                         {
-                            MessageBox.Show("Could not auto-assign, more than one new device was detected.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            MessageBox.Show("Could not auto-assign; more than one new device was detected.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
                             return;
                         }
                         // If there's no new ones, don't do anything
                         else if (newDevices.Count == 0)
                         {
-                            MessageBox.Show("Could not auto-assign, no new devices were detected.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            MessageBox.Show("Could not auto-assign; no new devices were detected.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
                             return;
                         }
                     }
@@ -1403,27 +1480,30 @@ namespace RB4InstrumentMapper
         private async void AutoDetectID()
         {
             // Disable all controls and show the auto-assign instruction label
-            pcapDeviceCombo.IsEnabled = false;
-            pcapAutoDetectButton.IsEnabled = false;
-            pcapRefreshButton.IsEnabled = false;
-            packetDebugCheckBox.IsEnabled = false;
+            uiDispatcher.Invoke(() =>
+            {
+                pcapDeviceCombo.IsEnabled = false;
+                pcapAutoDetectButton.IsEnabled = false;
+                pcapRefreshButton.IsEnabled = false;
+                packetDebugCheckBox.IsEnabled = false;
 
-            guitar1Combo.IsEnabled = false;
-            guitar1IdTextBox.IsEnabled = false;
-            guitar1IdAutoDetectButton.IsEnabled = false;
+                guitar1Combo.IsEnabled = false;
+                guitar1IdTextBox.IsEnabled = false;
+                guitar1IdAutoDetectButton.IsEnabled = false;
 
-            guitar2Combo.IsEnabled = false;
-            guitar2IdTextBox.IsEnabled = false;
-            guitar2IdAutoDetectButton.IsEnabled = false;
+                guitar2Combo.IsEnabled = false;
+                guitar2IdTextBox.IsEnabled = false;
+                guitar2IdAutoDetectButton.IsEnabled = false;
 
-            drumCombo.IsEnabled = false;
-            drumIdTextBox.IsEnabled = false;
-            drumIdAutoDetectButton.IsEnabled = false;
+                drumCombo.IsEnabled = false;
+                drumIdTextBox.IsEnabled = false;
+                drumIdAutoDetectButton.IsEnabled = false;
 
-            controllerRefreshButton.IsEnabled = false;
-            controllerAutoAssignLabel.Visibility = Visibility.Visible;
+                controllerRefreshButton.IsEnabled = false;
+                controllerAutoAssignLabel.Visibility = Visibility.Visible;
 
-            startButton.IsEnabled = false;
+                startButton.IsEnabled = false;
+            });
 
             // Await the result of auto-assignment
             bool result = await Task.Run(Read_AutoDetectID);
@@ -1433,27 +1513,30 @@ namespace RB4InstrumentMapper
             }
 
             // Re-enable all controls and hide the auto-assign instruction label
-            pcapDeviceCombo.IsEnabled = true;
-            pcapAutoDetectButton.IsEnabled = true;
-            pcapRefreshButton.IsEnabled = true;
-            packetDebugCheckBox.IsEnabled = true;
+            uiDispatcher.Invoke(() =>
+            {
+                pcapDeviceCombo.IsEnabled = true;
+                pcapAutoDetectButton.IsEnabled = true;
+                pcapRefreshButton.IsEnabled = true;
+                packetDebugCheckBox.IsEnabled = true;
 
-            guitar1Combo.IsEnabled = true;
-            guitar1IdTextBox.IsEnabled = true;
-            guitar1IdAutoDetectButton.IsEnabled = true;
+                guitar1Combo.IsEnabled = true;
+                guitar1IdTextBox.IsEnabled = true;
+                guitar1IdAutoDetectButton.IsEnabled = true;
 
-            guitar2Combo.IsEnabled = true;
-            guitar2IdTextBox.IsEnabled = true;
-            guitar2IdAutoDetectButton.IsEnabled = true;
+                guitar2Combo.IsEnabled = true;
+                guitar2IdTextBox.IsEnabled = true;
+                guitar2IdAutoDetectButton.IsEnabled = true;
 
-            drumCombo.IsEnabled = true;
-            drumIdTextBox.IsEnabled = true;
-            drumIdAutoDetectButton.IsEnabled = true;
+                drumCombo.IsEnabled = true;
+                drumIdTextBox.IsEnabled = true;
+                drumIdAutoDetectButton.IsEnabled = true;
 
-            controllerRefreshButton.IsEnabled = true;
-            controllerAutoAssignLabel.Visibility = Visibility.Hidden;
+                controllerRefreshButton.IsEnabled = true;
+                controllerAutoAssignLabel.Visibility = Visibility.Hidden;
 
-            startButton.IsEnabled = true;
+                startButton.IsEnabled = true;
+            });
 
             // Disable auto-assignment flags
             packetGuitar1AutoAssign = false;
@@ -1468,6 +1551,9 @@ namespace RB4InstrumentMapper
         /// <param name="e"></param>
         private bool Read_AutoDetectID()
         {
+            // Assume failure
+            bool result = false;
+
             // Retrieve the device list from the local machine
             IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
 
@@ -1483,97 +1569,84 @@ namespace RB4InstrumentMapper
                 );
 
             // Receive packet
-            Packet packet;
-            pcapCommunicator.ReceivePacket(out packet);
-            if (packet == null)
+            Packet packet = null;
+            int attempts = 6;
+            while (attempts > 0)
             {
-                return false;
-            }
-
-            // Debugging (if enabled)
-            if (packetDebug)
-            {
-                string packetHexString = ParsingHelpers.ByteArrayToHexString(packet.Buffer);
-                Console.WriteLine(packet.Timestamp.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{packet.Length}] " + packetHexString);
-            }
-
-            // Check assignment flags and packet length
-            if (packetGuitar1AutoAssign && packet.Length == 40)
-            {
-                // Assign instrument ID
-                // String representation: AA BB CC DD
-                uint id = (uint)(
-                    packet[15] |         // DD
-                    (packet[14] << 8) |  // CC
-                    (packet[13] << 16) | // BB
-                    (packet[12] << 24)   // AA
-                );
-                string idString = Convert.ToString(id, 16).ToUpperInvariant();
-
-                uiDispatcher.Invoke((Action)(() =>
+                pcapCommunicator.ReceivePacket(out packet);
+                if (packet != null)
                 {
-                    guitar1IdTextBox.Text = idString;
-                }));
+                    break;
+                }
 
-                // Stop packet reading
-                pcapCommunicator.Break();
-                pcapCommunicator = null;
-
-                return true;
+                // Short pause before retry
+                Thread.Sleep(333);
+                attempts--;
             }
 
-            if (packetGuitar2AutoAssign && packet.Length == 40)
+            // Process if we got a packet
+            if (packet != null)
             {
-                // Assign instrument ID
-                // String representation: AA BB CC DD
-                uint id = (uint)(
-                    packet[15] |         // DD
-                    (packet[14] << 8) |  // CC
-                    (packet[13] << 16) | // BB
-                    (packet[12] << 24)   // AA
-                );
-                string idString = Convert.ToString(id, 16).ToUpperInvariant();
-
-                uiDispatcher.Invoke((Action)(() =>
+                // Debugging (if enabled)
+                if (packetDebug)
                 {
-                    guitar2IdTextBox.Text = idString;
-                }));
+                    string packetHexString = ParsingHelpers.ByteArrayToHexString(packet.Buffer);
+                    Console.WriteLine(packet.Timestamp.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{packet.Length}] " + packetHexString);
+                }
 
-                // Stop packet reading
-                pcapCommunicator.Break();
-                pcapCommunicator = null;
-
-                return true;
-            }
-
-            if (packetDrumAutoAssign && packet.Length == 36)
-            {
-                // Assign instrument ID
-                // String representation: AA BB CC DD
-                uint id = (uint)(
-                    packet[15] |         // DD
-                    (packet[14] << 8) |  // CC
-                    (packet[13] << 16) | // BB
-                    (packet[12] << 24)   // AA
-                );
-                string idString = Convert.ToString(id, 16).ToUpperInvariant();
-
-                uiDispatcher.Invoke((Action)(() =>
+                // Get ID from packet as Hex string
+                string idString = null;
+                if (packet.Length == 40 || packet.Length == 36)
                 {
-                    drumIdTextBox.Text = idString;
-                }));
+                    // String representation: AA BB CC DD
+                    uint id = (uint)(
+                        packet[15] |         // DD
+                        (packet[14] << 8) |  // CC
+                        (packet[13] << 16) | // BB
+                        (packet[12] << 24)   // AA
+                    );
 
-                // Stop packet reading
-                pcapCommunicator.Break();
-                pcapCommunicator = null;
+                    idString = Convert.ToString(id, 16).ToUpperInvariant();
+                }
 
-                return true;
+                // Check assignment flags and packet length
+                if (packetGuitar1AutoAssign && packet.Length == 40)
+                {
+                    // Update UI (assigns instrument ID)
+                    uiDispatcher.Invoke((Action)(() =>
+                    {
+                        guitar1IdTextBox.Text = idString;
+                    }));
+
+                    result = true;
+                }
+                else if (packetGuitar2AutoAssign && packet.Length == 40)
+                {
+                    // Update UI (assigns instrument ID)
+                    uiDispatcher.Invoke((Action)(() =>
+                    {
+                        guitar2IdTextBox.Text = idString;
+                    }));
+
+                    result = true;
+                }
+                else if (packetDrumAutoAssign && packet.Length == 36)
+                {
+                    // Update UI (assigns instrument ID)
+                    uiDispatcher.Invoke((Action)(() =>
+                    {
+                        drumIdTextBox.Text = idString;
+                    }));
+
+                    result = true;
+                }
             }
             
             // Stop packet reading
             pcapCommunicator.Break();
             pcapCommunicator = null;
-            return false;
+
+            return result;
         }
     }
 }
