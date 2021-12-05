@@ -35,7 +35,7 @@
                 <TextBox x:Name="drumIdTextBox" HorizontalAlignment="Right" Height="28" Margin="0,80,123,0" TextWrapping="Wrap" Text="" FontSize="16" VerticalAlignment="Top" Width="96" TextChanged="drumIdTextBox_TextChanged" TextAlignment="Right"/>
                 <Button x:Name="drumIdAutoDetectButton" Content="Auto-Detect ID" HorizontalAlignment="Right" Margin="0,80,0,0" VerticalAlignment="Top" Width="112" Height="28" Click="drumIdAutoDetectButton_Click" IsEnabled="False"/>
                 <Button x:Name="controllerRefreshButton" Content="Refresh Controller" HorizontalAlignment="Right" Margin="0,118,281,0" VerticalAlignment="Top" Width="132" Height="20" Click="controllerRefreshButton_Click" FontSize="10"/>
-                <Label x:Name="controllerAutoAssignLabel" Content="Ensure controllers are connected. &#xD;&#xA;Maybe press a button on the controller." HorizontalAlignment="Left" Margin="504,118,0,-5" VerticalAlignment="Top" Width="219" Height="46" FontSize="11"/>
+                <Label x:Name="controllerAutoAssignLabel" Content="Ensure controllers are connected. &#xD;&#xA;Maybe press a button on the controller." HorizontalAlignment="Left" Margin="504,118,0,-5" VerticalAlignment="Top" Width="219" Height="46" FontSize="11" Visibility="Hidden"/>
             </Grid>
         </GroupBox>
         <Label x:Name="packetsProcessedLabel" Content="Packets processed:" HorizontalAlignment="Left" Height="26" Margin="25,375,0,0" VerticalAlignment="Top" Width="115" FontSize="10" Visibility="Hidden"/>
@@ -46,6 +46,6 @@
                 <TextBox Name="messageConsole" Margin="0,0,0,0" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Visible" IsReadOnly="True" FontSize="10"/>
             </Grid>
         </GroupBox>
-        <Label x:Name="guitar1IdLabel_Copy" Content="v1.0.20211204" HorizontalAlignment="Right" Height="28" Margin="0,13,9.667,0" VerticalAlignment="Top" Width="103" IsEnabled="False"/>
+        <Label x:Name="guitar1IdLabel_Copy" Content="v1.0.20211205" HorizontalAlignment="Right" Height="28" Margin="0,13,9.667,0" VerticalAlignment="Top" Width="103" IsEnabled="False"/>
     </Grid>
 </Window>

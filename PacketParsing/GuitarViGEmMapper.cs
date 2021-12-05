@@ -17,12 +17,6 @@ namespace RB4InstrumentMapper
         /// <returns>True if packet was mapped, false otherwise.</returns>
         public static bool MapPacket(GuitarPacket packet, IXbox360Controller vigemDevice, uint instrumentId)
         {
-            // Don't auto-submit input reports for performance optimization
-            if (vigemDevice.AutoSubmitReport == true)
-            {
-                vigemDevice.AutoSubmitReport = false;
-            }
-
             // Ensure instrument ID is assigned
             if(instrumentId == 0)
             {
@@ -33,6 +27,12 @@ namespace RB4InstrumentMapper
             if (instrumentId != packet.InstrumentID)
             {
                 return false;
+            }
+
+            // Don't auto-submit input reports for performance optimization
+            if (vigemDevice.AutoSubmitReport)
+            {
+                vigemDevice.AutoSubmitReport = false;
             }
 
             // Reset report

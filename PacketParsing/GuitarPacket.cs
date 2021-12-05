@@ -66,14 +66,14 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Packet definitions for the d-pad.
+        /// Packet definitions for the Dpad.
         /// </summary>
         [Flags]
         public enum Dpad : byte
         {
-            Down  = 0x01,
-            Up    = 0x02,
-            Left  = 0x04,
+            Down = 0x01, // up/down inverted to match usage geometry
+            Up = 0x02,
+            Left = 0x04,
             Right = 0x08,
         }
 
@@ -90,13 +90,13 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// Position in the packet from the header.
         /// </summary>
-        public enum PacketPosition : int 
+        public enum PacketPosition : int
         {
-            Buttons   = 8,
-            Dpad      = 9,
-            Tilt      = 10,
-            Whammy    = 11,
-            Slider    = 12,
+            Buttons = 8,
+            Dpad = 9,
+            Tilt = 10,
+            Whammy = 11,
+            Slider = 12,
             UpperFret = 13,
             LowerFret = 14,
         }
@@ -126,10 +126,10 @@ namespace RB4InstrumentMapper
 
                 // Menu
                 data.MenuButton = (buttons & (byte)Buttons.Menu) != 0;
-                
+
                 // Options
                 data.OptionsButton = (buttons & (byte)Buttons.Options) != 0;
-                
+
                 // Xbox
                 data.XboxButton = (buttons & (byte)Buttons.Xbox) != 0;
 
@@ -138,13 +138,13 @@ namespace RB4InstrumentMapper
 
                 // Dpad Up
                 data.DpadUp = (dpad & (byte)Dpad.Up) != 0;
-                
+
                 // Dpad Down
                 data.DpadDown = (dpad & (byte)Dpad.Down) != 0;
-                
+
                 // Dpad Left
                 data.DpadLeft = (dpad & (byte)Dpad.Left) != 0;
-                
+
                 // Dpad Right
                 data.DpadRight = (dpad & (byte)Dpad.Right) != 0;
 
@@ -155,19 +155,19 @@ namespace RB4InstrumentMapper
                 // Fret Green
                 data.UpperGreen = (upperFret & (byte)Frets.Green) != 0;
                 data.LowerGreen = (lowerFret & (byte)Frets.Green) != 0;
-                
+
                 // Fret Red
                 data.UpperRed = (upperFret & (byte)Frets.Red) != 0;
                 data.LowerRed = (lowerFret & (byte)Frets.Red) != 0;
-                
+
                 // Fret Yellow
                 data.UpperYellow = (upperFret & (byte)Frets.Yellow) != 0;
                 data.LowerYellow = (lowerFret & (byte)Frets.Yellow) != 0;
-                
+
                 // Fret Blue
                 data.UpperBlue = (upperFret & (byte)Frets.Blue) != 0;
                 data.LowerBlue = (lowerFret & (byte)Frets.Blue) != 0;
-                
+
                 // Fret Orange
                 data.UpperOrange = (upperFret & (byte)Frets.Orange) != 0;
                 data.LowerOrange = (lowerFret & (byte)Frets.Orange) != 0;

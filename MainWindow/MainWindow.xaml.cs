@@ -110,11 +110,6 @@ namespace RB4InstrumentMapper
         private static uint guitar1InstrumentId = 0;
 
         /// <summary>
-        /// Analyzed packet for guitar 1.
-        /// </summary>
-        private static GuitarPacket guitar1Packet = new GuitarPacket();
-
-        /// <summary>
         /// Index of the selected guitar 2 device.
         /// </summary>
         private static uint guitar2DeviceIndex = 0;
@@ -128,11 +123,6 @@ namespace RB4InstrumentMapper
         private static uint guitar2InstrumentId = 0;
 
         /// <summary>
-        /// Analyzed packet for guitar 2.
-        /// </summary>
-        private static GuitarPacket guitar2Packet = new GuitarPacket();
-
-        /// <summary>
         /// Index of the selected drum device.
         /// </summary>
         private static uint drumDeviceIndex = 0;
@@ -144,6 +134,11 @@ namespace RB4InstrumentMapper
         /// An ID of 0x00000000 is assumed to be invalid.
         /// </remarks>
         private static uint drumInstrumentId = 0;
+
+        /// <summary>
+        /// Analyzed packet for guitar.
+        /// </summary>
+        private static GuitarPacket guitarPacket = new GuitarPacket();
 
         /// <summary>
         /// Analyzed packet for the drumkit.
@@ -894,86 +889,76 @@ namespace RB4InstrumentMapper
                 return;
             }
 
-            // Map guitar 1 (if enabled)
-            if (guitar1DeviceIndex > 0 && guitar1InstrumentId != 0)
+            // Analyze guitar packets
+            if (GuitarPacketReader.AnalyzePacket(packet.Buffer, ref guitarPacket))
             {
-                if (GuitarPacketReader.AnalyzePacket(packet.Buffer, ref guitar1Packet))
+                // Map guitar 1 (if enabled)
+                if (guitar1DeviceIndex > 0 && guitar1InstrumentId != 0 && guitar1InstrumentId == guitarPacket.InstrumentID)
                 {
-                    if (guitar1InstrumentId == guitar1Packet.InstrumentID)
+                    // vJoy
+                    if (guitar1DeviceIndex < (int)VigemEnum.DeviceIndex && joystick != null)
                     {
-                        // vJoy
-                        if (guitar1DeviceIndex < (int)VigemEnum.DeviceIndex && joystick != null)
+                        if (GuitarPacketVjoyMapper.MapPacket(guitarPacket, joystick, guitar1DeviceIndex, guitar1InstrumentId))
                         {
-                            if (GuitarPacketVjoyMapper.MapPacket(guitar1Packet, joystick, guitar1DeviceIndex, guitar1InstrumentId))
-                            {
-                                // Used packet
-                                processedPacketCount++;
-                            }
+                            // Used packet
+                            processedPacketCount++;
                         }
-                        // ViGEmBus
-                        else if (guitar1DeviceIndex == (int)VigemEnum.DeviceIndex && vigemClient != null)
+                    }
+                    // ViGEmBus
+                    else if (guitar1DeviceIndex == (int)VigemEnum.DeviceIndex && vigemClient != null)
+                    {
+                        if (GuitarPacketViGEmMapper.MapPacket(guitarPacket, vigemDictionary[(uint)VigemEnum.Guitar1], guitar1InstrumentId))
                         {
-                            if (GuitarPacketViGEmMapper.MapPacket(guitar1Packet, vigemDictionary[(uint)VigemEnum.Guitar1], guitar1InstrumentId))
-                            {
-                                // Used packet
-                                processedPacketCount++;
-                            }
+                            // Used packet
+                            processedPacketCount++;
+                        }
+                    }
+                }
+                // Map guitar 2 (if enabled)
+                else if (guitar2DeviceIndex > 0 && guitar2InstrumentId != 0 && guitar2InstrumentId == guitarPacket.InstrumentID)
+                {
+                    // vJoy
+                    if (guitar2DeviceIndex < (int)VigemEnum.DeviceIndex && joystick != null)
+                    {
+                        if (GuitarPacketVjoyMapper.MapPacket(guitarPacket, joystick, guitar2DeviceIndex, guitar2InstrumentId))
+                        {
+                            // Used packet
+                            processedPacketCount++;
+                        }
+                    }
+                    // ViGEmBus
+                    else if (guitar2DeviceIndex == (int)VigemEnum.DeviceIndex && vigemClient != null)
+                    {
+                        if (GuitarPacketViGEmMapper.MapPacket(guitarPacket, vigemDictionary[(uint)VigemEnum.Guitar2], guitar2InstrumentId))
+                        {
+                            // Used packet
+                            processedPacketCount++;
                         }
                     }
                 }
             }
-            // Map guitar 2 (if enabled)
-            else if (guitar2DeviceIndex > 0 && guitar2InstrumentId != 0)
+            // Analyze drum packets
+            else if (DrumPacketReader.AnalyzePacket(packet.Buffer, ref drumPacket))
             {
-                if (GuitarPacketReader.AnalyzePacket(packet.Buffer, ref guitar2Packet))
+                // Map drum (if enabled)
+                if (drumDeviceIndex > 0 && drumInstrumentId != 0 && drumInstrumentId == drumPacket.InstrumentID)
                 {
-                    if (guitar2InstrumentId == guitar2Packet.InstrumentID)
+                    // vJoy
+                    if (drumDeviceIndex < (int)VigemEnum.DeviceIndex && joystick != null)
                     {
-                        // vJoy
-                        if (guitar2DeviceIndex < (int)VigemEnum.DeviceIndex && joystick != null)
+                        if (DrumPacketVjoyMapper.MapPacket(drumPacket, joystick, drumDeviceIndex, drumInstrumentId))
                         {
-                            if (GuitarPacketVjoyMapper.MapPacket(guitar2Packet, joystick, guitar2DeviceIndex, guitar2InstrumentId))
-                            {
-                                // Used packet
-                                processedPacketCount++;
-                            }
-                        }
-                        // ViGEmBus
-                        else if (guitar2DeviceIndex == (int)VigemEnum.DeviceIndex && vigemClient != null)
-                        {
-                            if (GuitarPacketViGEmMapper.MapPacket(guitar2Packet, vigemDictionary[(uint)VigemEnum.Guitar2], guitar2InstrumentId))
-                            {
-                                // Used packet
-                                processedPacketCount++;
-                            }
+                            // Used packet
+                            processedPacketCount++;
                         }
                     }
-                }
-            }
-            // Map drum (if enabled)
-            else if (drumDeviceIndex > 0 && drumInstrumentId != 0)
-            {
-                if (DrumPacketReader.AnalyzePacket(packet.Buffer, ref drumPacket))
-                {
-                    if (drumInstrumentId == drumPacket.InstrumentID)
+                    // ViGEmBus
+                    else if (drumDeviceIndex == (int)VigemEnum.DeviceIndex && vigemClient != null)
                     {
-                        // vJoy
-                        if (drumDeviceIndex < (int)VigemEnum.DeviceIndex && joystick != null)
+                        if (DrumPacketViGEmMapper.MapPacket(drumPacket, vigemDictionary[(uint)VigemEnum.Drum], drumInstrumentId))
                         {
-                            if (DrumPacketVjoyMapper.MapPacket(drumPacket, joystick, drumDeviceIndex, drumInstrumentId))
-                            {
-                                // Used packet
-                                processedPacketCount++;
-                            }
-                        }
-                        // ViGEmBus
-                        else if (drumDeviceIndex == (int)VigemEnum.DeviceIndex && vigemClient != null)
-                        {
-                            if (DrumPacketViGEmMapper.MapPacket(drumPacket, vigemDictionary[(uint)VigemEnum.Drum], drumInstrumentId))
-                            {
-                                // Used packet
-                                processedPacketCount++;
-                            }
+                            // Used packet
+                            processedPacketCount++;
                         }
                     }
                 }
