@@ -55,6 +55,9 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Nefarius.ViGEm.Client, Version=1.17.178.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Nefarius.ViGEm.Client.1.17.178\lib\net452\Nefarius.ViGEm.Client.dll</HintPath>
+    </Reference>
     <Reference Include="PcapDotNet.Base, Version=1.0.4.25027, Culture=neutral, PublicKeyToken=06a20bc2fabb1931, processorArchitecture=MSIL">
       <HintPath>packages\Pcap.Net.x64.1.0.4.1\lib\net45\PcapDotNet.Base.dll</HintPath>
     </Reference>
@@ -69,7 +72,7 @@
     </Reference>
     <Reference Include="vJoyInterfaceWrap, Version=0.2.0.5, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>x64\vJoyInterfaceWrap.dll</HintPath>
+      <HintPath>Dependencies\x64\vJoyInterfaceWrap.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -91,11 +94,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="DrumPacketVjoyMapper.cs" />
-    <Compile Include="GuitarPacketVjoyMapper.cs" />
-    <Compile Include="ParsingHelpers.cs" />
-    <Compile Include="TextBoxConsole.cs" />
-    <Page Include="MainWindow.xaml">
+    <Compile Include="PacketParsing\DrumPacket.cs" />
+    <Compile Include="PacketParsing\DrumViGEmMapper.cs" />
+    <Compile Include="PacketParsing\DrumPacketVjoyMapper.cs" />
+    <Compile Include="PacketParsing\GuitarPacket.cs" />
+    <Compile Include="PacketParsing\GuitarViGEmMapper.cs" />
+    <Compile Include="PacketParsing\GuitarPacketVjoyMapper.cs" />
+    <Compile Include="MainWindow\ParsingHelpers.cs" />
+    <Compile Include="MainWindow\TextBoxConsole.cs" />
+    <Page Include="MainWindow\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -103,8 +110,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="FixedSizeConcurrentQueue.cs" />
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="MainWindow\FixedSizeConcurrentQueue.cs" />
+    <Compile Include="MainWindow\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
@@ -129,6 +136,7 @@
     </EmbeddedResource>
     <None Include=".gitignore" />
     <None Include="packages.config" />
+    <None Include="Docs\PacketFormats.md" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -139,10 +147,17 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\Screenshot.png" />
+    <Resource Include="Docs\Images\ProgramScreenshot.png" />
+    <Resource Include="Docs\Images\vJoyConfiguration.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Dependencies\x64\vJoyInterface.dll" />
+    <Content Include="Dependencies\x64\vJoyInterfaceWrap.dll" />
+    <Content Include="Dependencies\x86\vJoyInterface.dll" />
+    <Content Include="Dependencies\x86\vJoyInterfaceWrap.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(SolutionDir)x64\vJoyInterface.dll  $(TargetDir).</PostBuildEvent>
+    <PostBuildEvent>copy $(SolutionDir)Dependencies\x64\vJoyInterface.dll  $(TargetDir).</PostBuildEvent>
   </PropertyGroup>
 </Project>
