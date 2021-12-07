@@ -66,7 +66,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Packet definitions for the d-pad.
+        /// Packet definitions for the Dpad.
         /// </summary>
         [Flags]
         public enum Dpad : byte

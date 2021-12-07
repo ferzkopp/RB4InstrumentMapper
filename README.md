@@ -50,6 +50,7 @@ Almost all features for guitars and drums are supported.
      - Guitars should auto-detect automatically as they are constantly sending packets. Retry if duplicate IDs were detected (and rejected).
      - Drums require an action such as a button press on the instrument you are assigning within 2 seconds after 'Auto-Detect' was clicked.
 5. Click the Start button.
+   - Note: launch *joy.cpl* to check Controller inputs.
 6. Map the controls for each instrument in Clone Hero:
    1. Press Space on the main menu.
    2. Click the Assign Controller button and do an action on the instrument to be assigned.
@@ -58,6 +59,7 @@ Almost all features for guitars and drums are supported.
    5. Click `Done`.
 
 Selections and IDs are saved and should persist across program sessions.
+
 
 ## References
 

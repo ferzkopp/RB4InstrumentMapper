@@ -11,7 +11,7 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// The vJoy device state.
         /// </summary>
-        static private vJoy.JoystickState iReport;
+        private static vJoy.JoystickState iReport;
 
         [Flags]
         /// <summary>
@@ -19,39 +19,23 @@ namespace RB4InstrumentMapper
         /// </summary>
         private enum Buttons : uint
         {
-            // For the pads, roughly follows the layout of an Xbox 360 drumkit as viewed through Joy.cpl
-            GreenDrum = 0x0001, // Button 1
-            RedDrum = 0x0002, // Button 2
-            BlueDrum = 0x0004, // Button 3
-            YellowDrum = 0x0008, // Button 4
-            GreenCymbal = 0x0010, // Button 5
-            BlueCymbal = 0x0020, // Button 6
-            YellowCymbal = 0x0040, // Button 7
-            BassOne = 0x0080, // Button 8
-            BassTwo = 0x0100, // Button 9
-
-            //Xbox = 0x2000, // Button 14
-            Menu = 0x4000, // Button 15
-            Options = 0x8000 // Button 16
+            One = (uint)1 << 0,
+            Two = (uint)1 << 1,
+            Three = (uint)1 << 2,
+            Four = (uint)1 << 3,
+            Five = (uint)1 << 4,
+            Six = (uint)1 << 5,
+            Seven = (uint)1 << 6,
+            Eight = (uint)1 << 7,
+            Nine = (uint)1 << 8,
+            Ten = (uint)1 << 9,
+            Eleven = (uint)1 << 10,
+            Twelve = (uint)1 << 11,
+            Thirteen = (uint)1 << 12,
+            Fourteen = (uint)1 << 13,
+            Fifteen = (uint)1 << 14,
+            Sixteen = (uint)1 << 15
         }
-
-        /*
-        Discrete PoV hat reference:
-            None = 0xFFFFFFFF,
-            Up = 0,
-            Down = 2,
-            Left = 3,
-            Right = 1
-
-        Continuous PoV hat reference:
-            Ranges from 0 to 35999 (measured in 1/100 of a degree), goes clockwise
-
-            None = 0xFFFFFFFF,
-            Up = 0,
-            Down = 18000,
-            Left = 27000,
-            Right = 9000
-        */
 
         /// <summary>
         /// Maps a DrumPacket to a vJoy device.
@@ -83,18 +67,19 @@ namespace RB4InstrumentMapper
             // Menu
             if (packet.MenuButton)
             {
-                iReport.Buttons |= (uint)Buttons.Menu;
+                iReport.Buttons |= (uint)Buttons.Fifteen;
             }
 
             // Options
             if (packet.OptionsButton)
             {
-                iReport.Buttons |= (uint)Buttons.Options;
+                iReport.Buttons |= (uint)Buttons.Sixteen;
             }
 
             // Xbox - not mapped
 
             // D-pad to POV
+            // Ranges from 0 to 35999 (measured in 1/100 of a degree), clockwise, top 0
             if (packet.DpadUp)
             {
                 if (packet.DpadLeft)
@@ -146,37 +131,37 @@ namespace RB4InstrumentMapper
             // Red drum
             if (packet.RedDrum)
             {
-                iReport.Buttons |= (uint)Buttons.RedDrum;
+                iReport.Buttons |= (uint)Buttons.One;
             }
 
             // Yellow drum
             if (packet.YellowDrum)
             {
-                iReport.Buttons |= (uint)Buttons.YellowDrum;
+                iReport.Buttons |= (uint)Buttons.Two;
             }
 
             // Blue drum
             if (packet.BlueDrum)
             {
-                iReport.Buttons |= (uint)Buttons.BlueDrum;
+                iReport.Buttons |= (uint)Buttons.Three;
             }
 
             // Green drum
             if (packet.GreenDrum)
             {
-                iReport.Buttons |= (uint)Buttons.GreenDrum;
+                iReport.Buttons |= (uint)Buttons.Four;
             }
 
             // Bass 1
             if (packet.BassOne)
             {
-                iReport.Buttons |= (uint)Buttons.BassOne;
+                iReport.Buttons |= (uint)Buttons.Five;
             }
 
             // Bass 2
             if (packet.BassTwo)
             {
-                iReport.Buttons |= (uint)Buttons.BassTwo;
+                iReport.Buttons |= (uint)Buttons.Nine;
             }
 
 
@@ -184,21 +169,20 @@ namespace RB4InstrumentMapper
             // Yellow cymbal
             if (packet.YellowCymbal)
             {
-                iReport.Buttons |= (uint)Buttons.YellowCymbal;
+                iReport.Buttons |= (uint)Buttons.Six;
             }
 
             // Blue cymbal
             if (packet.BlueCymbal)
             {
-                iReport.Buttons |= (uint)Buttons.BlueCymbal;
+                iReport.Buttons |= (uint)Buttons.Seven;
             }
 
             // Green cymbal
             if (packet.GreenCymbal)
             {
-                iReport.Buttons |= (uint)Buttons.GreenCymbal;
+                iReport.Buttons |= (uint)Buttons.Eight;
             }
-
 
             // Send data
             vjoyClient.UpdateVJD(joystickDeviceIndex, ref iReport);

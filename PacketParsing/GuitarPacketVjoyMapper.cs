@@ -11,7 +11,7 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// The vJoy device state.
         /// </summary>
-        static private vJoy.JoystickState iReport;
+        private static vJoy.JoystickState iReport;
 
         [Flags]
         /// <summary>
@@ -19,37 +19,23 @@ namespace RB4InstrumentMapper
         /// </summary>
         private enum Buttons : uint
         {
-            // Roughly follows the layout of an Xbox 360 guitar as viewed through Joy.cpl
-            GreenFret = 0x0001, // Button 1
-            RedFret = 0x0002, // Button 2
-            BlueFret = 0x0004, // Button 3
-            YellowFret = 0x0008, // Button 4
-            OrangeFret = 0x0010, // Button 5
-
-            //Xbox = 0x2000, // Button 14
-            Menu = 0x4000, // Button 15
-            Options = 0x8000 // Button 16
+            One = (uint)1 << 0,
+            Two = (uint)1 << 1,
+            Three = (uint)1 << 2,
+            Four = (uint)1 << 3,
+            Five = (uint)1 << 4,
+            Six = (uint)1 << 5,
+            Seven = (uint)1 << 6,
+            Eight = (uint)1 << 7,
+            Nine = (uint)1 << 8,
+            Ten = (uint)1 << 9,
+            Eleven = (uint)1 << 10,
+            Twelve = (uint)1 << 11,
+            Thirteen = (uint)1 << 12,
+            Fourteen = (uint)1 << 13,
+            Fifteen = (uint)1 << 14,
+            Sixteen = (uint)1 << 15
         }
-        
-        /*
-        Discrete PoV hat reference:
-            None = 0xFFFFFFFF,
-            Up = 0,
-            Down = 2,
-            Left = 3,
-            Right = 1
-        */
-
-        /*
-        Continuous PoV hat reference:
-            Ranges from 0 to 35999 (measured in 1/100 of a degree), goes clockwise
-
-            None = 0xFFFFFFFF,
-            Up = 0,
-            Down = 18000,
-            Left = 27000,
-            Right = 9000
-        */
 
         /// <summary>
         /// Maps a GuitarPacket to a vJoy device.
@@ -81,16 +67,17 @@ namespace RB4InstrumentMapper
             // Menu
             if (packet.MenuButton)
             {
-                iReport.Buttons |= (uint)Buttons.Menu;
+                iReport.Buttons |= (uint)Buttons.Fifteen;
             }
 
             // Options
             if (packet.OptionsButton)
             {
-                iReport.Buttons |= (uint)Buttons.Options;
+                iReport.Buttons |= (uint)Buttons.Sixteen;
             }
 
             // Xbox - not mapped
+            // Ranges from 0 to 35999 (measured in 1/100 of a degree), clockwise, top 0
 
             // D-pad to POV
             if (packet.DpadUp)
@@ -144,39 +131,50 @@ namespace RB4InstrumentMapper
             // Fret Green
             if (packet.UpperGreen || packet.LowerGreen)
             {
-                iReport.Buttons |= (uint)Buttons.GreenFret;
+                iReport.Buttons |= (uint)Buttons.One;
             }
             // Fret Red
             if (packet.UpperRed || packet.LowerRed)
             {
-                iReport.Buttons |= (uint)Buttons.RedFret;
+                iReport.Buttons |= (uint)Buttons.Two;
             }
             // Fret Yellow
             if (packet.UpperYellow || packet.LowerYellow)
             {
-                iReport.Buttons |= (uint)Buttons.YellowFret;
+                iReport.Buttons |= (uint)Buttons.Three;
             }
             // Fret Blue
             if (packet.UpperBlue || packet.LowerBlue)
             {
-                iReport.Buttons |= (uint)Buttons.BlueFret;
+                iReport.Buttons |= (uint)Buttons.Four;
             }
             // Fret Orange
             if (packet.UpperOrange || packet.LowerOrange)
             {
-                iReport.Buttons |= (uint)Buttons.OrangeFret;
+                iReport.Buttons |= (uint)Buttons.Five;
             }
 
             // Axes
+
+            // vJoy axis range is 0x0...0x7FFF(0...32767), 50 % = 0x4000(16384).
+
             // Map pickup switch to X-axis
-            // Multiply the byte into a 32-bit uint, then subtract the max positive of an int + 1 to get a signed int
-            iReport.AxisX = (int)((packet.PickupSwitch * 16843009) - 2147483648);
+            // input is 0, 16, 32, 48, and 64.
+            int xAxis = packet.PickupSwitch;
+            xAxis *= (32768 / 64);
+            iReport.AxisX = xAxis;
 
             // Map whammy to Y-axis
-            iReport.AxisY = (int)((packet.WhammyBar * 16843009) - 2147483648);
+            // input ranges from 0 (default) to 255 (depressed)
+            int yAxis = packet.WhammyBar;
+            yAxis *= (32768 / 256);
+            iReport.AxisY = yAxis;
 
             // Map tilt to Z-axis
-            iReport.AxisZ = (int)((packet.Tilt * 16843009) - 2147483648);
+            // input ranges from 0 (horizontal) to 255 (vertical)
+            int zAxis = packet.Tilt;
+            zAxis *= (32768 / 256);
+            iReport.AxisZ = zAxis;
 
             // Send data
             vjoyClient.UpdateVJD(joystickDeviceIndex, ref iReport);
