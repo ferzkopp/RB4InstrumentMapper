@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product
+    Id="17334893-60D7-45E2-9101-704EF0BCD515"
+    Name="RB4InstrumentMapper"
+    Language="1033"
+    Version="1.1.0.0"
+    Manufacturer="Andreas Schiffler"
+    UpgradeCode="94bef546-701f-4571-9828-d4fa39b2ea84">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes"/>
+
+    <?define ResourcesDir = $(sys.CURRENTDIR)Resources\?>
+    <Icon Id="FILE_Iconico" SourceFile="$(var.ResourcesDir)Icon.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="FILE_Iconico" />
+
+    <UIRef Id="WixUI_Minimal" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.ResourcesDir)license.rtf" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.ResourcesDir)dialog.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.ResourcesDir)banner.bmp" />
+
+    <Feature Id="ProductFeature" Title="MsiInstaller" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="RB4InstrumentMapper" />
+      </Directory>
+      <Directory Id="DesktopFolder" Name="Desktop" />
+    </Directory>
+  </Fragment>
+  
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <?define BinariesDir = $(sys.CURRENTDIR)..\bin\x64\Release\?>
+      <Component Id="COMP_NefariusViGEmClientdll" Guid="04BB3091-EA32-4F10-8F2B-7BA22FF8309A">
+        <File Id="FILE_NefariusViGEmClientdll" Name="Nefarius.ViGEm.Client.dll" Source="$(var.BinariesDir)Nefarius.ViGEm.Client.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_PcapDotNetBasedll" Guid="6A914948-A7EF-4A9D-BC33-7C9915A3ED32">
+        <File Id="FILE_PcapDotNetBasedll" Name="PcapDotNet.Base.dll" Source="$(var.BinariesDir)PcapDotNet.Base.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_PcapDotNetCoredll" Guid="23E885D9-CD4C-4BCA-84F0-3D3369C3C035">
+        <File Id="FILE_PcapDotNetCoredll" Name="PcapDotNet.Core.dll" Source="$(var.BinariesDir)PcapDotNet.Core.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_PcapDotNetCoreExtensionsdll" Guid="BBB69010-18C6-4AB4-8F2E-15257DC7433F">
+        <File Id="FILE_PcapDotNetCoreExtensionsdll" Name="PcapDotNet.Core.Extensions.dll" Source="$(var.BinariesDir)PcapDotNet.Core.Extensions.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_PcapDotNetPacketsdll" Guid="C43DDB63-9F8E-4843-BFE9-0E60FC34B561">
+        <File Id="FILE_PcapDotNetPacketsdll" Name="PcapDotNet.Packets.dll" Source="$(var.BinariesDir)PcapDotNet.Packets.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_RB4InstrumentMapperexe" Guid="4D1C894A-DA1B-4C6F-AB06-0A89DE716835">
+        <File Id="FILE_RB4InstrumentMapperexe" Name="RB4InstrumentMapper.exe" Source="$(var.BinariesDir)RB4InstrumentMapper.exe" KeyPath="yes" >
+        </File>
+      </Component>
+      <Component Id="COMP_RB4InstrumentMapperexeconfig" Guid="5DB2E840-D3B5-4B9D-AEF9-523A8C8CD09C">
+        <File Id="FILE_RB4InstrumentMapperexeconfig" Name="RB4InstrumentMapper.exe.config" Source="$(var.BinariesDir)RB4InstrumentMapper.exe.config" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_vJoyInterfacedll" Guid="CB9CA948-3098-44B6-B5DA-3807C6C1CA97">
+        <File Id="FILE_vJoyInterfacedll" Name="vJoyInterface.dll" Source="$(var.BinariesDir)vJoyInterface.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_vJoyInterfaceWrapdll" Guid="92502704-7C1B-49B7-BF68-56A2B78AC1F9">
+        <File Id="FILE_vJoyInterfaceWrapdll" Name="vJoyInterfaceWrap.dll" Source="$(var.BinariesDir)vJoyInterfaceWrap.dll" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <Component Id="DesktopShortcut" Directory="INSTALLFOLDER" Guid="BC673EF6-B5A1-4AA3-BAC4-EC0BAEBB6B98">
+      <RegistryValue Id="RegShortcutDesktop"
+              Root="HKCU"
+              Key="Software\AndreasSchiffler\RB4InstrumentMapper"
+              Name="DesktopShortcut"
+              Value="1"
+              Type="integer"
+              KeyPath="yes" />
+      <Shortcut Id="DesktopShortcut"
+              Target="[INSTALLFOLDER]RB4InstrumentMapper.exe"
+              WorkingDirectory="INSTALLFOLDER"
+              Directory="DesktopFolder"
+              Icon="Icon.ico"
+              Name="RB4InstrumentMapper"
+              Advertise="no" >
+        <Icon Id="Icon.ico" SourceFile="$(var.ResourcesDir)Icon.ico" />
+      </Shortcut>
+    </Component>
+  </Fragment>
+
+</Wix>
