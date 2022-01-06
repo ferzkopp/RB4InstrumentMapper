@@ -62,6 +62,10 @@ Almost all features for guitars and drums are supported.
 
 Selections and IDs are saved and should persist across program sessions.
 
+## Error Logs
+
+In the case that the program crashes, an error log is saved to a `RB4InstrumentMapper` > `Logs` folder inside your Documents folder. Make sure to include it when creating an issue report for a crash or when getting help for a crash.
+
 ## References
 
 - [GuitarSniffer repository](https://github.com/artman41/guitarsniffer)

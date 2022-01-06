@@ -175,6 +175,9 @@ namespace RB4InstrumentMapper
         /// </summary>
         public MainWindow()
         {
+            // Assign event handler for unhandled exceptions
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(App.App_UnhandledException);
+
             InitializeComponent();
 
             // Capture Dispatcher object for use in callback
