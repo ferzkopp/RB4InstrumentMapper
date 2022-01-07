@@ -1,4 +1,4 @@
-﻿using PcapDotNet.Core;
+using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using System;
 using System.Collections.Generic;
@@ -276,7 +276,15 @@ namespace RB4InstrumentMapper
                 // the guitar should be subtype 6, and the drums should be subtype 8
             );
 
-            Console.WriteLine($"Created new ViGEmBus device with user index {vigemDictionary[userIndex].UserIndex}");
+            try
+            {
+                int _userIndex = vigemDictionary[userIndex].UserIndex;
+                Console.WriteLine($"Created new ViGEmBus device with user index {_userIndex}");
+            }
+            catch (Nefarius.ViGEm.Client.Targets.Xbox360.Exceptions.Xbox360UserIndexNotReportedException)
+            {
+                Console.WriteLine($"Created new ViGEmBus device, user index not reported.");
+            }
         }
 
         /// <summary>
