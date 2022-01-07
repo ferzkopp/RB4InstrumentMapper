@@ -44,6 +44,11 @@ namespace RB4InstrumentMapper
         private int pcapDeviceIndex = -1;
 
         /// <summary>
+        /// Length of the Pcap device list.
+        /// </summary>
+        private int pcapDeviceCount = 0;
+
+        /// <summary>
         /// Pcap packet communicator.
         /// </summary>
         private PacketCommunicator pcapCommunicator;
@@ -583,6 +588,7 @@ namespace RB4InstrumentMapper
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < allDevices.Count; i++)
             {
+                pcapDeviceCount = allDevices.Count;
                 LivePacketDevice device = allDevices[i];
                 sb.Clear();
                 string itemNumber = $"{i + 1}";
@@ -786,6 +792,18 @@ namespace RB4InstrumentMapper
         /// <param name="deviceIndex">The index of the Pcap device to use.</param>
         private void StartCapture(int deviceIndex)
         {
+            // Retrieve the device list from the local machine
+            IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
+
+            // Don't start if the device count has changed
+            if (allDevices.Count != pcapDeviceCount)
+            {
+                Console.WriteLine("Pcap device count has changed, please re-select your device from the list and try again.");
+                // Force a refresh
+                PopulatePcapDropdown();
+                return;
+            }
+
             // Enable packet capture active flag
             packetCaptureActive = true;
 
@@ -858,9 +876,6 @@ namespace RB4InstrumentMapper
                     CreateVigemDevice((uint)VigemEnum.Drum);
                 }
             }
-
-            // Retrieve the device list from the local machine
-            IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
 
             // Take the selected adapter
             PacketDevice selectedDevice = allDevices[deviceIndex];
