@@ -1,4 +1,4 @@
-using PcapDotNet.Core;
+﻿using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using System;
 using System.Collections.Generic;
@@ -878,7 +878,7 @@ namespace RB4InstrumentMapper
             }
 
             // Take the selected adapter
-            PacketDevice selectedDevice = allDevices[deviceIndex];
+            LivePacketDevice selectedDevice = allDevices[deviceIndex];
 
             // Open the device
             pcapCommunicator =
@@ -1549,7 +1549,7 @@ namespace RB4InstrumentMapper
             IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
 
             // Take the selected adapter
-            PacketDevice selectedDevice = allDevices[pcapDeviceIndex];
+            LivePacketDevice selectedDevice = allDevices[pcapDeviceIndex];
 
             // Open the device
             pcapCommunicator =
