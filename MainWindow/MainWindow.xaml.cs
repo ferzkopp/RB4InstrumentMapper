@@ -1,4 +1,4 @@
-using PcapDotNet.Core;
+﻿using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using System;
 using System.Collections.Generic;
@@ -200,13 +200,13 @@ namespace RB4InstrumentMapper
             TextBoxConsole.RedirectConsoleToTextBox(messageConsole, displayLinesWithTimestamp: false);
 
             // Initialize dropdowns
-            try // PcapDotNet can't be loaded if WinPcap isn't installed, so it will cause a run-time exception here
+            try // PcapDotNet can't be loaded if Pcap isn't installed, so it will cause a run-time exception here
             {
                 PopulatePcapDropdown();
             }
             catch(System.IO.FileNotFoundException)
             {
-                MessageBox.Show("Could not load WinPcap interface.\nThe program will now shut down.", "Error Starting Program", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Could not load Pcap interface.\nThe program will now shut down.", "Error Starting Program", MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.Shutdown();
                 return;
             }
@@ -574,7 +574,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Populates the WinPcap device combo.
+        /// Populates the Pcap device combo.
         /// </summary>
         /// <remarks>
         /// Used both when initializing, and when refreshing.
@@ -596,13 +596,13 @@ namespace RB4InstrumentMapper
             }
             catch(InvalidOperationException)
             {
-                Console.WriteLine("Could not retrieve list of WinPcap interfaces.");
+                Console.WriteLine("Could not retrieve list of Pcap interfaces.");
                 return;
             }
 
             if (pcapDeviceList == null || pcapDeviceList.Count == 0)
             {
-                Console.WriteLine("No WinPcap interfaces found!");
+                Console.WriteLine("No Pcap interfaces found!");
                 return;
             }
 
@@ -656,7 +656,7 @@ namespace RB4InstrumentMapper
                 packetDebugCheckBox.IsChecked = true;
             }
 
-            Console.WriteLine($"Discovered {pcapDeviceList.Count} WinPcap devices.");
+            Console.WriteLine($"Discovered {pcapDeviceList.Count} Pcap devices.");
         }
 
         /// <summary>
