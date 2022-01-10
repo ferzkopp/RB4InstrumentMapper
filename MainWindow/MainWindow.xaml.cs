@@ -240,7 +240,8 @@ namespace RB4InstrumentMapper
         /// </summary>
         /// <param name="joystick">The vJoy client to use.</param>
         /// <param name="deviceId">The device ID of the vJoy device to acquire.</param>
-        static void AcquirevJoyDevice(vJoy joystick, uint deviceId)
+        /// <returns>True if device was successfully acquired, false otherwise.</returns>
+        static bool AcquirevJoyDevice(vJoy joystick, uint deviceId)
         {
             // Get the state of the requested device
             VjdStat status = joystick.GetVJDStatus(deviceId);
@@ -249,7 +250,7 @@ namespace RB4InstrumentMapper
             if ((status == VjdStat.VJD_STAT_OWN) || ((status == VjdStat.VJD_STAT_FREE) && (!joystick.AcquireVJD(deviceId))))
             {
                 Console.WriteLine($"Failed to acquire vJoy device number {deviceId}.");
-                return;
+                return false;
             }
             else
             {
@@ -257,6 +258,7 @@ namespace RB4InstrumentMapper
                 int nButtons = joystick.GetVJDButtonNumber(deviceId);
 
                 Console.WriteLine($"Acquired vJoy device number {deviceId} with {nButtons} buttons.");
+                return true;
             }
         }
 
@@ -264,32 +266,53 @@ namespace RB4InstrumentMapper
         /// Creates a ViGEmBus device.
         /// </summary>
         /// <param name="joystick">The user index to index into the ViGEm dictionary.</param>
-        static void CreateVigemDevice(uint userIndex)
+        /// <returns>True if device was successfully created or already exists, false otherwise.</returns>
+        static bool CreateVigemDevice(uint userIndex)
         {
             // Don't add duplicate entries
             if (vigemDictionary.ContainsKey(userIndex))
             {
-                return;
+                // Returns true since it's already added
+                return true;
             }
 
-            vigemDictionary.Add(
-                userIndex,
-                vigemClient.CreateXbox360Controller(0x1BAD, 0x0719) // Xbox 360 Rock Band wireless instrument vendor/product IDs
+            IXbox360Controller vigemDevice = vigemClient.CreateXbox360Controller(0x1BAD, 0x0719); // Xbox 360 Rock Band wireless instrument vendor/product IDs
                 // Rock Band Guitar: USB\VID_1BAD&PID_0719&IG_00  XUSB\TYPE_00\SUB_86\VEN_1BAD\REV_0002
                 // Rock Band Drums:  USB\VID_1BAD&PID_0719&IG_02  XUSB\TYPE_00\SUB_88\VEN_1BAD\REV_0002
                 // If subtype ID specification through ViGEmBus becomes possible at some point,
                 // the guitar should be subtype 6, and the drums should be subtype 8
-            );
 
             try
             {
-                int _userIndex = vigemDictionary[userIndex].UserIndex;
+                // Throws one of 5 exceptions:
+                // VigemBusNotFoundException
+                // VigemTargetUninitializedException
+                // VigemAlreadyConnectedException
+                // VigemNoFreeSlotException
+                // Win32Exception
+                // These shouldn't happen in 99% of cases, catching just in case
+                vigemDevice.Connect();
+
+                // Throws Xbox360UserIndexNotReportedException
+                // This also shouldn't happen in 99% of cases, managed to encounter the 1% with someone
+                int _userIndex = vigemDevice.UserIndex;
                 Console.WriteLine($"Created new ViGEmBus device with user index {_userIndex}");
             }
-            catch (Nefarius.ViGEm.Client.Targets.Xbox360.Exceptions.Xbox360UserIndexNotReportedException)
+            catch (Exception e)
             {
-                Console.WriteLine($"Created new ViGEmBus device, user index not reported.");
+                // Create brief exception string
+                // Not using Exception.Message since it doesn't contain the exception type
+                string exceptionString = e.ToString();
+                int removeIndex = exceptionString.IndexOf(Environment.NewLine);
+                string exceptionMessage = exceptionString.Substring(0, removeIndex);
+
+                string instrumentName = Enum.GetName(typeof(VigemEnum), userIndex);
+                Console.WriteLine($"Could not create ViGEmBus device for {instrumentName}: {exceptionMessage}");
+                return false;
             }
+
+            vigemDictionary.Add(userIndex, vigemDevice);
+            return true;
         }
 
         /// <summary>
@@ -869,6 +892,7 @@ namespace RB4InstrumentMapper
             processedPacketCount = 0;
 
             // Initialize vJoy
+            bool vjoyResult;
             if (joystick != null)
             {
                 // Reset buttons and axis
@@ -877,37 +901,68 @@ namespace RB4InstrumentMapper
                 // Acquire vJoy devices
                 if (guitar1DeviceIndex > 0 && guitar1DeviceIndex < (int)VigemEnum.DeviceIndex)
                 {
-                    AcquirevJoyDevice(joystick, guitar1DeviceIndex);
+                    vjoyResult = AcquirevJoyDevice(joystick, guitar1DeviceIndex);
+                    if (!vjoyResult)
+                    {
+                        StopCapture();
+                        return;
+                    }
                 }
 
                 if (guitar2DeviceIndex > 0 && guitar2DeviceIndex < (int)VigemEnum.DeviceIndex)
                 {
-                    AcquirevJoyDevice(joystick, guitar2DeviceIndex);
+                    vjoyResult = AcquirevJoyDevice(joystick, guitar2DeviceIndex);
+                    if (!vjoyResult)
+                    {
+                        StopCapture();
+                        return;
+                    }
                 }
 
                 if (drumDeviceIndex > 0 && drumDeviceIndex < (int)VigemEnum.DeviceIndex)
                 {
-                    AcquirevJoyDevice(joystick, drumDeviceIndex);
+                    vjoyResult = AcquirevJoyDevice(joystick, drumDeviceIndex);
+                    if (!vjoyResult)
+                    {
+                        StopCapture();
+                        return;
+                    }
                 }
             }
 
             // Initialize ViGEmBus devices
+            bool vigemResult;
             if (vigemClient != null)
             {
                 // Create ViGEmBus devices for each
                 if (guitar1DeviceIndex == (int)VigemEnum.DeviceIndex)
                 {
-                    CreateVigemDevice((uint)VigemEnum.Guitar1);
+                    vigemResult = CreateVigemDevice((uint)VigemEnum.Guitar1);
+                    if (!vigemResult)
+                    {
+                        StopCapture();
+                        return;
+                    }
                 }
 
                 if (guitar2DeviceIndex == (int)VigemEnum.DeviceIndex)
                 {
-                    CreateVigemDevice((uint)VigemEnum.Guitar2);
+                    vigemResult = CreateVigemDevice((uint)VigemEnum.Guitar2);
+                    if (!vigemResult)
+                    {
+                        StopCapture();
+                        return;
+                    }
                 }
 
                 if (drumDeviceIndex == (int)VigemEnum.DeviceIndex)
                 {
-                    CreateVigemDevice((uint)VigemEnum.Drum);
+                    vigemResult = CreateVigemDevice((uint)VigemEnum.Drum);
+                    if (!vigemResult)
+                    {
+                        StopCapture();
+                        return;
+                    }
                 }
             }
 
