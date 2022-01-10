@@ -459,7 +459,10 @@ namespace RB4InstrumentMapper
                 drumCombo.Items.Add(vjoyComboBoxItem);
             }
 
-            Console.WriteLine($"Discovered {freeDeviceCount} free vJoy devices.");
+            if (vjoyFound)
+            {
+                Console.WriteLine($"Discovered {freeDeviceCount} free vJoy devices.");
+            }
 
             // Create ViGEmBus device dropdown item
             string vigemDeviceName = $"ViGEmBus Device";
