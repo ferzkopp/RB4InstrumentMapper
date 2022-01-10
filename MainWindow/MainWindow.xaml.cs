@@ -1,4 +1,4 @@
-﻿using PcapDotNet.Core;
+using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using System;
 using System.Collections.Generic;
@@ -39,14 +39,14 @@ namespace RB4InstrumentMapper
         private const int DefaultPacketCaptureTimeoutMilliseconds = 50;
 
         /// <summary>
-        /// Index of the selected Pcap device.
+        /// List of available Pcap devices.
         /// </summary>
-        private int pcapDeviceIndex = -1;
+        private IList<LivePacketDevice> pcapDeviceList = null;
 
         /// <summary>
-        /// Length of the Pcap device list.
+        /// The selected Pcap device.
         /// </summary>
-        private int pcapDeviceCount = 0;
+        private LivePacketDevice pcapSelectedDevice = null;
 
         /// <summary>
         /// Pcap packet communicator.
@@ -564,10 +564,9 @@ namespace RB4InstrumentMapper
             pcapDeviceCombo.Items.Clear();
 
             // Retrieve the device list from the local machine
-            IList<LivePacketDevice> allDevices;
             try
             {
-                allDevices = LivePacketDevice.AllLocalMachine;
+                pcapDeviceList = LivePacketDevice.AllLocalMachine;
             }
             catch(InvalidOperationException)
             {
@@ -575,7 +574,7 @@ namespace RB4InstrumentMapper
                 return;
             }
 
-            if (allDevices == null || allDevices.Count == 0)
+            if (pcapDeviceList == null || pcapDeviceList.Count == 0)
             {
                 Console.WriteLine("No WinPcap interfaces found!");
                 return;
@@ -586,10 +585,9 @@ namespace RB4InstrumentMapper
 
             // Populate combo and print the list
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < allDevices.Count; i++)
+            for (int i = 0; i < pcapDeviceList.Count; i++)
             {
-                pcapDeviceCount = allDevices.Count;
-                LivePacketDevice device = allDevices[i];
+                LivePacketDevice device = pcapDeviceList[i];
                 sb.Clear();
                 string itemNumber = $"{i + 1}";
                 sb.Append($"{itemNumber}. ");
@@ -605,17 +603,24 @@ namespace RB4InstrumentMapper
                 comboBoxItem.Name = itemName;
                 comboBoxItem.Content = deviceName;
                 comboBoxItem.IsEnabled = true;                
-                bool isSelected = itemName.Equals(currentPcapSelection);
+                bool isSelected = device.Name.Equals(currentPcapSelection) || device.Name.Equals(pcapSelectedDevice?.Name);
                 comboBoxItem.IsSelected = isSelected;
                 if (isSelected)
                 {
-                    // Re-enable auto-detect ID buttons
+                    // Re-enable auto-detect ID buttons and assign internal device reference
                     guitar1IdAutoDetectButton.IsEnabled = true;
                     guitar2IdAutoDetectButton.IsEnabled = true;
                     drumIdAutoDetectButton.IsEnabled = true;
+                    pcapSelectedDevice = device;
                 }
 
                 pcapDeviceCombo.Items.Add(comboBoxItem);
+            }
+
+            // Set selection to nothing if saved device not detected
+            if (pcapSelectedDevice == null)
+            {
+                pcapDeviceCombo.SelectedIndex = -1;
             }
 
             // Preset debugging flag
@@ -625,7 +630,7 @@ namespace RB4InstrumentMapper
                 packetDebugCheckBox.IsChecked = true;
             }
 
-            Console.WriteLine($"Discovered {allDevices.Count} WinPcap devices.");
+            Console.WriteLine($"Discovered {pcapDeviceList.Count} WinPcap devices.");
         }
 
         /// <summary>
@@ -635,7 +640,7 @@ namespace RB4InstrumentMapper
         /// <param name="e"></param>
         private void pcapDeviceCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Get selected Pcap device
+            // Get selected combo box item
             ComboBoxItem typeItem = (ComboBoxItem)pcapDeviceCombo.SelectedItem;
             // Attempting to use typeItem's properties while null will cause a NullReferenceException
             if (typeItem == null)
@@ -646,19 +651,24 @@ namespace RB4InstrumentMapper
             }
             string itemName = typeItem.Name;
 
-            // Get index of selected Pcapdevice
+            // Get index of selected Pcap device
+            int pcapDeviceIndex = -1;
             if (int.TryParse(itemName.Substring(pcapComboBoxItemName.Length), out pcapDeviceIndex))
             {
                 // Adjust index count (UI->Logical)
                 pcapDeviceIndex -= 1;
+
+                // Assign device
+                pcapSelectedDevice = pcapDeviceList[pcapDeviceIndex];
+                Console.WriteLine($"Selected Pcap device {pcapSelectedDevice.Description}");
 
                 // Enable auto-detect ID buttons
                 guitar1IdAutoDetectButton.IsEnabled = true;
                 guitar2IdAutoDetectButton.IsEnabled = true;
                 drumIdAutoDetectButton.IsEnabled = true;
 
-                // Remember selected Pcapdevice
-                Properties.Settings.Default.currentPcapSelection = itemName;
+                // Remember selected Pcap device's name
+                Properties.Settings.Default.currentPcapSelection = pcapSelectedDevice.Name;
                 Properties.Settings.Default.Save();
             }
         }
@@ -789,16 +799,40 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// Configures the Pcap device and controller devices, and starts packet capture.
         /// </summary>
-        /// <param name="deviceIndex">The index of the Pcap device to use.</param>
-        private void StartCapture(int deviceIndex)
+        private void StartCapture()
         {
+            // Check if a device has been selected
+            if (pcapSelectedDevice == null)
+            {
+                Console.WriteLine("Please select a Pcap device from the Pcap dropdown.");
+                return;
+            }
+
             // Retrieve the device list from the local machine
             IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
 
-            // Don't start if the device count has changed
-            if (allDevices.Count != pcapDeviceCount)
+            // Check if the device is still present
+            bool deviceStillPresent = false;
+            foreach(LivePacketDevice device in allDevices)
             {
-                Console.WriteLine("Pcap device count has changed, please re-select your device from the list and try again.");
+                if (device.Name == pcapSelectedDevice.Name)
+                {
+                    deviceStillPresent = true;
+                    break;
+                }
+            }
+
+            if (!deviceStillPresent)
+            {
+                // Invalidate selected device (but not the saved preference)
+                pcapSelectedDevice = null;
+                // Notify user
+                MessageBox.Show(
+                    "Pcap device list has changed and the selected device is no longer present.\nPlease re-select your device from the list and try again.",
+                    "Pcap Device Not Found",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Exclamation
+                );
                 // Force a refresh
                 PopulatePcapDropdown();
                 return;
@@ -877,12 +911,9 @@ namespace RB4InstrumentMapper
                 }
             }
 
-            // Take the selected adapter
-            LivePacketDevice selectedDevice = allDevices[deviceIndex];
-
             // Open the device
             pcapCommunicator =
-                selectedDevice.Open(
+                pcapSelectedDevice.Open(
                     45, // small packets
                     PacketDeviceOpenAttributes.Promiscuous | PacketDeviceOpenAttributes.MaximumResponsiveness, // promiscuous mode with maximum speed
                     DefaultPacketCaptureTimeoutMilliseconds); // read timeout
@@ -891,7 +922,7 @@ namespace RB4InstrumentMapper
             pcapCaptureThread = new Thread(ReadContinously);
             pcapCaptureThread.Start();
 
-            Console.WriteLine($"Listening on {selectedDevice.Description}...");
+            Console.WriteLine($"Listening on {pcapSelectedDevice.Description}...");
         }
 
         /// <summary>
@@ -1102,7 +1133,7 @@ namespace RB4InstrumentMapper
         {
             if (!packetCaptureActive)
             {
-                StartCapture(pcapDeviceIndex);
+                StartCapture();
             }
             else
             {
@@ -1337,13 +1368,34 @@ namespace RB4InstrumentMapper
             if (MessageBox.Show("Unplug your receiver, then click OK.", "Auto-Detect Receiver", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
             {
                 // Get the list of devices for when receiver is unplugged
-                IList<LivePacketDevice> notPlugged = LivePacketDevice.AllLocalMachine;
+                IList<LivePacketDevice> notPlugged = null;
+                try
+                {
+                    notPlugged = LivePacketDevice.AllLocalMachine;
+                }
+                catch (InvalidOperationException)
+                {
+                    MessageBox.Show("Could not auto-assign; an error occured.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
                 // Prompt user to plug in their receiver
-                if (MessageBox.Show("Now plug in your receiver, then click OK.", "Auto-Detect Receiver", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                if (MessageBox.Show("Now plug in your receiver, wait a bit for it to register, then click OK.\n(A 1-second delay will be taken after clicking OK to ensure that it registers.)", "Auto-Detect Receiver", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
                 {
+                    // Wait for a moment before getting the new list, seems like clicking OK too quickly after plugging it in makes it not get registered
+                    Thread.Sleep(1000);
+
                     // Get the list of devices for when receiver is plugged in
-                    IList<LivePacketDevice> plugged = LivePacketDevice.AllLocalMachine;
+                    IList<LivePacketDevice> plugged = null;
+                    try
+                    {
+                        plugged = LivePacketDevice.AllLocalMachine;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        MessageBox.Show("Could not auto-assign; an error occured.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
 
                     // Check for devices in the new list that aren't in the initial list
                     // Have to check names specifically, because doing `notPlugged.Contains(newDevice)`
@@ -1381,26 +1433,15 @@ namespace RB4InstrumentMapper
                         }
                     }
 
-                    // Refresh the dropdown
-                    PopulatePcapDropdown();
-
                     // If there's (strictly) one new device, assign it
                     if (newDevices.Count == 1)
                     {
-                        // Create a new pcapDeviceCombo item for the new device
-                        LivePacketDevice device = newDevices.First();
+                        // Assign the new device
+                        pcapSelectedDevice = newDevices.First();
 
-                        // Check dropdown for the device to be assigned
-                        foreach (ComboBoxItem item in pcapDeviceCombo.Items)
-                        {
-                            if (((string)item.Content).Contains(device.Name))
-                            {
-                                pcapDeviceCombo.SelectedItem = item;
-                                Properties.Settings.Default.currentPcapSelection = item.Name;
-                            }
-                        }
-
-                        return;
+                        // Remember the new device
+                        Properties.Settings.Default.currentPcapSelection = pcapSelectedDevice.Name;
+                        Properties.Settings.Default.Save();
                     }
                     else
                     {
@@ -1408,15 +1449,16 @@ namespace RB4InstrumentMapper
                         if (newDevices.Count > 1)
                         {
                             MessageBox.Show("Could not auto-assign; more than one new device was detected.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
-                            return;
                         }
                         // If there's no new ones, don't do anything
                         else if (newDevices.Count == 0)
                         {
                             MessageBox.Show("Could not auto-assign; no new devices were detected.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
-                            return;
                         }
                     }
+
+                    // Refresh the dropdown
+                    PopulatePcapDropdown();
                 }
             }
         }
@@ -1545,15 +1587,47 @@ namespace RB4InstrumentMapper
             // Assume failure
             bool result = false;
 
+            // Check if a device has been selected
+            if (pcapSelectedDevice == null)
+            {
+                uiDispatcher.Invoke((Action)(() =>
+                {
+                    Console.WriteLine("Please select a Pcap device from the Pcap dropdown.");
+                }));
+                return false;
+            }
+
             // Retrieve the device list from the local machine
             IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
 
-            // Take the selected adapter
-            LivePacketDevice selectedDevice = allDevices[pcapDeviceIndex];
+            // Check if the device is still present
+            bool deviceStillPresent = false;
+            foreach(LivePacketDevice device in allDevices)
+            {
+                if (device.Name == pcapSelectedDevice.Name)
+                {
+                    deviceStillPresent = true;
+                    break;
+                }
+            }
+
+            if (!deviceStillPresent)
+            {
+                uiDispatcher.Invoke((Action)(() =>
+                {
+                    // Invalidate selected device
+                    pcapSelectedDevice = null;
+                    // Notify user
+                    Console.WriteLine("Pcap device list has changed and the selected device is no longer present. Please re-select your device from the list and try again.");
+                    // Force a refresh
+                    PopulatePcapDropdown();
+                }));
+                return false;
+            }
 
             // Open the device
             pcapCommunicator =
-                selectedDevice.Open(
+                pcapSelectedDevice.Open(
                     45, // small packets
                     PacketDeviceOpenAttributes.Promiscuous | PacketDeviceOpenAttributes.MaximumResponsiveness, // promiscuous mode with maximum speed
                     DefaultPacketCaptureTimeoutMilliseconds // read timeout
