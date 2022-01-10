@@ -1177,6 +1177,7 @@ namespace RB4InstrumentMapper
             packetsProcessedCountLabel.Content = string.Empty;
             processedPacketCount = 0;
 
+            Console.WriteLine("Stopped capture.");
         }
 
         /// <summary>
