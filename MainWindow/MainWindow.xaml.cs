@@ -1649,10 +1649,7 @@ namespace RB4InstrumentMapper
             // Check if a device has been selected
             if (pcapSelectedDevice == null)
             {
-                uiDispatcher.Invoke((Action)(() =>
-                {
-                    Console.WriteLine("Please select a Pcap device from the Pcap dropdown.");
-                }));
+                Console.WriteLine("Please select a Pcap device from the Pcap dropdown.");
                 return false;
             }
 
