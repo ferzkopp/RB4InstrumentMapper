@@ -39,9 +39,14 @@ namespace RB4InstrumentMapper
         private const int DefaultPacketCaptureTimeoutMilliseconds = 50;
 
         /// <summary>
-        /// Index of the selected Pcap device.
+        /// List of available Pcap devices.
         /// </summary>
-        private int pcapDeviceIndex = -1;
+        private IList<LivePacketDevice> pcapDeviceList = null;
+
+        /// <summary>
+        /// The selected Pcap device.
+        /// </summary>
+        private LivePacketDevice pcapSelectedDevice = null;
 
         /// <summary>
         /// Pcap packet communicator.
@@ -175,6 +180,9 @@ namespace RB4InstrumentMapper
         /// </summary>
         public MainWindow()
         {
+            // Assign event handler for unhandled exceptions
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(App.App_UnhandledException);
+
             InitializeComponent();
 
             // Capture Dispatcher object for use in callback
@@ -192,13 +200,13 @@ namespace RB4InstrumentMapper
             TextBoxConsole.RedirectConsoleToTextBox(messageConsole, displayLinesWithTimestamp: false);
 
             // Initialize dropdowns
-            try // PcapDotNet can't be loaded if WinPcap isn't installed, so it will cause a run-time exception here
+            try // PcapDotNet can't be loaded if Pcap isn't installed, so it will cause a run-time exception here
             {
                 PopulatePcapDropdown();
             }
             catch(System.IO.FileNotFoundException)
             {
-                MessageBox.Show("Could not load WinPcap interface.\nThe program will now shut down.", "Error Starting Program", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Could not load Pcap interface.\nThe program will now shut down.", "Error Starting Program", MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.Shutdown();
                 return;
             }
@@ -232,7 +240,8 @@ namespace RB4InstrumentMapper
         /// </summary>
         /// <param name="joystick">The vJoy client to use.</param>
         /// <param name="deviceId">The device ID of the vJoy device to acquire.</param>
-        static void AcquirevJoyDevice(vJoy joystick, uint deviceId)
+        /// <returns>True if device was successfully acquired, false otherwise.</returns>
+        static bool AcquirevJoyDevice(vJoy joystick, uint deviceId)
         {
             // Get the state of the requested device
             VjdStat status = joystick.GetVJDStatus(deviceId);
@@ -241,7 +250,7 @@ namespace RB4InstrumentMapper
             if ((status == VjdStat.VJD_STAT_OWN) || ((status == VjdStat.VJD_STAT_FREE) && (!joystick.AcquireVJD(deviceId))))
             {
                 Console.WriteLine($"Failed to acquire vJoy device number {deviceId}.");
-                return;
+                return false;
             }
             else
             {
@@ -249,6 +258,7 @@ namespace RB4InstrumentMapper
                 int nButtons = joystick.GetVJDButtonNumber(deviceId);
 
                 Console.WriteLine($"Acquired vJoy device number {deviceId} with {nButtons} buttons.");
+                return true;
             }
         }
 
@@ -256,24 +266,53 @@ namespace RB4InstrumentMapper
         /// Creates a ViGEmBus device.
         /// </summary>
         /// <param name="joystick">The user index to index into the ViGEm dictionary.</param>
-        static void CreateVigemDevice(uint userIndex)
+        /// <returns>True if device was successfully created or already exists, false otherwise.</returns>
+        static bool CreateVigemDevice(uint userIndex)
         {
             // Don't add duplicate entries
             if (vigemDictionary.ContainsKey(userIndex))
             {
-                return;
+                // Returns true since it's already added
+                return true;
             }
 
-            vigemDictionary.Add(
-                userIndex,
-                vigemClient.CreateXbox360Controller(0x1BAD, 0x0719) // Xbox 360 Rock Band wireless instrument vendor/product IDs
+            IXbox360Controller vigemDevice = vigemClient.CreateXbox360Controller(0x1BAD, 0x0719); // Xbox 360 Rock Band wireless instrument vendor/product IDs
                 // Rock Band Guitar: USB\VID_1BAD&PID_0719&IG_00  XUSB\TYPE_00\SUB_86\VEN_1BAD\REV_0002
                 // Rock Band Drums:  USB\VID_1BAD&PID_0719&IG_02  XUSB\TYPE_00\SUB_88\VEN_1BAD\REV_0002
                 // If subtype ID specification through ViGEmBus becomes possible at some point,
                 // the guitar should be subtype 6, and the drums should be subtype 8
-            );
 
-            Console.WriteLine($"Created new ViGEmBus device with user index {vigemDictionary[userIndex].UserIndex}");
+            try
+            {
+                // Throws one of 5 exceptions:
+                // VigemBusNotFoundException
+                // VigemTargetUninitializedException
+                // VigemAlreadyConnectedException
+                // VigemNoFreeSlotException
+                // Win32Exception
+                // These shouldn't happen in 99% of cases, catching just in case
+                vigemDevice.Connect();
+
+                // Throws Xbox360UserIndexNotReportedException
+                // This also shouldn't happen in 99% of cases, managed to encounter the 1% with someone
+                int _userIndex = vigemDevice.UserIndex;
+                Console.WriteLine($"Created new ViGEmBus device with user index {_userIndex}");
+            }
+            catch (Exception e)
+            {
+                // Create brief exception string
+                // Not using Exception.Message since it doesn't contain the exception type
+                string exceptionString = e.ToString();
+                int removeIndex = exceptionString.IndexOf(Environment.NewLine);
+                string exceptionMessage = exceptionString.Substring(0, removeIndex);
+
+                string instrumentName = Enum.GetName(typeof(VigemEnum), userIndex);
+                Console.WriteLine($"Could not create ViGEmBus device for {instrumentName}: {exceptionMessage}");
+                return false;
+            }
+
+            vigemDictionary.Add(userIndex, vigemDevice);
+            return true;
         }
 
         /// <summary>
@@ -420,7 +459,10 @@ namespace RB4InstrumentMapper
                 drumCombo.Items.Add(vjoyComboBoxItem);
             }
 
-            Console.WriteLine($"Discovered {freeDeviceCount} free vJoy devices.");
+            if (vjoyFound)
+            {
+                Console.WriteLine($"Discovered {freeDeviceCount} free vJoy devices.");
+            }
 
             // Create ViGEmBus device dropdown item
             string vigemDeviceName = $"ViGEmBus Device";
@@ -532,7 +574,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Populates the WinPcap device combo.
+        /// Populates the Pcap device combo.
         /// </summary>
         /// <remarks>
         /// Used both when initializing, and when refreshing.
@@ -548,20 +590,19 @@ namespace RB4InstrumentMapper
             pcapDeviceCombo.Items.Clear();
 
             // Retrieve the device list from the local machine
-            IList<LivePacketDevice> allDevices;
             try
             {
-                allDevices = LivePacketDevice.AllLocalMachine;
+                pcapDeviceList = LivePacketDevice.AllLocalMachine;
             }
             catch(InvalidOperationException)
             {
-                Console.WriteLine("Could not retrieve list of WinPcap interfaces.");
+                Console.WriteLine("Could not retrieve list of Pcap interfaces.");
                 return;
             }
 
-            if (allDevices == null || allDevices.Count == 0)
+            if (pcapDeviceList == null || pcapDeviceList.Count == 0)
             {
-                Console.WriteLine("No WinPcap interfaces found!");
+                Console.WriteLine("No Pcap interfaces found!");
                 return;
             }
 
@@ -570,9 +611,9 @@ namespace RB4InstrumentMapper
 
             // Populate combo and print the list
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < allDevices.Count; i++)
+            for (int i = 0; i < pcapDeviceList.Count; i++)
             {
-                LivePacketDevice device = allDevices[i];
+                LivePacketDevice device = pcapDeviceList[i];
                 sb.Clear();
                 string itemNumber = $"{i + 1}";
                 sb.Append($"{itemNumber}. ");
@@ -588,17 +629,24 @@ namespace RB4InstrumentMapper
                 comboBoxItem.Name = itemName;
                 comboBoxItem.Content = deviceName;
                 comboBoxItem.IsEnabled = true;                
-                bool isSelected = itemName.Equals(currentPcapSelection);
+                bool isSelected = device.Name.Equals(currentPcapSelection) || device.Name.Equals(pcapSelectedDevice?.Name);
                 comboBoxItem.IsSelected = isSelected;
                 if (isSelected)
                 {
-                    // Re-enable auto-detect ID buttons
+                    // Re-enable auto-detect ID buttons and assign internal device reference
                     guitar1IdAutoDetectButton.IsEnabled = true;
                     guitar2IdAutoDetectButton.IsEnabled = true;
                     drumIdAutoDetectButton.IsEnabled = true;
+                    pcapSelectedDevice = device;
                 }
 
                 pcapDeviceCombo.Items.Add(comboBoxItem);
+            }
+
+            // Set selection to nothing if saved device not detected
+            if (pcapSelectedDevice == null)
+            {
+                pcapDeviceCombo.SelectedIndex = -1;
             }
 
             // Preset debugging flag
@@ -608,7 +656,7 @@ namespace RB4InstrumentMapper
                 packetDebugCheckBox.IsChecked = true;
             }
 
-            Console.WriteLine($"Discovered {allDevices.Count} WinPcap devices.");
+            Console.WriteLine($"Discovered {pcapDeviceList.Count} Pcap devices.");
         }
 
         /// <summary>
@@ -618,7 +666,7 @@ namespace RB4InstrumentMapper
         /// <param name="e"></param>
         private void pcapDeviceCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Get selected Pcap device
+            // Get selected combo box item
             ComboBoxItem typeItem = (ComboBoxItem)pcapDeviceCombo.SelectedItem;
             // Attempting to use typeItem's properties while null will cause a NullReferenceException
             if (typeItem == null)
@@ -629,19 +677,24 @@ namespace RB4InstrumentMapper
             }
             string itemName = typeItem.Name;
 
-            // Get index of selected Pcapdevice
+            // Get index of selected Pcap device
+            int pcapDeviceIndex = -1;
             if (int.TryParse(itemName.Substring(pcapComboBoxItemName.Length), out pcapDeviceIndex))
             {
                 // Adjust index count (UI->Logical)
                 pcapDeviceIndex -= 1;
+
+                // Assign device
+                pcapSelectedDevice = pcapDeviceList[pcapDeviceIndex];
+                Console.WriteLine($"Selected Pcap device {pcapSelectedDevice.Description}");
 
                 // Enable auto-detect ID buttons
                 guitar1IdAutoDetectButton.IsEnabled = true;
                 guitar2IdAutoDetectButton.IsEnabled = true;
                 drumIdAutoDetectButton.IsEnabled = true;
 
-                // Remember selected Pcapdevice
-                Properties.Settings.Default.currentPcapSelection = itemName;
+                // Remember selected Pcap device's name
+                Properties.Settings.Default.currentPcapSelection = pcapSelectedDevice.Name;
                 Properties.Settings.Default.Save();
             }
         }
@@ -772,9 +825,45 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// Configures the Pcap device and controller devices, and starts packet capture.
         /// </summary>
-        /// <param name="deviceIndex">The index of the Pcap device to use.</param>
-        private void StartCapture(int deviceIndex)
+        private void StartCapture()
         {
+            // Check if a device has been selected
+            if (pcapSelectedDevice == null)
+            {
+                Console.WriteLine("Please select a Pcap device from the Pcap dropdown.");
+                return;
+            }
+
+            // Retrieve the device list from the local machine
+            IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
+
+            // Check if the device is still present
+            bool deviceStillPresent = false;
+            foreach(LivePacketDevice device in allDevices)
+            {
+                if (device.Name == pcapSelectedDevice.Name)
+                {
+                    deviceStillPresent = true;
+                    break;
+                }
+            }
+
+            if (!deviceStillPresent)
+            {
+                // Invalidate selected device (but not the saved preference)
+                pcapSelectedDevice = null;
+                // Notify user
+                MessageBox.Show(
+                    "Pcap device list has changed and the selected device is no longer present.\nPlease re-select your device from the list and try again.",
+                    "Pcap Device Not Found",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Exclamation
+                );
+                // Force a refresh
+                PopulatePcapDropdown();
+                return;
+            }
+
             // Enable packet capture active flag
             packetCaptureActive = true;
 
@@ -806,6 +895,7 @@ namespace RB4InstrumentMapper
             processedPacketCount = 0;
 
             // Initialize vJoy
+            bool vjoyResult;
             if (joystick != null)
             {
                 // Reset buttons and axis
@@ -814,49 +904,74 @@ namespace RB4InstrumentMapper
                 // Acquire vJoy devices
                 if (guitar1DeviceIndex > 0 && guitar1DeviceIndex < (int)VigemEnum.DeviceIndex)
                 {
-                    AcquirevJoyDevice(joystick, guitar1DeviceIndex);
+                    vjoyResult = AcquirevJoyDevice(joystick, guitar1DeviceIndex);
+                    if (!vjoyResult)
+                    {
+                        StopCapture();
+                        return;
+                    }
                 }
 
                 if (guitar2DeviceIndex > 0 && guitar2DeviceIndex < (int)VigemEnum.DeviceIndex)
                 {
-                    AcquirevJoyDevice(joystick, guitar2DeviceIndex);
+                    vjoyResult = AcquirevJoyDevice(joystick, guitar2DeviceIndex);
+                    if (!vjoyResult)
+                    {
+                        StopCapture();
+                        return;
+                    }
                 }
 
                 if (drumDeviceIndex > 0 && drumDeviceIndex < (int)VigemEnum.DeviceIndex)
                 {
-                    AcquirevJoyDevice(joystick, drumDeviceIndex);
+                    vjoyResult = AcquirevJoyDevice(joystick, drumDeviceIndex);
+                    if (!vjoyResult)
+                    {
+                        StopCapture();
+                        return;
+                    }
                 }
             }
 
             // Initialize ViGEmBus devices
+            bool vigemResult;
             if (vigemClient != null)
             {
                 // Create ViGEmBus devices for each
                 if (guitar1DeviceIndex == (int)VigemEnum.DeviceIndex)
                 {
-                    CreateVigemDevice((uint)VigemEnum.Guitar1);
+                    vigemResult = CreateVigemDevice((uint)VigemEnum.Guitar1);
+                    if (!vigemResult)
+                    {
+                        StopCapture();
+                        return;
+                    }
                 }
 
                 if (guitar2DeviceIndex == (int)VigemEnum.DeviceIndex)
                 {
-                    CreateVigemDevice((uint)VigemEnum.Guitar2);
+                    vigemResult = CreateVigemDevice((uint)VigemEnum.Guitar2);
+                    if (!vigemResult)
+                    {
+                        StopCapture();
+                        return;
+                    }
                 }
 
                 if (drumDeviceIndex == (int)VigemEnum.DeviceIndex)
                 {
-                    CreateVigemDevice((uint)VigemEnum.Drum);
+                    vigemResult = CreateVigemDevice((uint)VigemEnum.Drum);
+                    if (!vigemResult)
+                    {
+                        StopCapture();
+                        return;
+                    }
                 }
             }
 
-            // Retrieve the device list from the local machine
-            IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
-
-            // Take the selected adapter
-            PacketDevice selectedDevice = allDevices[deviceIndex];
-
             // Open the device
             pcapCommunicator =
-                selectedDevice.Open(
+                pcapSelectedDevice.Open(
                     45, // small packets
                     PacketDeviceOpenAttributes.Promiscuous | PacketDeviceOpenAttributes.MaximumResponsiveness, // promiscuous mode with maximum speed
                     DefaultPacketCaptureTimeoutMilliseconds); // read timeout
@@ -865,7 +980,7 @@ namespace RB4InstrumentMapper
             pcapCaptureThread = new Thread(ReadContinously);
             pcapCaptureThread.Start();
 
-            Console.WriteLine($"Listening on {selectedDevice.Description}...");
+            Console.WriteLine($"Listening on {pcapSelectedDevice.Description}...");
         }
 
         /// <summary>
@@ -1065,6 +1180,7 @@ namespace RB4InstrumentMapper
             packetsProcessedCountLabel.Content = string.Empty;
             processedPacketCount = 0;
 
+            Console.WriteLine("Stopped capture.");
         }
 
         /// <summary>
@@ -1076,7 +1192,7 @@ namespace RB4InstrumentMapper
         {
             if (!packetCaptureActive)
             {
-                StartCapture(pcapDeviceIndex);
+                StartCapture();
             }
             else
             {
@@ -1311,13 +1427,34 @@ namespace RB4InstrumentMapper
             if (MessageBox.Show("Unplug your receiver, then click OK.", "Auto-Detect Receiver", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
             {
                 // Get the list of devices for when receiver is unplugged
-                IList<LivePacketDevice> notPlugged = LivePacketDevice.AllLocalMachine;
+                IList<LivePacketDevice> notPlugged = null;
+                try
+                {
+                    notPlugged = LivePacketDevice.AllLocalMachine;
+                }
+                catch (InvalidOperationException)
+                {
+                    MessageBox.Show("Could not auto-assign; an error occured.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
                 // Prompt user to plug in their receiver
-                if (MessageBox.Show("Now plug in your receiver, then click OK.", "Auto-Detect Receiver", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
+                if (MessageBox.Show("Now plug in your receiver, wait a bit for it to register, then click OK.\n(A 1-second delay will be taken after clicking OK to ensure that it registers.)", "Auto-Detect Receiver", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
                 {
+                    // Wait for a moment before getting the new list, seems like clicking OK too quickly after plugging it in makes it not get registered
+                    Thread.Sleep(1000);
+
                     // Get the list of devices for when receiver is plugged in
-                    IList<LivePacketDevice> plugged = LivePacketDevice.AllLocalMachine;
+                    IList<LivePacketDevice> plugged = null;
+                    try
+                    {
+                        plugged = LivePacketDevice.AllLocalMachine;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        MessageBox.Show("Could not auto-assign; an error occured.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
 
                     // Check for devices in the new list that aren't in the initial list
                     // Have to check names specifically, because doing `notPlugged.Contains(newDevice)`
@@ -1355,26 +1492,15 @@ namespace RB4InstrumentMapper
                         }
                     }
 
-                    // Refresh the dropdown
-                    PopulatePcapDropdown();
-
                     // If there's (strictly) one new device, assign it
                     if (newDevices.Count == 1)
                     {
-                        // Create a new pcapDeviceCombo item for the new device
-                        LivePacketDevice device = newDevices.First();
+                        // Assign the new device
+                        pcapSelectedDevice = newDevices.First();
 
-                        // Check dropdown for the device to be assigned
-                        foreach (ComboBoxItem item in pcapDeviceCombo.Items)
-                        {
-                            if (((string)item.Content).Contains(device.Name))
-                            {
-                                pcapDeviceCombo.SelectedItem = item;
-                                Properties.Settings.Default.currentPcapSelection = item.Name;
-                            }
-                        }
-
-                        return;
+                        // Remember the new device
+                        Properties.Settings.Default.currentPcapSelection = pcapSelectedDevice.Name;
+                        Properties.Settings.Default.Save();
                     }
                     else
                     {
@@ -1382,15 +1508,16 @@ namespace RB4InstrumentMapper
                         if (newDevices.Count > 1)
                         {
                             MessageBox.Show("Could not auto-assign; more than one new device was detected.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
-                            return;
                         }
                         // If there's no new ones, don't do anything
                         else if (newDevices.Count == 0)
                         {
                             MessageBox.Show("Could not auto-assign; no new devices were detected.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
-                            return;
                         }
                     }
+
+                    // Refresh the dropdown
+                    PopulatePcapDropdown();
                 }
             }
         }
@@ -1519,15 +1646,44 @@ namespace RB4InstrumentMapper
             // Assume failure
             bool result = false;
 
+            // Check if a device has been selected
+            if (pcapSelectedDevice == null)
+            {
+                Console.WriteLine("Please select a Pcap device from the Pcap dropdown.");
+                return false;
+            }
+
             // Retrieve the device list from the local machine
             IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
 
-            // Take the selected adapter
-            PacketDevice selectedDevice = allDevices[pcapDeviceIndex];
+            // Check if the device is still present
+            bool deviceStillPresent = false;
+            foreach(LivePacketDevice device in allDevices)
+            {
+                if (device.Name == pcapSelectedDevice.Name)
+                {
+                    deviceStillPresent = true;
+                    break;
+                }
+            }
+
+            if (!deviceStillPresent)
+            {
+                uiDispatcher.Invoke((Action)(() =>
+                {
+                    // Invalidate selected device
+                    pcapSelectedDevice = null;
+                    // Notify user
+                    Console.WriteLine("Pcap device list has changed and the selected device is no longer present. Please re-select your device from the list and try again.");
+                    // Force a refresh
+                    PopulatePcapDropdown();
+                }));
+                return false;
+            }
 
             // Open the device
             pcapCommunicator =
-                selectedDevice.Open(
+                pcapSelectedDevice.Open(
                     45, // small packets
                     PacketDeviceOpenAttributes.Promiscuous | PacketDeviceOpenAttributes.MaximumResponsiveness, // promiscuous mode with maximum speed
                     DefaultPacketCaptureTimeoutMilliseconds // read timeout
