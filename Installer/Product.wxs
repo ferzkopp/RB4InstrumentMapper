@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product
-    Id="17334893-60D7-45E2-9101-704EF0BCD515"
+    Id="*"
     Name="RB4InstrumentMapper"
     Language="1033"
-    Version="1.1.0.0"
+    Version="1.2.0.0"
     Manufacturer="Andreas Schiffler"
-    UpgradeCode="94bef546-701f-4571-9828-d4fa39b2ea84">
+    UpgradeCode="7836DAAE-817B-4984-99B3-B42ADDC23A8A">
+    
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
+    
     <MediaTemplate EmbedCab="yes"/>
 
     <?define ResourcesDir = $(sys.CURRENTDIR)Resources\?>
