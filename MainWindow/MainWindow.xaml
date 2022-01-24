@@ -46,6 +46,6 @@
                 <TextBox Name="messageConsole" Margin="0,0,0,0" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Visible" IsReadOnly="True" FontSize="10"/>
             </Grid>
         </GroupBox>
-        <Label x:Name="guitar1IdLabel_Copy" Content="v1.2.0.0" HorizontalAlignment="Right" Height="28" Margin="0,13,9.667,0" VerticalAlignment="Top" Width="102" IsEnabled="False"/>
+        <Label x:Name="guitar1IdLabel_Copy" Content="v1.22.0.0" HorizontalAlignment="Right" Height="28" Margin="0,13,9.667,0" VerticalAlignment="Top" Width="102" IsEnabled="False"/>
     </Grid>
 </Window>
