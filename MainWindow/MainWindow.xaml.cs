@@ -294,7 +294,8 @@ namespace RB4InstrumentMapper
                 vigemDevice.Connect();
 
                 // Throws Xbox360UserIndexNotReportedException
-                // This also shouldn't happen in 99% of cases, managed to encounter the 1% with someone
+                // This also shouldn't happen, but it seems to be somewhat prevalent for some reason,
+                // and if it happens the device is not usable later on in program execution
                 int _userIndex = vigemDevice.UserIndex;
                 Console.WriteLine($"Created new ViGEmBus device with user index {_userIndex}");
             }
