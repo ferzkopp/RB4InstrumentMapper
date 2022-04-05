@@ -1,4 +1,4 @@
-﻿using PcapDotNet.Core;
+using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using System;
 using System.Collections.Generic;
@@ -300,6 +300,9 @@ namespace RB4InstrumentMapper
             }
             catch (Exception e)
             {
+                // Disconnect the device in case it was connected
+                try { vigemDevice.Disconnect(); } catch {}
+
                 // Create brief exception string
                 // Not using Exception.Message since it doesn't contain the exception type
                 string exceptionString = e.ToString();
