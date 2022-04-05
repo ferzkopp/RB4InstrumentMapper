@@ -8,7 +8,6 @@ namespace RB4InstrumentMapper
     public struct GuitarPacket
     {
         public uint InstrumentID;
-        public string InstrumentIDString;
 
         public bool MenuButton;
         public bool OptionsButton;
