@@ -352,7 +352,7 @@ namespace RB4InstrumentMapper
                     vigemFound = true;
                     Console.WriteLine("ViGEmBus found!");
                 }
-                catch(Nefarius.ViGEm.Client.Exceptions.VigemBusNotFoundException)
+                catch (Nefarius.ViGEm.Client.Exceptions.VigemBusNotFoundException)
                 {
                     vigemClient = null;
                     vigemFound = false;
@@ -598,7 +598,7 @@ namespace RB4InstrumentMapper
             {
                 pcapDeviceList = LivePacketDevice.AllLocalMachine;
             }
-            catch(InvalidOperationException)
+            catch (InvalidOperationException)
             {
                 Console.WriteLine("Could not retrieve list of Pcap interfaces.");
                 return;
