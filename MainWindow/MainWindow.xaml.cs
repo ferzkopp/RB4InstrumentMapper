@@ -1,7 +1,9 @@
-using PcapDotNet.Core;
+﻿using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -32,6 +34,17 @@ namespace RB4InstrumentMapper
         /// Dispatcher to send changes to UI.
         /// </summary>
         private static Dispatcher uiDispatcher = null;
+
+        /// <summary>
+        /// The file to log to.
+        /// </summary>
+        private static StreamWriter mainLog = null;
+
+        // TODO: Implement logging packets to a file for debugging/research
+        /// <summary>
+        /// The file to log packets to.
+        /// </summary>
+        private static StreamWriter packetLog = null;
 
         /// <summary>
         /// Default Pcap packet capture timeout in milliseconds.
@@ -181,7 +194,8 @@ namespace RB4InstrumentMapper
         public MainWindow()
         {
             // Assign event handler for unhandled exceptions
-            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(App.App_UnhandledException);
+            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+            AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
 
             InitializeComponent();
 
@@ -199,18 +213,103 @@ namespace RB4InstrumentMapper
             // Connect to console
             TextBoxConsole.RedirectConsoleToTextBox(messageConsole, displayLinesWithTimestamp: false);
 
+            // Initialize log file
+            mainLog = LogUtils.CreateLogStream();
+
             // Initialize dropdowns
             try // PcapDotNet can't be loaded if Pcap isn't installed, so it will cause a run-time exception here
             {
                 PopulatePcapDropdown();
             }
-            catch(System.IO.FileNotFoundException)
+            catch (System.IO.FileNotFoundException ex)
             {
-                MessageBox.Show("Could not load Pcap interface.\nThe program will now shut down.", "Error Starting Program", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Message buffer
+                StringBuilder message = new StringBuilder();
+
+                // Log
+                message.AppendLine("FusionLog:");
+                try
+                {
+                    string fusLog = ex.FusionLog;
+                    message.AppendLine(fusLog);
+                }
+                catch (Exception fusEx)
+                {
+                    message.AppendLine("Error getting FusionLog:");
+                    message.AppendLine(fusEx.ToString());
+                }
+                mainLog.WriteException(ex, message.ToString());
+
+                // Prompt
+                message.Clear();
+                message.AppendLine("Could not initialize the program:");
+                message.AppendLine();
+                message.AppendLine(ex.GetFirstLine());
+                message.AppendLine();
+                message.AppendLine("The program will now shut down.");
+
+                MessageBox.Show(message.ToString(), "Error Starting Program", MessageBoxButton.OK, MessageBoxImage.Error);
+
                 Application.Current.Shutdown();
                 return;
             }
+
             PopulateControllerDropdowns();
+        }
+
+        /// <summary>
+        /// Event handler for AppDomain.CurrentDomain.UnhandledException.
+        /// </summary>
+        /// <remarks>
+        /// Logs the exception info to a file and prompts the user with the exception message.
+        /// </remarks>
+        public static void OnUnhandledException(object sender, UnhandledExceptionEventArgs args)
+        {
+            // The unhandled exception
+            Exception unhandledException = args.ExceptionObject as Exception;
+
+            // MessageBox message
+            StringBuilder message = new StringBuilder();
+            message.AppendLine("An unhandled error has occured:");
+            message.AppendLine();
+            message.AppendLine(unhandledException.GetFirstLine());
+            message.AppendLine();
+
+            // Use an alternate message if log couldn't be created
+            if (mainLog != null)
+            {
+                // Log exception
+                mainLog.WriteException(unhandledException);
+
+                // Complete the message buffer
+                message.AppendLine("A log of the error has been created, do you want to open it?");
+
+                // Display message
+                MessageBoxResult result = MessageBox.Show(message.ToString(), "Unhandled Error", MessageBoxButton.YesNo, MessageBoxImage.Error);
+                // If user requested to, open the log
+                if (result == MessageBoxResult.Yes)
+                {
+                    Process.Start(LogUtils.LogFolderPath);
+                }
+            }
+            else
+            {
+                // Complete the message buffer
+                message.AppendLine("An error log was unable to be created.");
+
+                // Display message
+                MessageBox.Show(message.ToString(), "Unhandled Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
+            // Close program
+            MessageBox.Show("The program will now shut down.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            Application.Current.Shutdown();
+        }
+
+        public static void OnProcessExit(object sender, EventArgs args)
+        {
+            // Close the log file
+            mainLog.Close();
         }
 
         /// <summary>
@@ -299,19 +398,20 @@ namespace RB4InstrumentMapper
                 int _userIndex = vigemDevice.UserIndex;
                 Console.WriteLine($"Created new ViGEmBus device with user index {_userIndex}");
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
                 // Disconnect the device in case it was connected
                 try { vigemDevice.Disconnect(); } catch {}
 
-                // Create brief exception string
-                // Not using Exception.Message since it doesn't contain the exception type
-                string exceptionString = e.ToString();
-                int removeIndex = exceptionString.IndexOf(Environment.NewLine);
-                string exceptionMessage = exceptionString.Substring(0, removeIndex);
+                // Log the exception
+                mainLog.WriteLine("ViGEmBus device creation failed!");
+                mainLog.WriteException(ex);
 
+                // Create brief exception string
+                string exceptionMessage = ex.GetFirstLine();
                 string instrumentName = Enum.GetName(typeof(VigemEnum), userIndex);
                 Console.WriteLine($"Could not create ViGEmBus device for {instrumentName}: {exceptionMessage}");
+
                 return false;
             }
 
@@ -1436,9 +1536,10 @@ namespace RB4InstrumentMapper
                 {
                     notPlugged = LivePacketDevice.AllLocalMachine;
                 }
-                catch (InvalidOperationException)
+                catch (InvalidOperationException ex)
                 {
                     MessageBox.Show("Could not auto-assign; an error occured.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    mainLog.WriteException(ex);
                     return;
                 }
 
@@ -1454,9 +1555,10 @@ namespace RB4InstrumentMapper
                     {
                         plugged = LivePacketDevice.AllLocalMachine;
                     }
-                    catch (InvalidOperationException)
+                    catch (InvalidOperationException ex)
                     {
                         MessageBox.Show("Could not auto-assign; an error occured.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        mainLog.WriteException(ex);
                         return;
                     }
 

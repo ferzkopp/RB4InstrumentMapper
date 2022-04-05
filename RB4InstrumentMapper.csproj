@@ -94,6 +94,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="LogUtils.cs" />
     <Compile Include="PacketParsing\DrumPacket.cs" />
     <Compile Include="PacketParsing\DrumViGEmMapper.cs" />
     <Compile Include="PacketParsing\DrumPacketVjoyMapper.cs" />
