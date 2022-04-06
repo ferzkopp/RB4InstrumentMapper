@@ -45,7 +45,7 @@ namespace RB4InstrumentMapper
         /// <param name="joystickDeviceIndex">The vJoy device ID to use.</param>
         /// <param name="instrumentId">The ID of the instrument being mapped.</param>
         /// <returns>True if packet was used and converted, false otherwise.</returns>
-        public static bool MapPacket(DrumPacket packet, vJoy vjoyClient, uint joystickDeviceIndex, uint instrumentId)
+        public static bool MapPacket(DrumPacket packet, vJoy vjoyClient, uint joystickDeviceIndex, ulong instrumentId)
         {
             // Ensure instrument ID is assigned
             if(instrumentId == 0)

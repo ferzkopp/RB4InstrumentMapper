@@ -15,7 +15,7 @@ namespace RB4InstrumentMapper
         /// <param name="vigemDevice">The ViGEmBus device to map to.</param>
         /// <param name="instrumentId">The instrument ID.</param>
         /// <returns>True if packet was mapped, false otherwise.</returns>
-        public static bool MapPacket(DrumPacket packet, IXbox360Controller vigemDevice, uint instrumentId)
+        public static bool MapPacket(DrumPacket packet, IXbox360Controller vigemDevice, ulong instrumentId)
         {
             // Ensure instrument ID is assigned
             if(instrumentId == 0)

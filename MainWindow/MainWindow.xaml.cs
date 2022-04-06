@@ -1,4 +1,4 @@
-﻿using PcapDotNet.Core;
+using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using System;
 using System.Collections.Generic;
@@ -123,9 +123,9 @@ namespace RB4InstrumentMapper
         /// Instrument ID for guitar 1.
         /// </summary>
         /// <remarks>
-        /// An ID of 0x00000000 is assumed to be invalid.
+        /// An ID of 0 is assumed to be invalid.
         /// </remarks>
-        private static uint guitar1InstrumentId = 0;
+        private static ulong guitar1InstrumentId = 0;
 
         /// <summary>
         /// Index of the selected guitar 2 device.
@@ -136,9 +136,9 @@ namespace RB4InstrumentMapper
         /// Instrument ID for guitar 2.
         /// </summary>
         /// <remarks>
-        /// An ID of 0x00000000 is assumed to be invalid.
+        /// An ID of 0 is assumed to be invalid.
         /// </remarks>
-        private static uint guitar2InstrumentId = 0;
+        private static ulong guitar2InstrumentId = 0;
 
         /// <summary>
         /// Index of the selected drum device.
@@ -149,9 +149,9 @@ namespace RB4InstrumentMapper
         /// Instrument ID for the drumkit.
         /// </summary>
         /// <remarks>
-        /// An ID of 0x00000000 is assumed to be invalid.
+        /// An ID of 0 is assumed to be invalid.
         /// </remarks>
-        private static uint drumInstrumentId = 0;
+        private static ulong drumInstrumentId = 0;
 
         /// <summary>
         /// Analyzed packet for guitar.
@@ -630,7 +630,13 @@ namespace RB4InstrumentMapper
             // Load default device IDs
             // Guitar 1
             string hexString = Properties.Settings.Default.currentGuitar1Id;
-            if (!ParsingHelpers.HexStringToUInt32(hexString, out guitar1InstrumentId))
+            // Limit ID to 12 characters, as they are 48 bits, not 64
+            if (hexString.Length > 12)
+            {
+                Console.WriteLine("Attempted to load an invalid Guitar 1 instrument ID. The ID has been reset.");
+                guitar1InstrumentId = 0;
+            }
+            else if (!ParsingHelpers.HexStringToUInt64(hexString, out guitar1InstrumentId))
             {
                 if (string.IsNullOrEmpty(hexString))
                 {
@@ -646,7 +652,13 @@ namespace RB4InstrumentMapper
             
             // Guitar 2
             hexString = Properties.Settings.Default.currentGuitar2Id;
-            if (!ParsingHelpers.HexStringToUInt32(hexString, out guitar2InstrumentId))
+            // Limit ID to 12 characters, as they are 48 bits, not 64
+            if (hexString.Length > 12)
+            {
+                Console.WriteLine("Attempted to load an invalid Guitar 2 instrument ID. The ID has been reset.");
+                guitar1InstrumentId = 0;
+            }
+            else if (!ParsingHelpers.HexStringToUInt64(hexString, out guitar2InstrumentId))
             {
                 if (string.IsNullOrEmpty(hexString))
                 {
@@ -662,7 +674,13 @@ namespace RB4InstrumentMapper
 
             // Drum
             hexString = Properties.Settings.Default.currentDrumId;
-            if (!ParsingHelpers.HexStringToUInt32(hexString, out drumInstrumentId))
+            // Limit ID to 12 characters, as they are 48 bits, not 64
+            if (hexString.Length > 12)
+            {
+                Console.WriteLine("Attempted to load an invalid Drum instrument ID. The ID has been reset.");
+                guitar1InstrumentId = 0;
+            }
+            else if (!ParsingHelpers.HexStringToUInt64(hexString, out drumInstrumentId))
             {
                 if (string.IsNullOrEmpty(hexString))
                 {
@@ -1367,8 +1385,15 @@ namespace RB4InstrumentMapper
 
             // Set new ID
             string hexString = guitar1IdTextBox.Text.ToUpperInvariant();
-            uint enteredId;
-            if (ParsingHelpers.HexStringToUInt32(hexString, out enteredId))
+            // Limit ID to 12 characters, as they are 48 bits, not 64
+            if (hexString.Length > 12)
+            {
+                Console.WriteLine("Hex ID must be 12 characters or less.");
+                return;
+            }
+
+            ulong enteredId;
+            if (ParsingHelpers.HexStringToUInt64(hexString, out enteredId))
             {
                 if (enteredId == 0)
                 {
@@ -1424,8 +1449,15 @@ namespace RB4InstrumentMapper
 
             // Set new ID
             string hexString = guitar2IdTextBox.Text.ToUpperInvariant();
-            uint enteredId;
-            if (ParsingHelpers.HexStringToUInt32(hexString, out enteredId))
+            // Limit ID to 12 characters, as they are 48 bits, not 64
+            if (hexString.Length > 12)
+            {
+                Console.WriteLine("Hex ID must be 12 characters or less.");
+                return;
+            }
+
+            ulong enteredId;
+            if (ParsingHelpers.HexStringToUInt64(hexString, out enteredId))
             {
                 if (enteredId == 0)
                 {
@@ -1481,8 +1513,15 @@ namespace RB4InstrumentMapper
 
             // Set new ID
             string hexString = drumIdTextBox.Text.ToUpperInvariant();
-            uint enteredId;
-            if (ParsingHelpers.HexStringToUInt32(hexString, out enteredId))
+            // Limit ID to 12 characters, as they are 48 bits, not 64
+            if (hexString.Length > 12)
+            {
+                Console.WriteLine("Hex ID must be 12 characters or less.");
+                return;
+            }
+
+            ulong enteredId;
+            if (ParsingHelpers.HexStringToUInt64(hexString, out enteredId))
             {
                 if (enteredId == 0)
                 {
@@ -1825,12 +1864,14 @@ namespace RB4InstrumentMapper
                 string idString = null;
                 if (packet.Length == 40 || packet.Length == 36)
                 {
-                    // String representation: AA BB CC DD
+                    // String representation: AA BB CC DD EE FF
                     uint id = (uint)(
-                        packet[15] |         // DD
-                        (packet[14] << 8) |  // CC
-                        (packet[13] << 16) | // BB
-                        (packet[12] << 24)   // AA
+                        packet[15] |         // FF
+                        (packet[14] << 8) |  // EE
+                        (packet[13] << 16) | // DD
+                        (packet[12] << 24) | // CC
+                        (packet[11] << 32) | // BB
+                        (packet[10] << 40)   // AA
                     );
 
                     idString = Convert.ToString(id, 16).ToUpperInvariant();

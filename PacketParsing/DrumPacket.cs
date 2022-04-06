@@ -7,7 +7,7 @@ namespace RB4InstrumentMapper
     /// </summary>
     public struct DrumPacket
     {
-        public uint InstrumentID;
+        public ulong InstrumentID;
 
         public bool MenuButton;
         public bool OptionsButton;
@@ -113,12 +113,14 @@ namespace RB4InstrumentMapper
             if (packet != null && packet.Length == DrumPacketLength)
             {
                 // Assign instrument ID
-                // String representation: AA BB CC DD
-                data.InstrumentID = (uint)(
-                    packet[15] |         // DD
-                    (packet[14] << 8) |  // CC
-                    (packet[13] << 16) | // BB
-                    (packet[12] << 24)   // AA
+                // String representation: AA BB CC DD EE FF
+                data.InstrumentID = (ulong)(
+                    packet[15] |         // FF
+                    (packet[14] << 8) |  // EE
+                    (packet[13] << 16) | // DD
+                    (packet[12] << 24) | // CC
+                    (packet[11] << 32) | // BB
+                    (packet[10] << 40)   // AA
                 );
 
                 // Map buttons

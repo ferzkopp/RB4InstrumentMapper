@@ -43,19 +43,19 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Converts a string representing a 32-bit hexadecimal number into a 32-bit unsigned integer.
+        /// Converts a string representing a 64-bit hexadecimal number into a 64-bit unsigned integer.
         /// </summary>
         /// <param name="hexString">The string to be converted.</param>
         /// <param name="number">The converted number.</param>
         /// <returns>True if the conversion was successful, or false if it failed.</returns>
-        public static bool HexStringToUInt32(string hexString, out uint number)
+        public static bool HexStringToUInt64(string hexString, out ulong number)
         {
             if (hexString.StartsWith("0x") || hexString.StartsWith("&h"))
             {
                 hexString = hexString.Remove(0, 2);
             }
 
-            return uint.TryParse(hexString, NumberStyles.HexNumber, NumberFormatInfo.CurrentInfo, out number);
+            return ulong.TryParse(hexString, NumberStyles.HexNumber, NumberFormatInfo.CurrentInfo, out number);
         }
 
         /// <summary>
