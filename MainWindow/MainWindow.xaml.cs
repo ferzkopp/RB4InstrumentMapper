@@ -1,6 +1,4 @@
-using PcapDotNet.Core;
-using PcapDotNet.Packets;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -22,6 +20,8 @@ using System.Runtime.InteropServices;
 using System.Windows.Threading;
 using Nefarius.ViGEm.Client;
 using Nefarius.ViGEm.Client.Targets;
+using SharpPcap;
+using SharpPcap.LibPcap;
 
 namespace RB4InstrumentMapper
 {
@@ -54,22 +54,12 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// List of available Pcap devices.
         /// </summary>
-        private IList<LivePacketDevice> pcapDeviceList = null;
+        private CaptureDeviceList pcapDeviceList = null;
 
         /// <summary>
         /// The selected Pcap device.
         /// </summary>
-        private LivePacketDevice pcapSelectedDevice = null;
-
-        /// <summary>
-        /// Pcap packet communicator.
-        /// </summary>
-        private PacketCommunicator pcapCommunicator;
-
-        /// <summary>
-        /// Thread that handles Pcap capture.
-        /// </summary>
-        private Thread pcapCaptureThread;
+        private ILiveDevice pcapSelectedDevice = null;
 
         /// <summary>
         /// Flag indicating that packet capture is active.
@@ -714,7 +704,7 @@ namespace RB4InstrumentMapper
             // Retrieve the device list from the local machine
             try
             {
-                pcapDeviceList = LivePacketDevice.AllLocalMachine;
+                pcapDeviceList = CaptureDeviceList.Instance;
             }
             catch (InvalidOperationException)
             {
@@ -735,7 +725,7 @@ namespace RB4InstrumentMapper
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < pcapDeviceList.Count; i++)
             {
-                LivePacketDevice device = pcapDeviceList[i];
+                ILiveDevice device = pcapDeviceList[i];
                 sb.Clear();
                 string itemNumber = $"{i + 1}";
                 sb.Append($"{itemNumber}. ");
@@ -957,11 +947,11 @@ namespace RB4InstrumentMapper
             }
 
             // Retrieve the device list from the local machine
-            IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
+            var allDevices = CaptureDeviceList.Instance;
 
             // Check if the device is still present
             bool deviceStillPresent = false;
-            foreach(LivePacketDevice device in allDevices)
+            foreach (var device in allDevices)
             {
                 if (device.Name == pcapSelectedDevice.Name)
                 {
@@ -1092,42 +1082,27 @@ namespace RB4InstrumentMapper
             }
 
             // Open the device
-            pcapCommunicator =
-                pcapSelectedDevice.Open(
-                    45, // small packets
-                    PacketDeviceOpenAttributes.Promiscuous | PacketDeviceOpenAttributes.MaximumResponsiveness, // promiscuous mode with maximum speed
-                    DefaultPacketCaptureTimeoutMilliseconds); // read timeout
-
-            // Read data
-            pcapCaptureThread = new Thread(ReadContinously);
-            pcapCaptureThread.Start();
+            pcapSelectedDevice.OnPacketArrival += OnPacketArrival;
+            pcapSelectedDevice.Open(new DeviceConfiguration()
+                {
+                    Snaplen = 45, // small packets
+                    Mode = DeviceModes.Promiscuous | DeviceModes.MaxResponsiveness, // promiscuous mode with maximum speed
+                    ReadTimeout = DefaultPacketCaptureTimeoutMilliseconds // read timeout
+                }
+            );
+            pcapSelectedDevice.StartCapture();
 
             Console.WriteLine($"Listening on {pcapSelectedDevice.Description}...");
-        }
-
-        /// <summary>
-        /// Continously reads packets from the Pcap device.
-        /// </summary>
-        private void ReadContinously()
-        {
-            // start the capture
-            pcapCommunicator.ReceivePackets(0, PacketHandler);
         }
 
         /// <summary>
         /// Callback function invoked by Pcap.Net for every incoming packet
         /// </summary>
         /// <param name="packet">The received packet</param>
-        private void PacketHandler(Packet packet)
+        private void OnPacketArrival(object sender, PacketCapture packet)
         {
-            // Don't use null packets
-            if (packet == null)
-            {
-                return;
-            }
-
             // Analyze guitar packets
-            if (GuitarPacketReader.AnalyzePacket(packet.Buffer, ref guitarPacket))
+            if (GuitarPacketReader.AnalyzePacket(packet.Data, ref guitarPacket))
             {
                 // Map guitar 1 (if enabled)
                 if (guitar1DeviceIndex > 0 && guitar1InstrumentId != 0 && guitar1InstrumentId == guitarPacket.InstrumentID)
@@ -1175,7 +1150,7 @@ namespace RB4InstrumentMapper
                 }
             }
             // Analyze drum packets
-            else if (DrumPacketReader.AnalyzePacket(packet.Buffer, ref drumPacket))
+            else if (DrumPacketReader.AnalyzePacket(packet.Data, ref drumPacket))
             {
                 // Map drum (if enabled)
                 if (drumDeviceIndex > 0 && drumInstrumentId != 0 && drumInstrumentId == drumPacket.InstrumentID)
@@ -1204,8 +1179,9 @@ namespace RB4InstrumentMapper
             // Debugging (if enabled)
             if (packetDebug)
             {
-                string packetHexString = ParsingHelpers.ByteArrayToHexString(packet.Buffer);
-                Console.WriteLine(packet.Timestamp.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{packet.Length}] " + packetHexString);
+                RawCapture raw = packet.GetPacket();
+                string packetHexString = ParsingHelpers.ByteArrayToHexString(raw.Data);
+                Console.WriteLine(raw.Timeval.Date.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{raw.PacketLength}] " + packetHexString);
             }
 
             // Status reporting (slow)
@@ -1228,17 +1204,11 @@ namespace RB4InstrumentMapper
         private void StopCapture()
         {
             // Stop packet capture
-            if (pcapCommunicator != null)
+            if (pcapSelectedDevice != null)
             {
-                pcapCommunicator.Break();
-                pcapCommunicator = null;
-            }
-
-            // Stop processing thread
-            if (pcapCaptureThread != null)
-            {
-                pcapCaptureThread.Join();
-                pcapCaptureThread = null;
+                // Close will automatically remove assigned event handlers and call StopCapture(), 
+                // so we don't need to do those ourselves
+                pcapSelectedDevice.Close();
             }
 
             // Release drum device
@@ -1570,10 +1540,10 @@ namespace RB4InstrumentMapper
             if (MessageBox.Show("Unplug your receiver, then click OK.", "Auto-Detect Receiver", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
             {
                 // Get the list of devices for when receiver is unplugged
-                IList<LivePacketDevice> notPlugged = null;
+                CaptureDeviceList notPlugged = null;
                 try
                 {
-                    notPlugged = LivePacketDevice.AllLocalMachine;
+                    notPlugged = CaptureDeviceList.Instance;
                 }
                 catch (InvalidOperationException ex)
                 {
@@ -1589,10 +1559,10 @@ namespace RB4InstrumentMapper
                     Thread.Sleep(1000);
 
                     // Get the list of devices for when receiver is plugged in
-                    IList<LivePacketDevice> plugged = null;
+                    CaptureDeviceList plugged = null;
                     try
                     {
-                        plugged = LivePacketDevice.AllLocalMachine;
+                        plugged = CaptureDeviceList.Instance;
                     }
                     catch (InvalidOperationException ex)
                     {
@@ -1608,11 +1578,11 @@ namespace RB4InstrumentMapper
                     // Get device names for both not plugged and plugged lists
                     List<string> notPluggedNames = new List<string>();
                     List<string> pluggedNames = new List<string>();
-                    foreach (LivePacketDevice oldDevice in notPlugged)
+                    foreach (ILiveDevice oldDevice in notPlugged)
                     {
                         notPluggedNames.Add(oldDevice.Name);
                     }
-                    foreach (LivePacketDevice newDevice in plugged)
+                    foreach (ILiveDevice newDevice in plugged)
                     {
                         pluggedNames.Add(newDevice.Name);
                     }
@@ -1628,8 +1598,8 @@ namespace RB4InstrumentMapper
                     }
 
                     // Create a list of new devices based on the list of new device names
-                    List<LivePacketDevice> newDevices = new List<LivePacketDevice>();
-                    foreach (LivePacketDevice newDevice in plugged)
+                    List<ILiveDevice> newDevices = new List<ILiveDevice>();
+                    foreach (ILiveDevice newDevice in plugged)
                     {
                         if (newNames.Contains(newDevice.Name))
                         {
@@ -1799,11 +1769,11 @@ namespace RB4InstrumentMapper
             }
 
             // Retrieve the device list from the local machine
-            IList<LivePacketDevice> allDevices = LivePacketDevice.AllLocalMachine;
+            var allDevices = CaptureDeviceList.Instance;
 
             // Check if the device is still present
             bool deviceStillPresent = false;
-            foreach(LivePacketDevice device in allDevices)
+            foreach (ILiveDevice device in allDevices)
             {
                 if (device.Name == pcapSelectedDevice.Name)
                 {
@@ -1827,21 +1797,85 @@ namespace RB4InstrumentMapper
             }
 
             // Open the device
-            pcapCommunicator =
-                pcapSelectedDevice.Open(
-                    45, // small packets
-                    PacketDeviceOpenAttributes.Promiscuous | PacketDeviceOpenAttributes.MaximumResponsiveness, // promiscuous mode with maximum speed
-                    DefaultPacketCaptureTimeoutMilliseconds // read timeout
-                );
+            pcapSelectedDevice.Open(new DeviceConfiguration()
+                {
+                    Snaplen = 45, // small packets
+                    Mode = DeviceModes.Promiscuous | DeviceModes.MaxResponsiveness, // promiscuous mode with maximum speed
+                    ReadTimeout = DefaultPacketCaptureTimeoutMilliseconds // read timeout
+                }
+            );
 
             // Receive packet
-            Packet packet = null;
+            PacketCapture packet;
             int attempts = 6;
             while (attempts > 0)
             {
-                pcapCommunicator.ReceivePacket(out packet);
-                if (packet != null)
+                var status = pcapSelectedDevice.GetNextPacket(out packet);
+                if (status == GetPacketStatus.PacketRead)
                 {
+                    RawCapture raw = packet.GetPacket();
+                    byte[] data = raw.Data;
+                    // RawCapture cannot be null here, as an instance is always created in the GetPacket function
+                    // if (raw == null)
+                    // {
+                    //     return;
+                    // }
+
+                    // Debugging (if enabled)
+                    if (packetDebug)
+                    {
+                        string packetHexString = ParsingHelpers.ByteArrayToHexString(data);
+                        Console.WriteLine(raw.Timeval.Date.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{raw.PacketLength}] " + packetHexString);
+                    }
+
+                    // Get ID from packet as Hex string
+                    string idString = null;
+                    if (raw.PacketLength == 40 || raw.PacketLength == 36)
+                    {
+                        // String representation: AA BB CC DD EE FF
+                        uint id = (uint)(
+                            data[15] |         // FF
+                            (data[14] << 8) |  // EE
+                            (data[13] << 16) | // DD
+                            (data[12] << 24) | // CC
+                            (data[11] << 32) | // BB
+                            (data[10] << 40)   // AA
+                        );
+
+                        idString = Convert.ToString(id, 16).ToUpperInvariant();
+                    }
+
+                    // Check assignment flags and packet length
+                    if (packetGuitar1AutoAssign && data.Length == 40)
+                    {
+                        // Update UI (assigns instrument ID)
+                        uiDispatcher.Invoke((Action)(() =>
+                        {
+                            guitar1IdTextBox.Text = idString;
+                        }));
+
+                        result = true;
+                    }
+                    else if (packetGuitar2AutoAssign && data.Length == 40)
+                    {
+                        // Update UI (assigns instrument ID)
+                        uiDispatcher.Invoke((Action)(() =>
+                        {
+                            guitar2IdTextBox.Text = idString;
+                        }));
+
+                        result = true;
+                    }
+                    else if (packetDrumAutoAssign && data.Length == 36)
+                    {
+                        // Update UI (assigns instrument ID)
+                        uiDispatcher.Invoke((Action)(() =>
+                        {
+                            drumIdTextBox.Text = idString;
+                        }));
+
+                        result = true;
+                    }
                     break;
                 }
 
@@ -1849,70 +1883,9 @@ namespace RB4InstrumentMapper
                 Thread.Sleep(333);
                 attempts--;
             }
-
-            // Process if we got a packet
-            if (packet != null)
-            {
-                // Debugging (if enabled)
-                if (packetDebug)
-                {
-                    string packetHexString = ParsingHelpers.ByteArrayToHexString(packet.Buffer);
-                    Console.WriteLine(packet.Timestamp.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{packet.Length}] " + packetHexString);
-                }
-
-                // Get ID from packet as Hex string
-                string idString = null;
-                if (packet.Length == 40 || packet.Length == 36)
-                {
-                    // String representation: AA BB CC DD EE FF
-                    uint id = (uint)(
-                        packet[15] |         // FF
-                        (packet[14] << 8) |  // EE
-                        (packet[13] << 16) | // DD
-                        (packet[12] << 24) | // CC
-                        (packet[11] << 32) | // BB
-                        (packet[10] << 40)   // AA
-                    );
-
-                    idString = Convert.ToString(id, 16).ToUpperInvariant();
-                }
-
-                // Check assignment flags and packet length
-                if (packetGuitar1AutoAssign && packet.Length == 40)
-                {
-                    // Update UI (assigns instrument ID)
-                    uiDispatcher.Invoke((Action)(() =>
-                    {
-                        guitar1IdTextBox.Text = idString;
-                    }));
-
-                    result = true;
-                }
-                else if (packetGuitar2AutoAssign && packet.Length == 40)
-                {
-                    // Update UI (assigns instrument ID)
-                    uiDispatcher.Invoke((Action)(() =>
-                    {
-                        guitar2IdTextBox.Text = idString;
-                    }));
-
-                    result = true;
-                }
-                else if (packetDrumAutoAssign && packet.Length == 36)
-                {
-                    // Update UI (assigns instrument ID)
-                    uiDispatcher.Invoke((Action)(() =>
-                    {
-                        drumIdTextBox.Text = idString;
-                    }));
-
-                    result = true;
-                }
-            }
             
-            // Stop packet reading
-            pcapCommunicator.Break();
-            pcapCommunicator = null;
+            // Close device
+            pcapSelectedDevice.Close();
 
             return result;
         }

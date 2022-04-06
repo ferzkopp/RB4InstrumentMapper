@@ -108,7 +108,7 @@ namespace RB4InstrumentMapper
         /// <param name="packet">The data packet to be analyzed.</param>
         /// <param name="data">A returned DrumPacket.</param>
         /// <returns>True if packet was used and analyzed, false otherwise.</returns>
-        public static bool AnalyzePacket(byte[] packet, ref DrumPacket data)
+        public static bool AnalyzePacket(ReadOnlySpan<byte> packet, ref DrumPacket data)
         {
             if (packet != null && packet.Length == DrumPacketLength)
             {
