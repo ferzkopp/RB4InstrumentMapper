@@ -94,7 +94,7 @@ The standard Xbox One controller layout is as follows:
 
 - 12 bytes long
 - `<buttons> <left trigger> <right trigger> <left stick X> <left stick Y> <right stick X> <right stick Y>`
-  - `buttons`: 16-bit button bitmask
+  - `buttons`: 16-bit button bitmask. Note that while other values are little-endian, these are listed in big-endian format.
     - Bit 0 (`0x0001`) - D-pad Up
     - Bit 1 (`0x0002`) - D-pad Down
     - Bit 2 (`0x0004`) - D-pad Left
