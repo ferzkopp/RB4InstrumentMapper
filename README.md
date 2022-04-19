@@ -16,11 +16,11 @@ Almost all features for guitars and drums are supported.
 - Windows 10 64-bit
 - Npcap in WinPcap compatibility mode, or WinPcap
 - USBPcap
-- vJoy or ViGEmBus
+- ViGEmBus or vJoy
 
 ## Installation
 
-1. Install [WinPCap](https://www.winpcap.org/install/default.htm) (recommended), or [Npcap](https://nmap.org/npcap/#download) in WinPCap compatibility mode.
+1. Install [WinPCap](https://www.winpcap.org/install/default.htm) (recommended as that seems to work best), or [Npcap](https://nmap.org/npcap/#download) in WinPCap compatibility mode.
    - Make sure you only install one or the other. Installing both at the same time may cause issues.
 2. Install [USBPCap](https://desowin.org/usbpcap/).
 3. Install [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest) (recommended) or [vJoy](https://github.com/jshafer817/vJoy/releases/latest).
