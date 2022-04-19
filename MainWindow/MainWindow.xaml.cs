@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -200,6 +200,40 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
+        /// Initializes the log file, if it hasn't been initialized already.
+        /// </summary>
+        private static void CreateLog()
+        {
+            if (mainLog != null)
+            {
+                return;
+            }
+
+            // Initialize log file
+            mainLog = LogUtils.CreateLogStream();
+        }
+
+        /// <summary>
+        /// Writes a line to the log file.
+        /// </summary>
+        private static void LogLine(string text)
+        {
+            CreateLog();
+
+            mainLog?.WriteLine(text);
+        }
+
+        /// <summary>
+        /// Writes an exception, and any additonal info, to the log.
+        /// </summary>
+        private static void LogException(Exception ex, string addtlInfo = null)
+        {
+            CreateLog();
+
+            mainLog?.WriteException(ex, addtlInfo);
+        }
+
+        /// <summary>
         /// Called when the window loads.
         /// </summary>
         /// <param name="sender"></param>
@@ -208,9 +242,6 @@ namespace RB4InstrumentMapper
         {
             // Connect to console
             TextBoxConsole.RedirectConsoleToTextBox(messageConsole, displayLinesWithTimestamp: false);
-
-            // Initialize log file
-            mainLog = LogUtils.CreateLogStream();
 
             // Initialize dropdowns
             try // PcapDotNet can't be loaded if Pcap isn't installed, so it will cause a run-time exception here
@@ -234,7 +265,7 @@ namespace RB4InstrumentMapper
                     message.AppendLine("Error getting FusionLog:");
                     message.AppendLine(fusEx.ToString());
                 }
-                mainLog.WriteException(ex, message.ToString());
+                LogException(ex, message.ToString());
 
                 // Prompt
                 message.Clear();
@@ -271,6 +302,8 @@ namespace RB4InstrumentMapper
             message.AppendLine(unhandledException.GetFirstLine());
             message.AppendLine();
 
+            // Create log if it hasn't been created yet
+            CreateLog();
             // Use an alternate message if log couldn't be created
             if (mainLog != null)
             {
@@ -395,8 +428,8 @@ namespace RB4InstrumentMapper
                 try { vigemDevice.Disconnect(); } catch {}
 
                 // Log the exception
-                mainLog.WriteLine("ViGEmBus device creation failed!");
-                mainLog.WriteException(ex);
+                LogLine("ViGEmBus device creation failed!");
+                LogException(ex);
 
                 // Create brief exception string
                 string exceptionMessage = ex.GetFirstLine();
@@ -1617,7 +1650,7 @@ namespace RB4InstrumentMapper
                 catch (InvalidOperationException ex)
                 {
                     MessageBox.Show("Could not auto-assign; an error occured.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    mainLog.WriteException(ex);
+                    LogException(ex);
                     return;
                 }
 
@@ -1636,7 +1669,7 @@ namespace RB4InstrumentMapper
                     catch (InvalidOperationException ex)
                     {
                         MessageBox.Show("Could not auto-assign; an error occured.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        mainLog.WriteException(ex);
+                        LogException(ex);
                         return;
                     }
 
