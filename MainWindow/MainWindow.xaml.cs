@@ -411,6 +411,10 @@ namespace RB4InstrumentMapper
                 // If subtype ID specification through ViGEmBus becomes possible at some point,
                 // the guitar should be subtype 6, and the drums should be subtype 8
 
+            // Register a temporary event handler for getting the user index
+            // Prevents a race condition when getting the user index directly from the device
+            vigemDevice.FeedbackReceived += OnVigemFeedbackReceived;
+
             try
             {
                 // Throws one of 5 exceptions:
@@ -439,9 +443,6 @@ namespace RB4InstrumentMapper
                 return false;
             }
 
-            // Register a temporary event handler for getting the user index
-            // Prevents a race condition when getting the user index directly from the device
-            vigemDevice.FeedbackReceived += OnVigemFeedbackReceived;
             vigemDictionary.Add(userIndex, vigemDevice);
             return true;
         }
