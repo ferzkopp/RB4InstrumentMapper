@@ -118,5 +118,17 @@ namespace RB4InstrumentMapper.Properties {
                 this["currentDrumId"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string currentPacketDebugLogState {
+            get {
+                return ((string)(this["currentPacketDebugLogState"]));
+            }
+            set {
+                this["currentPacketDebugLogState"] = value;
+            }
+        }
     }
 }

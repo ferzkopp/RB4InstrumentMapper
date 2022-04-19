@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -71,6 +71,11 @@ namespace RB4InstrumentMapper
         /// Flag indicating if packets should be shown.
         /// </summary>
         private static bool packetDebug = false;
+
+        /// <summary>
+        /// Flag indicating if packets should be logged to a file.
+        /// </summary>
+        private static bool packetDebugLog = false;
 
         /// <summary>
         /// Flag indicating that guitar 1 ID auto assigning is in progress.
@@ -299,8 +304,9 @@ namespace RB4InstrumentMapper
 
         public static void OnProcessExit(object sender, EventArgs args)
         {
-            // Close the log file
-            mainLog.Close();
+            // Close the log files
+            mainLog?.Close();
+            packetLog?.Close();
         }
 
         /// <summary>
@@ -771,11 +777,17 @@ namespace RB4InstrumentMapper
                 pcapDeviceCombo.SelectedIndex = -1;
             }
 
-            // Preset debugging flag
+            // Preset debugging flags
             string currentPacketDebugState = Properties.Settings.Default.currentPacketDebugState;
             if (currentPacketDebugState == "true")
             {
                 packetDebugCheckBox.IsChecked = true;
+            }
+
+            string currentPacketLogState = Properties.Settings.Default.currentPacketDebugLogState;
+            if (currentPacketLogState == "true")
+            {
+                packetLogCheckBox.IsChecked = true;
             }
 
             Console.WriteLine($"Discovered {pcapDeviceList.Count} Pcap devices.");
@@ -994,6 +1006,7 @@ namespace RB4InstrumentMapper
             pcapAutoDetectButton.IsEnabled = false;
             pcapRefreshButton.IsEnabled = false;
             packetDebugCheckBox.IsEnabled = false;
+            packetLogCheckBox.IsEnabled = false;
 
             guitar1Combo.IsEnabled = false;
             guitar1IdTextBox.IsEnabled = false;
@@ -1015,6 +1028,12 @@ namespace RB4InstrumentMapper
             packetsProcessedCountLabel.Visibility = Visibility.Visible;
             packetsProcessedCountLabel.Content = "0";
             processedPacketCount = 0;
+
+            // Initialize packet log
+            if (packetDebugLog)
+            {
+                packetLog = LogUtils.CreatePacketLogStream();
+            }
 
             // Initialize vJoy
             bool vjoyResult;
@@ -1190,8 +1209,13 @@ namespace RB4InstrumentMapper
             if (packetDebug)
             {
                 RawCapture raw = packet.GetPacket();
-                string packetHexString = ParsingHelpers.ByteArrayToHexString(raw.Data);
-                Console.WriteLine(raw.Timeval.Date.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{raw.PacketLength}] " + packetHexString);
+                string packetLogString = raw.Timeval.Date.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{raw.PacketLength}] " + ParsingHelpers.ByteArrayToHexString(raw.Data);;
+                Console.WriteLine(packetLogString);
+
+                if (packetDebugLog)
+                {
+                    packetLog?.WriteLine(packetLogString);
+                }
             }
 
             // Status reporting (slow)
@@ -1251,6 +1275,9 @@ namespace RB4InstrumentMapper
                 }
             }
             vigemDictionary.Clear();
+
+            // Close packet log file if it was created
+            packetLog?.Close();
             
             // Disable packet capture active flag
             packetCaptureActive = false;
@@ -1260,6 +1287,7 @@ namespace RB4InstrumentMapper
             pcapAutoDetectButton.IsEnabled = true;
             pcapRefreshButton.IsEnabled = true;
             packetDebugCheckBox.IsEnabled = true;
+            packetLogCheckBox.IsEnabled = true;
 
             guitar1Combo.IsEnabled = true;
             guitar1IdTextBox.IsEnabled = true;
@@ -1310,11 +1338,12 @@ namespace RB4InstrumentMapper
         private void packetDebugCheckBox_Checked(object sender, RoutedEventArgs e)
         {
             packetDebug = true;
+            packetLogCheckBox.IsEnabled = true;
+            packetDebugLog = packetLogCheckBox.IsChecked.GetValueOrDefault();
 
             // Remember selected packet debug state
             Properties.Settings.Default.currentPacketDebugState = "true";
             Properties.Settings.Default.Save();
-
         }
 
         /// <summary>
@@ -1325,9 +1354,39 @@ namespace RB4InstrumentMapper
         private void packetDebugCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
             packetDebug = false;
+            packetLogCheckBox.IsEnabled = false;
+            packetDebugLog = false;
 
             // Remember selected packet debug state
             Properties.Settings.Default.currentPacketDebugState = "false";
+            Properties.Settings.Default.Save();
+        }
+
+        /// <summary>
+        /// Handles the packet debug checkbox being checked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void packetLogCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            packetDebugLog = true;
+
+            // Remember selected packet debug state
+            Properties.Settings.Default.currentPacketDebugLogState = "true";
+            Properties.Settings.Default.Save();
+        }
+
+        /// <summary>
+        /// Handles the packet debug checkbox being unchecked.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void packetLogCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            packetDebugLog = false;
+
+            // Remember selected packet debug state
+            Properties.Settings.Default.currentPacketDebugLogState = "false";
             Properties.Settings.Default.Save();
         }
 
@@ -1703,6 +1762,7 @@ namespace RB4InstrumentMapper
                 pcapAutoDetectButton.IsEnabled = false;
                 pcapRefreshButton.IsEnabled = false;
                 packetDebugCheckBox.IsEnabled = false;
+                packetLogCheckBox.IsEnabled = false;
 
                 guitar1Combo.IsEnabled = false;
                 guitar1IdTextBox.IsEnabled = false;
@@ -1736,6 +1796,7 @@ namespace RB4InstrumentMapper
                 pcapAutoDetectButton.IsEnabled = true;
                 pcapRefreshButton.IsEnabled = true;
                 packetDebugCheckBox.IsEnabled = true;
+                packetLogCheckBox.IsEnabled = true;
 
                 guitar1Combo.IsEnabled = true;
                 guitar1IdTextBox.IsEnabled = true;

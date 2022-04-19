@@ -12,7 +12,8 @@
             <Grid Margin="10,10,10,10">
                 <Label Name="pcapDeviceLabel" Content="Devices:" HorizontalAlignment="Left" Height="29" Margin="0,0,0,0" VerticalAlignment="Top" Width="74"/>
                 <ComboBox Name="pcapDeviceCombo" Height="28" Margin="79,0,119.667,0" VerticalAlignment="Top" SelectionChanged="pcapDeviceCombo_SelectionChanged"/>
-                <CheckBox x:Name="packetDebugCheckBox" Content="Show packets (for debugging)" HorizontalAlignment="Left" Height="22" Margin="79,43,0,-1.667" VerticalAlignment="Top" Width="312" Checked="packetDebugCheckBox_Checked" Unchecked="packetDebugCheckBox_Unchecked"/>
+                <CheckBox x:Name="packetDebugCheckBox" Content="Show packets (for debugging)" HorizontalAlignment="Left" Height="22" Margin="79,43,0,0" VerticalAlignment="Top" Width="183" Checked="packetDebugCheckBox_Checked" Unchecked="packetDebugCheckBox_Unchecked"/>
+                <CheckBox x:Name="packetLogCheckBox" Content="Log packets to file" HorizontalAlignment="Left" Height="22" Margin="267,43,0,0" VerticalAlignment="Top" Width="120" Checked="packetLogCheckBox_Checked" Unchecked="packetLogCheckBox_Unchecked"/>
                 <Button x:Name="pcapAutoDetectButton" Content="Auto-Detect Pcap" HorizontalAlignment="Right" Margin="0,-1,-0.333,36.333" VerticalAlignment="Bottom" Width="112" Height="28" Click="pcapAutoDetectButton_Click"/>
                 <Button x:Name="pcapRefreshButton" Content="Refresh Pcap" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="132" Height="20" Click="pcapRefreshButton_Click" Margin="0,0,119.667,7.333" FontSize="10"/>
             </Grid>
