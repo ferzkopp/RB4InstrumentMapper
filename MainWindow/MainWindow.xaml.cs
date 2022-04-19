@@ -20,6 +20,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Threading;
 using Nefarius.ViGEm.Client;
 using Nefarius.ViGEm.Client.Targets;
+using Nefarius.ViGEm.Client.Targets.Xbox360;
 using SharpPcap;
 using SharpPcap.LibPcap;
 
@@ -381,12 +382,6 @@ namespace RB4InstrumentMapper
                 // Win32Exception
                 // These shouldn't happen in 99% of cases, catching just in case
                 vigemDevice.Connect();
-
-                // Throws Xbox360UserIndexNotReportedException
-                // This also shouldn't happen, but it seems to be somewhat prevalent for some reason,
-                // and if it happens the device is not usable later on in program execution
-                int _userIndex = vigemDevice.UserIndex;
-                Console.WriteLine($"Created new ViGEmBus device with user index {_userIndex}");
             }
             catch (Exception ex)
             {
@@ -405,8 +400,23 @@ namespace RB4InstrumentMapper
                 return false;
             }
 
+            // Register a temporary event handler for getting the user index
+            // Prevents a race condition when getting the user index directly from the device
+            vigemDevice.FeedbackReceived += OnVigemFeedbackReceived;
             vigemDictionary.Add(userIndex, vigemDevice);
             return true;
+        }
+
+        /// <summary>
+        /// Temporary event handler for logging the user index of a ViGEm device.
+        /// </summary>
+        static void OnVigemFeedbackReceived(object sender, Xbox360FeedbackReceivedEventArgs args)
+        {
+            // Log the user index
+            Console.WriteLine($"Created new ViGEmBus device with user index {args.LedNumber}");
+
+            // Unregister the event handler
+            (sender as IXbox360Controller).FeedbackReceived -= OnVigemFeedbackReceived;
         }
 
         /// <summary>
