@@ -30,7 +30,7 @@ namespace RB4InstrumentMapper
         /// </remarks>
         public static readonly string PacketLogFolderPath = Path.Combine(
             System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            $"RB4InstrumentMapper\\Logs"
+            $"RB4InstrumentMapper\\PacketLogs"
         );
 
         /// <summary>
