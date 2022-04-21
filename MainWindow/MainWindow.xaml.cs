@@ -1298,15 +1298,9 @@ namespace RB4InstrumentMapper
             }
 
             // Disconnect ViGEmBus controllers
-            if (vigemDictionary.Count != 0)
+            foreach (IXbox360Controller device in vigemDictionary.Values)
             {
-                for (uint i = 0; i < vigemDictionary.Count; i++)
-                {
-                    if (vigemDictionary.ContainsKey(i) && vigemDictionary[i] != null)
-                    {
-                        vigemDictionary[i].Disconnect();
-                    }
-                }
+                device?.Disconnect();
             }
             vigemDictionary.Clear();
 
