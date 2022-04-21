@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -244,43 +244,7 @@ namespace RB4InstrumentMapper
             TextBoxConsole.RedirectConsoleToTextBox(messageConsole, displayLinesWithTimestamp: false);
 
             // Initialize dropdowns
-            try // PcapDotNet can't be loaded if Pcap isn't installed, so it will cause a run-time exception here
-            {
-                PopulatePcapDropdown();
-            }
-            catch (System.IO.FileNotFoundException ex)
-            {
-                // Message buffer
-                StringBuilder message = new StringBuilder();
-
-                // Log
-                message.AppendLine("FusionLog:");
-                try
-                {
-                    string fusLog = ex.FusionLog;
-                    message.AppendLine(fusLog);
-                }
-                catch (Exception fusEx)
-                {
-                    message.AppendLine("Error getting FusionLog:");
-                    message.AppendLine(fusEx.ToString());
-                }
-                LogException(ex, message.ToString());
-
-                // Prompt
-                message.Clear();
-                message.AppendLine("Could not initialize the program:");
-                message.AppendLine();
-                message.AppendLine(ex.GetFirstLine());
-                message.AppendLine();
-                message.AppendLine("The program will now shut down.");
-
-                MessageBox.Show(message.ToString(), "Error Starting Program", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                Application.Current.Shutdown();
-                return;
-            }
-
+            PopulatePcapDropdown();
             PopulateControllerDropdowns();
         }
 
@@ -352,8 +316,6 @@ namespace RB4InstrumentMapper
             // Shutdown
             if (packetCaptureActive)
             {
-                // Same situation as PopulatePcapDropdown can happen here,
-                // but this function will only be called if the program successfully starts in the first place due to the if(packetCaptureActive)
                 StopCapture();
             }
 
