@@ -1121,7 +1121,7 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Callback function invoked by Pcap.Net for every incoming packet
+        /// Handles captured packets.
         /// </summary>
         /// <param name="packet">The received packet</param>
         private void OnPacketArrival(object sender, PacketCapture packet)
