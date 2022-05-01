@@ -9,8 +9,36 @@ namespace RB4InstrumentMapper
     /// <summary>
     /// Provides functionality for logging.
     /// </summary>
-    public static class LogUtils
+    public static class Logging
     {
+        /// <summary>
+        /// The file to log errors to.
+        /// </summary>
+        private static StreamWriter mainLog = null;
+
+        /// <summary>
+        /// Gets whether or not the main log exists.
+        /// </summary>
+        public static bool MainLogExists
+        {
+            get => mainLog != null;
+        }
+
+        private static bool allowMainLogCreation = true;
+
+        /// <summary>
+        /// The current file to log packets to.
+        /// </summary>
+        private static StreamWriter packetLog = null;
+
+        /// <summary>
+        /// Gets whether or not a packet log exists.
+        /// </summary>
+        public static bool PacketLogExists
+        {
+            get => packetLog != null;
+        }
+
         /// <summary>
         /// The path to the folder to write logs to.
         /// </summary>
@@ -19,43 +47,27 @@ namespace RB4InstrumentMapper
         /// </remarks>
         public static readonly string LogFolderPath = Path.Combine(
             System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            $"RB4InstrumentMapper\\Logs"
+            "RB4InstrumentMapper\\Logs"
         );
 
         /// <summary>
         /// The path to the folder to write packet logs to.
         /// </summary>
         /// <remarks>
-        /// Currently %USERPROFILE%\Documents\RB4InstrumentMapper\Logs
+        /// Currently %USERPROFILE%\Documents\RB4InstrumentMapper\PacketLogs
         /// </remarks>
         public static readonly string PacketLogFolderPath = Path.Combine(
             System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            $"RB4InstrumentMapper\\PacketLogs"
+            "RB4InstrumentMapper\\PacketLogs"
         );
 
         /// <summary>
-        /// Create a log file stream.
-        /// </summary>
-        public static StreamWriter CreateLogStream()
-        {
-            return CreateFileStream(LogFolderPath);
-        }
-
-        /// <summary>
-        /// Create a packet log file stream.
-        /// </summary>
-        public static StreamWriter CreatePacketLogStream()
-        {
-            return CreateFileStream(PacketLogFolderPath);
-        }
-
-        /// <summary>
-        /// Create a file stream in the specified folder.
+        /// Creates a file stream in the specified folder.
         /// </summary>
         /// <param name="folderPath">
         /// The folder to create the file in.
         /// </param>
-        static StreamWriter CreateFileStream(string folderPath)
+        private static StreamWriter CreateFileStream(string folderPath)
         {
             // Create logs folder if it doesn't exist
             if (!Directory.Exists(folderPath))
@@ -77,6 +89,113 @@ namespace RB4InstrumentMapper
                 Debug.WriteLine(ex.ToString());
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Creates the main log file.
+        /// </summary>
+        public static bool CreateMainLog()
+        {
+            if (allowMainLogCreation && mainLog == null)
+            {
+                mainLog = CreateFileStream(LogFolderPath);
+                if (mainLog != null)
+                {
+                    Console.WriteLine("Created main log file.");
+                    return true;
+                }
+                else
+                {
+                    // Log could not be created, don't allow creating it again to prevent console spam
+                    allowMainLogCreation = false;
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Creates a packet log file.
+        /// </summary>
+        public static bool CreatePacketLog()
+        {
+            if (packetLog == null)
+            {
+                packetLog = CreateFileStream(PacketLogFolderPath);
+                if (packetLog != null)
+                {
+                    Console.WriteLine("Created packet log file.");
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Writes a line to the log file.
+        /// </summary>
+        public static void LogLine(string text)
+        {
+            // Create log file if it hasn't been made yet
+            CreateMainLog();
+
+            mainLog?.WriteLine(text);
+        }
+
+        /// <summary>
+        /// Writes an exception, and any additonal info, to the log.
+        /// </summary>
+        public static void LogException(Exception ex, string addtlInfo = null)
+        {
+            // Create log file if it hasn't been made yet
+            CreateMainLog();
+
+            mainLog?.WriteException(ex, addtlInfo);
+        }
+
+        public static void LogPacket(string packetLine)
+        {
+            // Create log file if it hasn't been made yet
+            CreatePacketLog();
+
+            packetLog?.WriteLine(packetLine);
+        }
+
+        /// <summary>
+        /// Closes the main log file.
+        /// </summary>
+        public static void CloseMainLog()
+        {
+            mainLog?.Close();
+            mainLog = null;
+        }
+
+        /// <summary>
+        /// Closes the active packet log file.
+        /// </summary>
+        public static void ClosePacketLog()
+        {
+            packetLog?.Close();
+            packetLog = null;
+        }
+
+        /// <summary>
+        /// Closes all log files.
+        /// </summary>
+        public static void CloseAll()
+        {
+            CloseMainLog();
+            ClosePacketLog();
         }
 
         // Extension method for getting the first line of Exception.ToString(),

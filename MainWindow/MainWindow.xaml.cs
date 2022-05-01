@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -35,17 +35,6 @@ namespace RB4InstrumentMapper
         /// Dispatcher to send changes to UI.
         /// </summary>
         private static Dispatcher uiDispatcher = null;
-
-        /// <summary>
-        /// The file to log to.
-        /// </summary>
-        private static StreamWriter mainLog = null;
-
-        // TODO: Implement logging packets to a file for debugging/research
-        /// <summary>
-        /// The file to log packets to.
-        /// </summary>
-        private static StreamWriter packetLog = null;
 
         /// <summary>
         /// Default Pcap packet capture timeout in milliseconds.
@@ -191,46 +180,11 @@ namespace RB4InstrumentMapper
         {
             // Assign event handler for unhandled exceptions
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
-            AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
 
             InitializeComponent();
 
             // Capture Dispatcher object for use in callback
             uiDispatcher = this.Dispatcher;
-        }
-
-        /// <summary>
-        /// Initializes the log file, if it hasn't been initialized already.
-        /// </summary>
-        private static void CreateLog()
-        {
-            if (mainLog != null)
-            {
-                return;
-            }
-
-            // Initialize log file
-            mainLog = LogUtils.CreateLogStream();
-        }
-
-        /// <summary>
-        /// Writes a line to the log file.
-        /// </summary>
-        private static void LogLine(string text)
-        {
-            CreateLog();
-
-            mainLog?.WriteLine(text);
-        }
-
-        /// <summary>
-        /// Writes an exception, and any additonal info, to the log.
-        /// </summary>
-        private static void LogException(Exception ex, string addtlInfo = null)
-        {
-            CreateLog();
-
-            mainLog?.WriteException(ex, addtlInfo);
         }
 
         /// <summary>
@@ -267,12 +221,15 @@ namespace RB4InstrumentMapper
             message.AppendLine();
 
             // Create log if it hasn't been created yet
-            CreateLog();
+            Logging.CreateMainLog();
             // Use an alternate message if log couldn't be created
-            if (mainLog != null)
+            if (Logging.MainLogExists)
             {
                 // Log exception
-                mainLog.WriteException(unhandledException);
+                Logging.LogLine("-------------------");
+                Logging.LogLine("UNHANDLED EXCEPTION");
+                Logging.LogLine("-------------------");
+                Logging.LogException(unhandledException);
 
                 // Complete the message buffer
                 message.AppendLine("A log of the error has been created, do you want to open it?");
@@ -282,7 +239,7 @@ namespace RB4InstrumentMapper
                 // If user requested to, open the log
                 if (result == MessageBoxResult.Yes)
                 {
-                    Process.Start(LogUtils.LogFolderPath);
+                    Process.Start(Logging.LogFolderPath);
                 }
             }
             else
@@ -294,16 +251,12 @@ namespace RB4InstrumentMapper
                 MessageBox.Show(message.ToString(), "Unhandled Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
+            // Close the log files
+            Logging.CloseAll();
+
             // Close program
             MessageBox.Show("The program will now shut down.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             Application.Current.Shutdown();
-        }
-
-        public static void OnProcessExit(object sender, EventArgs args)
-        {
-            // Close the log files
-            mainLog?.Close();
-            packetLog?.Close();
         }
 
         /// <summary>
@@ -324,6 +277,9 @@ namespace RB4InstrumentMapper
             {
                 vigemClient.Dispose();
             }
+
+            // Close the log files
+            Logging.CloseAll();
         }
 
         /// <summary>
@@ -394,8 +350,8 @@ namespace RB4InstrumentMapper
                 try { vigemDevice.Disconnect(); } catch {}
 
                 // Log the exception
-                LogLine("ViGEmBus device creation failed!");
-                LogException(ex);
+                Logging.LogLine("ViGEmBus device creation failed!");
+                Logging.LogException(ex);
 
                 // Create brief exception string
                 string exceptionMessage = ex.GetFirstLine();
@@ -1028,7 +984,11 @@ namespace RB4InstrumentMapper
             // Initialize packet log
             if (packetDebugLog)
             {
-                packetLog = LogUtils.CreatePacketLogStream();
+                if (!Logging.CreatePacketLog())
+                {
+                    packetDebugLog = false;
+                    Console.WriteLine("Disabled packet logging for this capture session.");
+                }
             }
 
             // Initialize vJoy
@@ -1210,7 +1170,7 @@ namespace RB4InstrumentMapper
 
                 if (packetDebugLog)
                 {
-                    packetLog?.WriteLine(packetLogString);
+                    Logging.LogPacket(packetLogString);
                 }
             }
 
@@ -1266,8 +1226,10 @@ namespace RB4InstrumentMapper
             }
             vigemDictionary.Clear();
 
-            // Close packet log file if it was created
-            packetLog?.Close();
+            // Store whether or not the packet log was created
+            bool doPacketLogMessage = Logging.PacketLogExists;
+            // Close packet log file
+            Logging.ClosePacketLog();
             
             // Disable packet capture active flag
             packetCaptureActive = false;
@@ -1301,6 +1263,10 @@ namespace RB4InstrumentMapper
             processedPacketCount = 0;
 
             Console.WriteLine("Stopped capture.");
+            if (doPacketLogMessage)
+            {
+                Console.WriteLine($"Packet logs may be found in {Logging.PacketLogFolderPath}.");
+            }
         }
 
         /// <summary>
@@ -1607,7 +1573,8 @@ namespace RB4InstrumentMapper
                 catch (InvalidOperationException ex)
                 {
                     MessageBox.Show("Could not auto-assign; an error occured.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    LogException(ex);
+                    Logging.LogLine("Error during auto-assignment:");
+                    Logging.LogException(ex);
                     return;
                 }
 
@@ -1626,7 +1593,8 @@ namespace RB4InstrumentMapper
                     catch (InvalidOperationException ex)
                     {
                         MessageBox.Show("Could not auto-assign; an error occured.", "Auto-Detect Receiver", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        LogException(ex);
+                        Logging.LogLine("Error during auto-assignment:");
+                        Logging.LogException(ex);
                         return;
                     }
 
