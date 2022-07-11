@@ -188,17 +188,17 @@ namespace RB4InstrumentMapper.Parsing
             // Pads
             SetButton(Button.One, (data[DrumOffset.PadVels] & DrumPadVel.Red) != 0);
             SetButton(Button.Two, (data[DrumOffset.PadVels] & DrumPadVel.Yellow) != 0);
-            SetButton(Button.Three, (data[DrumOffset.PadVels] & DrumPadVel.Blue) != 0);
-            SetButton(Button.Four, (data[DrumOffset.PadVels] & DrumPadVel.Green) != 0);
+            SetButton(Button.Three, (data[DrumOffset.PadVels + 1] & DrumPadVel.Blue) != 0);
+            SetButton(Button.Four, (data[DrumOffset.PadVels + 1] & DrumPadVel.Green) != 0);
 
             // Cymbals
             SetButton(Button.Six, (data[DrumOffset.CymbalVels] & DrumCymVel.Yellow) != 0);
             SetButton(Button.Seven, (data[DrumOffset.CymbalVels] & DrumCymVel.Blue) != 0);
-            SetButton(Button.Eight, (data[DrumOffset.CymbalVels] & DrumCymVel.Green) != 0);
+            SetButton(Button.Eight, (data[DrumOffset.CymbalVels + 1] & DrumCymVel.Green) != 0);
 
             // Kick pedals
-            SetButton(Button.Five, (data[DrumOffset.Buttons] & DrumButton.KickOne) != 0);
-            SetButton(Button.Nine, (data[DrumOffset.Buttons] & DrumButton.KickTwo) != 0);
+            SetButton(Button.Five, (data[DrumOffset.Buttons + 1] & DrumButton.KickOne) != 0);
+            SetButton(Button.Nine, (data[DrumOffset.Buttons + 1] & DrumButton.KickTwo) != 0);
         }
 
         /// <summary>

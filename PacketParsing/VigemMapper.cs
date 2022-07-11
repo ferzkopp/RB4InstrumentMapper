@@ -164,7 +164,7 @@ namespace RB4InstrumentMapper.Parsing
             byte greenPad  = (byte)(data[DrumOffset.PadVels + 1] & DrumPadVel.Green);
 
             byte yellowCym = (byte)(data[DrumOffset.CymbalVels] >> 4);
-            byte blueCym   = (byte)(data[DrumOffset.CymbalVels] & DrumPadVel.Blue);
+            byte blueCym   = (byte)(data[DrumOffset.CymbalVels] & DrumCymVel.Blue);
             byte greenCym  = (byte)(data[DrumOffset.CymbalVels + 1] >> 4);
 
             // Color flags
@@ -179,6 +179,12 @@ namespace RB4InstrumentMapper.Parsing
             // Cymbal flag
             device.SetButtonState(Xbox360Button.RightShoulder,
                 (yellowCym | blueCym | greenCym) != 0);
+
+            // Pedals
+            device.SetButtonState(Xbox360Button.LeftShoulder, 
+                (data[DrumOffset.Buttons + 1] & DrumButton.KickOne) != 0);
+            device.SetButtonState(Xbox360Button.LeftThumb, 
+                (data[DrumOffset.Buttons + 1] & DrumButton.KickTwo) != 0);
 
             // Velocities
             device.SetAxisValue(
