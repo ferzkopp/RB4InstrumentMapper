@@ -191,16 +191,16 @@ Bytes:
   - Bit 3 (`0x0008`) - D-pad Right
   - Bit 4 (`0x0010`) - 1st Kick Pedal (equivalent to Left Bumper)
   - Bit 5 (`0x0020`) - 2nd Kick Pedal (equivalent to Right Bumper)
-  - Bit 6 (`0x0040`) - Unused? (equivalent to Left Stick Press)
-  - Bit 7 (`0x0080`) - Unused? (equivalent to Right Stick Press)
+  - Bit 6 (`0x0040`) - Unused (equivalent to Left Stick Press)
+  - Bit 7 (`0x0080`) - Unused (equivalent to Right Stick Press)
   - Bit 8 (`0x0100`) - Sync button?
   - Bit 9 (`0x0200`) - Unused (undefined?)
   - Bit 10 (`0x0400`) - Menu Button
   - Bit 11 (`0x0800`) - Options Button
   - Bit 12 (`0x1000`) - Green Pad (equivalent to A Button)
   - Bit 13 (`0x2000`) - Red Pad (equivalent to B Button)
-  - Bit 14 (`0x4000`) - Blue Pad (equivalent to X Button)
-  - Bit 15 (`0x8000`) - Yellow Pad (equivalent to Y Button)
+  - Bit 14 (`0x4000`) - Unused (equivalent to X Button)
+  - Bit 15 (`0x8000`) - Unused (equivalent to Y Button)
 - Bytes 32-33 - Pad velocities
   - Bits 0-3 (`0x000F`) - Green Pad
   - Bits 4-7 (`0x00F0`) - Blue Pad
@@ -208,7 +208,7 @@ Bytes:
   - Bits 12-15 (`0xF000`) - Red Pad
   - Seem to range from 0-7
 - Bytes 34-35 - Cymbal velocities
-  - Bits 0-3 (`0x000F`) - Unused?
+  - Bits 0-3 (`0x000F`) - Unused
   - Bits 4-7 (`0x00F0`) - Green Cymbal
   - Bits 8-11 (`0x0F00`) - Blue Cymbal
   - Bits 12-15 (`0xF000`) - Yellow Cymbal

@@ -161,8 +161,6 @@ namespace RB4InstrumentMapper.Parsing
     {
         public const ushort
         RedPad = GamepadButton.B,
-        YellowPad = GamepadButton.Y,
-        BluePad = GamepadButton.X,
         GreenPad = GamepadButton.A,
         KickOne = GamepadButton.LeftBumper,
         KickTwo = GamepadButton.RightBumper;
