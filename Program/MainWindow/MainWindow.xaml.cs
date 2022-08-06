@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -223,6 +223,8 @@ namespace RB4InstrumentMapper
 
             // Populate combo and print the list
             StringBuilder sb = new StringBuilder();
+            ILiveDevice xboxReceiver = null;
+            int xboxIndex = -1;
             for (int i = 0; i < pcapDeviceList.Count; i++)
             {
                 ILiveDevice device = pcapDeviceList[i];
@@ -232,6 +234,15 @@ namespace RB4InstrumentMapper
                 sb.Append($"{itemNumber}. ");
                 if (device.Description != null)
                 {
+                    // Check if it's an Xbox receiver for later use
+                    // TODO: Research if there are any other device names to check for, or other methods to detect receivers
+                    // This won't work anymore if the receiver changes device name down the line
+                    if (device.Description == "MT7612US_RL")
+                    {
+                        xboxReceiver = device;
+                        xboxIndex = i;
+                    }
+
                     sb.Append(device.Description);
                     sb.Append($" ({device.Name})");
                 }
@@ -258,10 +269,20 @@ namespace RB4InstrumentMapper
                 });
             }
 
-            // Set selection to nothing if saved device not detected
+            // Set selection to the detected receiver if saved device not detected
             if (pcapSelectedDevice == null)
             {
-                pcapDeviceCombo.SelectedIndex = -1;
+                if (xboxReceiver != null)
+                {
+                    pcapSelectedDevice = xboxReceiver;
+                    pcapDeviceCombo.SelectedIndex = xboxIndex;
+                }
+                else
+                {
+                    pcapDeviceCombo.SelectedIndex = -1;
+                    Console.WriteLine("No Xbox controller receivers detected during refresh! Please ensure you have one connected, and that you are using WinPcap and not Npcap.");
+                    Console.WriteLine("You may need to run through auto-detection or manually select the device from the dropdown as well.");
+                }
             }
 
             Console.WriteLine($"Discovered {pcapDeviceList.Count} Pcap devices.");
