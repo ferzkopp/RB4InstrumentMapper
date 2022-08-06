@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31729.503
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RB4InstrumentMapper", "RB4InstrumentMapper.csproj", "{93041197-1E1B-4084-B1DD-C8363A588C48}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RB4InstrumentMapper", "Program\RB4InstrumentMapper.csproj", "{93041197-1E1B-4084-B1DD-C8363A588C48}"
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "RB4InstrumentMapperInstaller", "Installer\RB4InstrumentMapperInstaller.wixproj", "{047562BB-6D63-4259-8E2E-0A5E834190B1}"
 	ProjectSection(ProjectDependencies) = postProject

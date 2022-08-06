@@ -163,8 +163,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Docs\Images\ProgramScreenshot.png" />
-    <Resource Include="Docs\Images\vJoyConfiguration.png" />
+    <Resource Include="..\Docs\Images\ProgramScreenshot.png" />
+    <Resource Include="..\Docs\Images\vJoyConfiguration.png" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Dependencies\x64\vJoyInterface.dll" />
@@ -174,6 +174,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(SolutionDir)Dependencies\x64\vJoyInterface.dll  $(TargetDir).</PostBuildEvent>
+    <PostBuildEvent>copy $(ProjectDir)Dependencies\x64\vJoyInterface.dll  $(TargetDir).</PostBuildEvent>
   </PropertyGroup>
 </Project>
