@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -163,7 +163,7 @@ namespace RB4InstrumentMapper
                 Console.WriteLine("ViGEmBus not found. ViGEmBus selection will be unavailable.");
 
                 // Reset device type selection if it was set to ViGEmBus
-                if (deviceType == (int)ControllerType.vJoy)
+                if (deviceType == (int)ControllerType.VigemBus)
                 {
                     controllerDeviceTypeCombo.SelectedIndex = (int)ControllerType.None;
                 }
