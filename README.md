@@ -41,10 +41,6 @@ RB4 drums made by PDP don't seem to work, they turn off after syncing to the rec
      ![vJoy Configuration Screenshot](/Docs/Images/vJoyConfiguration.png "vJoy Configuration Screenshot")
    - If you installed ViGEmBus, there's no configuration required. Outputs for guitars and drums will match that of their Xbox 360 counterparts.
 4. Restart your PC.
-5. Download the latest release from the [Releases tab](https://github.com/ferzkopp/RB4InstrumentMapper/releases/latest) and install it.
-6. Install Pcap.Net dependencies
-   - [Microsoft Visual C++ 2010 Service Pack 1 Redistributable Package MFC Security Update](https://www.microsoft.com/en-us/download/details.aspx?id=26999)
-   - [Visual C++ Redistributable Packages for Visual Studio 2013 ](https://www.microsoft.com/en-us/download/details.aspx?id=40784)
 
 ## Usage
 
@@ -72,10 +68,6 @@ Note that these settings are meant for debugging purposes only, leaving them ena
 ## Error Logs
 
 In the case that the program crashes, an error log is saved to a `RB4InstrumentMapper` > `Logs` folder inside your Documents folder. Make sure to include it when getting help or creating an issue report for the crash.
-
-## Other Versions
-
-A fork of this code with an updated interface, 64bit version and other improvements is available at: https://github.com/TheNathannator/RB4InstrumentMapper
 
 ## References
 
