@@ -183,7 +183,13 @@ namespace RB4InstrumentMapper.Parsing
         private void ParseDrums(ReadOnlySpan<byte> data)
         {
             // Buttons
-            ParseCoreButtons(data.GetUInt16BE(DrumOffset.Buttons));
+            ushort buttons = data.GetUInt16BE(DrumOffset.Buttons);
+            ParseCoreButtons(buttons);
+
+            SetButton(Button.Four, (buttons & GamepadButton.A) != 0);
+            SetButton(Button.One, (buttons & GamepadButton.B) != 0);
+            SetButton(Button.Three, (buttons & GamepadButton.X) != 0);
+            SetButton(Button.Two, (buttons & GamepadButton.Y) != 0);
 
             // Pads
             SetButton(Button.One, (data[DrumOffset.PadVels] & DrumPadVel.Red) != 0);
