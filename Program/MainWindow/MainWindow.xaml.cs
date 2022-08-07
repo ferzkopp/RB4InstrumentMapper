@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -714,6 +714,49 @@ namespace RB4InstrumentMapper
         private void pcapAutoDetectButton_Click(object sender, RoutedEventArgs e)
         {
             MessageBoxResult result;
+
+            // Get the list of devices for when receiver is unplugged
+            CaptureDeviceList deviceList = CaptureDeviceList.Instance;
+            foreach (var device in deviceList)
+            {
+                if (!IsXboxOneReceiver(device))
+                {
+                    continue;
+                }
+
+                result = MessageBox.Show(
+                    $"Found Xbox One receiver device: {device.Description}\nPress OK to set this device as your selected Pcap device, or press Cancel to continue with the auto-detection process.",
+                    "Auto-Detect Receiver",
+                    MessageBoxButton.OKCancel
+                );
+                if (result == MessageBoxResult.OK)
+                {
+                    // Assign the new device
+                    pcapSelectedDevice = device;
+
+                    // Remember the new device
+                    Properties.Settings.Default.pcapDevice = pcapSelectedDevice.Name;
+                    Properties.Settings.Default.Save();
+
+                    // Refresh the dropdown
+                    PopulatePcapDropdown();
+                    return;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+
+            result = MessageBox.Show(
+                "No Xbox One receivers could be found through checking device properties.\nYou will now be guided through a second auto-detection process. Press Cancel at any time to cancel the process.",
+                "Auto-Detect Receiver",
+                MessageBoxButton.OKCancel
+            );
+            if (result == MessageBoxResult.Cancel)
+            {
+                return;
+            }
 
             // Prompt user to unplug their receiver
             result = MessageBox.Show(
