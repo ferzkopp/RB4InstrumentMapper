@@ -44,7 +44,7 @@
   
   <Fragment>
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-      <?define BinariesDir = $(sys.CURRENTDIR)..\bin\x64\Release\?>
+      <?define BinariesDir = $(sys.CURRENTDIR)..\Program\bin\x64\Release\?>
       <Component Id="COMP_NefariusViGEmClientdll" Guid="04BB3091-EA32-4F10-8F2B-7BA22FF8309A">
         <File Id="FILE_NefariusViGEmClientdll" Name="Nefarius.ViGEm.Client.dll" Source="$(var.BinariesDir)Nefarius.ViGEm.Client.dll" KeyPath="yes" />
       </Component>
