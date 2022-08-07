@@ -47,6 +47,7 @@ RB4 drums made by PDP don't seem to work, they turn off after syncing to the rec
 1. Configure the selected Pcap device:
    - Xbox receivers should be detected automatically by device name.
    - If they are not, click the `Auto-Detect Pcap` button and follow its instructions.
+   - You can also check the device list yourself for a device called `MT7612US_RL`.
    - If that doesn't work, then if you installed WinPcap, try installing Npcap instead, or vice versa.
 2. Select either vJoy or ViGEmBus in the Controller Type dropdown.
 3. Connect your instruments if you haven't yet.
