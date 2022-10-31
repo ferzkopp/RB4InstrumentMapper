@@ -8,7 +8,6 @@ namespace RB4InstrumentMapper.Parsing
         public const int
         ReceiverHeader = 26,
         CommandHeader = 4,
-        VirtualKey = 2,
         Input_Gamepad = 0x0C,
         Input_Guitar = 0x0A,
         Input_Drums = 0x06;
@@ -41,26 +40,7 @@ namespace RB4InstrumentMapper.Parsing
     static class CommandId
     {
         public const int
-        VirtualKey = 0x07,
         Input = 0x20;
-    }
-
-    /// <summary>
-    /// Virtual keycodes that will be recognized.
-    /// </summary>
-    static class Keycodes
-    {
-        public const byte LeftWin = 0x5b;
-    }
-
-    /// <summary>
-    /// Virtual keycode packet offsets relative to the end of the command header.
-    /// </summary>
-    static class KeycodeOffset
-    {
-        public const int
-        PressedState = 0,
-        Keycode = 1;
     }
 
     /// <summary>

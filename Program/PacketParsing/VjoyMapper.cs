@@ -208,29 +208,6 @@ namespace RB4InstrumentMapper.Parsing
         }
 
         /// <summary>
-        /// Parses a virtual key report.
-        /// </summary>
-        public void ParseVirtualKey(ReadOnlySpan<byte> data, byte length, byte sequenceCount)
-        {
-            // Don't parse the same report twice
-            if (sequenceCount == prevVirtualKeySeqCount)
-            {
-                return;
-            }
-            else
-            {
-                prevVirtualKeySeqCount = sequenceCount;
-            }
-
-            // Only respond to the Left Windows keycode, as this is what the guide button reports.
-            if (data[KeycodeOffset.Keycode] == Keycodes.LeftWin)
-            {
-                SetButton(Button.Fourteen, data[KeycodeOffset.PressedState] != 0);
-                VjoyStatic.Client.UpdateVJD(deviceId, ref state);
-            }
-        }
-
-        /// <summary>
         /// Performs cleanup for the vJoy mapper.
         /// </summary>
         public void Close()

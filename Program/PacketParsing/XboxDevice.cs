@@ -51,12 +51,6 @@ namespace RB4InstrumentMapper.Parsing
                     deviceMapper.ParseInput(commandData.Slice(Length.CommandHeader), commandData[CommandOffset.DataLength], commandData[CommandOffset.SequenceCount]);
                     break;
 
-                // Probably don't actually want to parse the guide button and output it to the device,
-                // so as to not interfere with Windows processes that use it
-                // case CommandId.VirtualKey:
-                //     deviceMapper.ParseVirtualKey(commandData.Slice(Length.CommandHeader), commandData[CommandOffset.DataLength], commandData[CommandOffset.SequenceCount]);
-                //     break;
-
                 default:
                     // Don't do anything with unrecognized command IDs
                     break;
