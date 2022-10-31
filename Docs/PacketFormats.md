@@ -4,7 +4,7 @@ This document provides some details on how Xbox One device data packets are rece
 
 This documentation is far from fully comprehensive, as there are many parts of the Xbox One controller protocol that don't pertain to sniffing inputs. There are also some parts of the receiver header data that are not well understood.
 
-Byte numbers in the lists are 0-indexed.
+All values are listed as little-endian. Byte numbers are 0-indexed.
 
 ## Table of Contents
 
@@ -94,23 +94,23 @@ The standard Xbox One controller layout is as follows:
 
 - 12 bytes long
 - `<buttons> <left trigger> <right trigger> <left stick X> <left stick Y> <right stick X> <right stick Y>`
-  - `buttons`: 16-bit button bitmask. Note that while other values are little-endian, these are listed in big-endian format.
-    - Bit 0 (`0x0001`) - D-pad Up
-    - Bit 1 (`0x0002`) - D-pad Down
-    - Bit 2 (`0x0004`) - D-pad Left
-    - Bit 3 (`0x0008`) - D-pad Right
-    - Bit 4 (`0x0010`) - Left Bumper
-    - Bit 5 (`0x0020`) - Right Bumper
-    - Bit 6 (`0x0040`) - Left Stick Press
-    - Bit 7 (`0x0080`) - Right Stick Press
-    - Bit 8 (`0x0100`) - Sync button
-    - Bit 9 (`0x0200`) - Unused (undefined?)
-    - Bit 10 (`0x0400`) - Menu Button
-    - Bit 11 (`0x0800`) - Options Button
-    - Bit 12 (`0x1000`) - A Button
-    - Bit 13 (`0x2000`) - B Button
-    - Bit 14 (`0x4000`) - X Button
-    - Bit 15 (`0x8000`) - Y Button
+  - `buttons`: 16-bit button bitmask
+    - Bit 0 (`0x0001`) - Sync button
+    - Bit 1 (`0x0002`) - Unused
+    - Bit 2 (`0x0004`) - Menu Button
+    - Bit 3 (`0x0008`) - Options Button
+    - Bit 4 (`0x0010`) - A Button
+    - Bit 5 (`0x0020`) - B Button
+    - Bit 6 (`0x0040`) - X Button
+    - Bit 7 (`0x0080`) - Y Button
+    - Bit 8 (`0x0100`) - D-pad Up
+    - Bit 9 (`0x0200`) - D-pad Down
+    - Bit 10 (`0x0400`) - D-pad Left
+    - Bit 11 (`0x0800`) - D-pad Right
+    - Bit 12 (`0x1000`) - Left Bumper
+    - Bit 13 (`0x2000`) - Right Bumper
+    - Bit 14 (`0x4000`) - Left Stick Press
+    - Bit 15 (`0x8000`) - Right Stick Press
   - `left trigger` and `right trigger`: 16-bit little-endian unsigned axis
   - `left stick X`/`Y`, `right stick X`/`Y`: 16-bit little-endian signed axis
 
@@ -121,22 +121,22 @@ The standard Xbox One controller layout is as follows:
 `<buttons> <tilt> <whammy> <pickup/slider> <upper frets> <lower frets> <unused[3]>`
 
 - `buttons`: 16-bit button bitmask
-  - Bit 0 (`0x0001`) - D-pad Up/Strum Up
-  - Bit 1 (`0x0002`) - D-pad Down/Strum Down
-  - Bit 2 (`0x0004`) - D-pad Left
-  - Bit 3 (`0x0008`) - D-pad Right
-  - Bit 4 (`0x0010`) - Orange Fret Flag (equivalent to Left Bumper)
-  - Bit 5 (`0x0020`) - Unused (equivalent to Right Bumper)
-  - Bit 6 (`0x0040`) - Lower Fret Flag (equivalent to Left Stick Press)
-  - Bit 7 (`0x0080`) - Unused (equivalent to Right Stick Press)
-  - Bit 8 (`0x0100`) - Sync button?
-  - Bit 9 (`0x0200`) - Unused (undefined?)
-  - Bit 10 (`0x0400`) - Menu Button
-  - Bit 11 (`0x0800`) - Options Button
-  - Bit 12 (`0x1000`) - Green Fret Flag (equivalent to A Button)
-  - Bit 13 (`0x2000`) - Red Fret Flag (equivalent to B Button)
-  - Bit 14 (`0x4000`) - Blue Fret Flag (equivalent to X Button)
-  - Bit 15 (`0x8000`) - Yellow Fret Flag (equivalent to Y Button)
+  - Bit 0 (`0x0001`) - Sync button
+  - Bit 1 (`0x0002`) - Unused
+  - Bit 2 (`0x0004`) - Menu Button
+  - Bit 3 (`0x0008`) - Options Button
+  - Bit 4 (`0x0010`) - Green Fret Flag (equivalent to A Button)
+  - Bit 5 (`0x0020`) - Red Fret Flag (equivalent to B Button)
+  - Bit 6 (`0x0040`) - Blue Fret Flag (equivalent to X Button)
+  - Bit 7 (`0x0080`) - Yellow Fret Flag (equivalent to Y Button)
+  - Bit 8 (`0x0100`) - D-pad Up/Strum Up
+  - Bit 9 (`0x0200`) - D-pad Down/Strum Down
+  - Bit 10 (`0x0400`) - D-pad Left
+  - Bit 11 (`0x0800`) - D-pad Right
+  - Bit 12 (`0x1000`) - Orange Fret Flag (equivalent to Left Bumper)
+  - Bit 13 (`0x2000`) - Unused (equivalent to Right Bumper)
+  - Bit 14 (`0x4000`) - Lower Fret Flag (equivalent to Left Stick Press)
+  - Bit 15 (`0x8000`) - Unused (equivalent to Right Stick Press)
 - `tilt`: 8-bit tilt axis
   - Has a threshold of `0x70`? (values below get cut off to `0x00`)
 - `whammy`: 8-bit whammy bar axis
@@ -185,33 +185,33 @@ Some of the data here is speculatory. It needs to be verified using packet captu
 Bytes:
 
 - `buttons`: 16-bit button bitmask
-  - Bit 0 (`0x0001`) - D-pad Up
-  - Bit 1 (`0x0002`) - D-pad Down
-  - Bit 2 (`0x0004`) - D-pad Left
-  - Bit 3 (`0x0008`) - D-pad Right
-  - Bit 4 (`0x0010`) - 1st Kick Pedal (equivalent to Left Bumper)
-  - Bit 5 (`0x0020`) - 2nd Kick Pedal (equivalent to Right Bumper)
-  - Bit 6 (`0x0040`) - Unused (equivalent to Left Stick Press)
-  - Bit 7 (`0x0080`) - Unused (equivalent to Right Stick Press)
-  - Bit 8 (`0x0100`) - Sync button?
-  - Bit 9 (`0x0200`) - Unused (undefined?)
-  - Bit 10 (`0x0400`) - Menu Button
-  - Bit 11 (`0x0800`) - Options Button
-  - Bit 12 (`0x1000`) - Green Pad (equivalent to A Button)
-  - Bit 13 (`0x2000`) - Red Pad (equivalent to B Button)
-  - Bit 14 (`0x4000`) - Unused (equivalent to X Button)
-  - Bit 15 (`0x8000`) - Unused (equivalent to Y Button)
-- Bytes 32-33 - Pad velocities
-  - Bits 0-3 (`0x000F`) - Green Pad
-  - Bits 4-7 (`0x00F0`) - Blue Pad
-  - Bits 8-11 (`0x0F00`) - Yellow Pad
-  - Bits 12-15 (`0xF000`) - Red Pad
+  - Bit 0 (`0x0001`) - Sync button
+  - Bit 1 (`0x0002`) - Unused
+  - Bit 2 (`0x0004`) - Menu Button
+  - Bit 3 (`0x0008`) - Options Button
+  - Bit 4 (`0x0010`) - Green Pad (equivalent to A Button)
+  - Bit 5 (`0x0020`) - Red Pad (equivalent to B Button)
+  - Bit 6 (`0x0040`) - Unused (equivalent to X Button)
+  - Bit 7 (`0x0080`) - Unused (equivalent to Y Button)
+  - Bit 8 (`0x0100`) - D-pad Up
+  - Bit 9 (`0x0200`) - D-pad Down
+  - Bit 10 (`0x0400`) - D-pad Left
+  - Bit 11 (`0x0800`) - D-pad Right
+  - Bit 12 (`0x1000`) - 1st Kick Pedal (equivalent to Left Bumper)
+  - Bit 13 (`0x2000`) - 2nd Kick Pedal (equivalent to Right Bumper)
+  - Bit 14 (`0x4000`) - Unused (equivalent to Left Stick Press)
+  - Bit 15 (`0x8000`) - Unused (equivalent to Right Stick Press)
+- `pad velocities` - 16 bits for the pad velocities (remember that this is little-endian)
+  - Bits 0-3 (`0x000F`) - Yellow Pad
+  - Bits 4-7 (`0x00F0`) - Red Pad
+  - Bits 8-11 (`0x0F00`) - Green Pad
+  - Bits 12-15 (`0xF000`) - Blue Pad
   - Seem to range from 0-7
-- Bytes 34-35 - Cymbal velocities
-  - Bits 0-3 (`0x000F`) - Unused
-  - Bits 4-7 (`0x00F0`) - Green Cymbal
-  - Bits 8-11 (`0x0F00`) - Blue Cymbal
-  - Bits 12-15 (`0xF000`) - Yellow Cymbal
+- `cymbal velocities` - 16 bits for the cymbal velocities (remember that this is little-endian)
+  - Bits 0-3 (`0x000F`) - Blue Cymbal
+  - Bits 4-7 (`0x00F0`) - Yellow Cymbal
+  - Bits 8-11 (`0x0F00`) - Unused
+  - Bits 12-15 (`0xF000`) - Green Cymbal
   - Seem to range from 0-7
 
 ### Drum Packet Samples
