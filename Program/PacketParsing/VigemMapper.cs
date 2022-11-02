@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Nefarius.ViGEm.Client.Exceptions;
 using Nefarius.ViGEm.Client.Targets;
 using Nefarius.ViGEm.Client.Targets.Xbox360;
@@ -66,37 +68,43 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses an input report.
         /// </summary>
-        public void ParseInput(ReadOnlySpan<byte> data, byte length, byte sequenceCount)
+        public unsafe void ParseInput(CommandHeader header, ReadOnlySpan<byte> data)
         {
-            // Don't parse the same report twice
-            if (sequenceCount == prevInputSeqCount)
+            // Don't process if not connected
+            if (!deviceConnected)
             {
                 return;
+            }
+
+            // Ensure lengths match
+            if (header.DataLength != data.Length)
+            {
+                // This is probably a bug, emit a debug message
+                Debug.Fail($"Command header length does not match buffer length! Header: {header.DataLength}  Buffer: {data.Length}");
+                return;
+            }
+
+            // Don't parse the same report twice
+            if (header.SequenceCount == prevInputSeqCount)
+            {
+                return;
+            }
+
+            header.SequenceCount = prevInputSeqCount;
+
+            int length = header.DataLength;
+            if (length == sizeof(GuitarInput) && MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
+            {
+                ParseGuitar(guitarReport);
+            }
+            else if (length == sizeof(DrumInput) && MemoryMarshal.TryRead(data, out DrumInput drumReport))
+            {
+                ParseDrums(drumReport);
             }
             else
             {
-                prevInputSeqCount = sequenceCount;
-            }
-
-            if (!deviceConnected)
-            {
-                // Device has not connected yet
+                // Report is not valid
                 return;
-            }
-
-            switch (length)
-            {
-                case Length.Input_Guitar:
-                    ParseGuitar(data);
-                    break;
-
-                case Length.Input_Drums:
-                    ParseDrums(data);
-                    break;
-                
-                default:
-                    // Don't parse unknown button data
-                    return;
             }
 
             // Send data
@@ -106,7 +114,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses common button data from an input report.
         /// </summary>
-        private void ParseCoreButtons(ushort buttons)
+        private void ParseCoreButtons(GamepadButton buttons)
         {
             // Menu
             device.SetButtonState(Xbox360Button.Start, (buttons & GamepadButton.Menu) != 0);
@@ -125,36 +133,36 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses guitar input data from an input report.
         /// </summary>
-        private void ParseGuitar(ReadOnlySpan<byte> data)
+        private void ParseGuitar(GuitarInput report)
         {
             // Buttons
-            ParseCoreButtons(data.GetUInt16BE(GuitarOffset.Buttons));
+            ParseCoreButtons((GamepadButton)report.Buttons);
 
             // Frets
-            byte frets = data[GuitarOffset.UpperFrets];
-            frets |= data[GuitarOffset.LowerFrets];
+            device.SetButtonState(Xbox360Button.A, report.Green);
+            device.SetButtonState(Xbox360Button.B, report.Red);
+            device.SetButtonState(Xbox360Button.Y, report.Yellow);
+            device.SetButtonState(Xbox360Button.X, report.Blue);
+            device.SetButtonState(Xbox360Button.LeftShoulder, report.Orange);
 
-            device.SetButtonState(Xbox360Button.A, (frets & GuitarFret.Green) != 0);
-            device.SetButtonState(Xbox360Button.B, (frets & GuitarFret.Red) != 0);
-            device.SetButtonState(Xbox360Button.Y, (frets & GuitarFret.Yellow) != 0);
-            device.SetButtonState(Xbox360Button.X, (frets & GuitarFret.Blue) != 0);
-            device.SetButtonState(Xbox360Button.LeftShoulder, (frets & GuitarFret.Orange) != 0);
+            // Lower fret flag
+            device.SetButtonState(Xbox360Button.LeftThumb, report.LowerFretFlag);
 
             // Whammy
-            device.SetAxisValue(Xbox360Axis.RightThumbX, data[GuitarOffset.WhammyBar].ScaleToInt16());
+            device.SetAxisValue(Xbox360Axis.RightThumbX, report.WhammyBar.ScaleToInt16());
             // Tilt
-            device.SetAxisValue(Xbox360Axis.RightThumbY, data[GuitarOffset.Tilt].ScaleToInt16());
+            device.SetAxisValue(Xbox360Axis.RightThumbY, report.Tilt.ScaleToInt16());
             // Pickup Switch
-            device.SetSliderValue(Xbox360Slider.LeftTrigger, data[GuitarOffset.PickupSwitch]);
+            device.SetSliderValue(Xbox360Slider.LeftTrigger, report.PickupSwitch);
         }
 
         /// <summary>
         /// Parses drums input data from an input report.
         /// </summary>
-        private void ParseDrums(ReadOnlySpan<byte> data)
+        private void ParseDrums(DrumInput report)
         {
             // Buttons
-            ushort buttons = data.GetUInt16BE(DrumOffset.Buttons);
+            var buttons = (GamepadButton)report.Buttons;
             ParseCoreButtons(buttons);
 
             device.SetButtonState(Xbox360Button.A, (buttons & GamepadButton.A) != 0);
@@ -163,14 +171,14 @@ namespace RB4InstrumentMapper.Parsing
             device.SetButtonState(Xbox360Button.Y, (buttons & GamepadButton.Y) != 0);
 
             // Pads and cymbals
-            byte redPad    = (byte)(data[DrumOffset.PadVels] >> 4);
-            byte yellowPad = (byte)(data[DrumOffset.PadVels] & DrumPadVel.Yellow);
-            byte bluePad   = (byte)(data[DrumOffset.PadVels + 1] >> 4);
-            byte greenPad  = (byte)(data[DrumOffset.PadVels + 1] & DrumPadVel.Green);
+            byte redPad    = report.RedPad;
+            byte yellowPad = report.YellowPad;
+            byte bluePad   = report.BluePad;
+            byte greenPad  = report.GreenPad;
 
-            byte yellowCym = (byte)(data[DrumOffset.CymbalVels] >> 4);
-            byte blueCym   = (byte)(data[DrumOffset.CymbalVels] & DrumCymVel.Blue);
-            byte greenCym  = (byte)(data[DrumOffset.CymbalVels + 1] >> 4);
+            byte yellowCym = report.YellowCymbal;
+            byte blueCym   = report.BlueCymbal;
+            byte greenCym  = report.GreenCymbal;
 
             // Color flags
             device.SetButtonState(Xbox360Button.B, (redPad) != 0);
@@ -187,9 +195,9 @@ namespace RB4InstrumentMapper.Parsing
 
             // Pedals
             device.SetButtonState(Xbox360Button.LeftShoulder, 
-                (data[DrumOffset.Buttons + 1] & DrumButton.KickOne) != 0);
+                (report.Buttons & (ushort)DrumInput.Button.KickOne) != 0);
             device.SetButtonState(Xbox360Button.LeftThumb, 
-                (data[DrumOffset.Buttons + 1] & DrumButton.KickTwo) != 0);
+                (report.Buttons & (ushort)DrumInput.Button.KickTwo) != 0);
 
             // Velocities
             device.SetAxisValue(

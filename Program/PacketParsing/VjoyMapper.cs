@@ -1,5 +1,7 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using vJoyInterfaceWrap;
 
 using Button = RB4InstrumentMapper.Parsing.VjoyStatic.Button;
@@ -34,32 +36,37 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses an input report.
         /// </summary>
-        public void ParseInput(ReadOnlySpan<byte> data, byte length, byte sequenceCount)
+        public unsafe void ParseInput(CommandHeader header, ReadOnlySpan<byte> data)
         {
+            // Ensure lengths match
+            if (header.DataLength != data.Length)
+            {
+                // This is probably a bug, emit a debug message
+                Debug.Fail($"Command header length does not match buffer length! Header: {header.DataLength}  Buffer: {data.Length}");
+                return;
+            }
+
             // Don't parse the same report twice
-            if (sequenceCount == prevInputSeqCount)
+            if (header.SequenceCount == prevInputSeqCount)
             {
                 return;
             }
+
+            header.SequenceCount = prevInputSeqCount;
+
+            int length = header.DataLength;
+            if (length == sizeof(GuitarInput) && MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
+            {
+                ParseGuitar(guitarReport);
+            }
+            else if (length == sizeof(DrumInput) && MemoryMarshal.TryRead(data, out DrumInput drumReport))
+            {
+                ParseDrums(drumReport);
+            }
             else
             {
-                prevInputSeqCount = sequenceCount;
-            }
-
-            // Parse the respective device
-            switch (length)
-            {
-                case Length.Input_Guitar:
-                    ParseGuitar(data);
-                    break;
-
-                case Length.Input_Drums:
-                    ParseDrums(data);
-                    break;
-
-                default:
-                    // Don't parse unknown input reports
-                    return;
+                // Report is not valid
+                return;
             }
 
             // Send data
@@ -85,7 +92,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses common button data from an input report.
         /// </summary>
-        private void ParseCoreButtons(ushort buttons)
+        private void ParseCoreButtons(GamepadButton buttons)
         {
             // Menu
             SetButton(Button.Fifteen, (buttons & GamepadButton.Menu) != 0);
@@ -146,64 +153,61 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses guitar input data from an input report.
         /// </summary>
-        private void ParseGuitar(ReadOnlySpan<byte> data)
+        private void ParseGuitar(GuitarInput report)
         {
             // Buttons
-            ParseCoreButtons(data.GetUInt16BE(GuitarOffset.Buttons));
+            ParseCoreButtons((GamepadButton)report.Buttons);
 
-            // Frets
-            byte frets = data[GuitarOffset.UpperFrets];
-            frets |= data[GuitarOffset.LowerFrets];
-
-            SetButton(Button.One, (frets & GuitarFret.Green) != 0);
-            SetButton(Button.Two, (frets & GuitarFret.Red) != 0);
-            SetButton(Button.Three, (frets & GuitarFret.Yellow) != 0);
-            SetButton(Button.Four, (frets & GuitarFret.Blue) != 0);
-            SetButton(Button.Five, (frets & GuitarFret.Orange) != 0);
+            SetButton(Button.One, report.Green);
+            SetButton(Button.Two, report.Red);
+            SetButton(Button.Three, report.Yellow);
+            SetButton(Button.Four, report.Blue);
+            SetButton(Button.Five, report.Orange);
 
             // Whammy
             // Value ranges from 0 (not pressed) to 255 (fully pressed)
-            state.AxisY = data[GuitarOffset.WhammyBar].ScaleToInt32();
+            state.AxisY = report.WhammyBar.ScaleToInt32();
 
             // Tilt
             // Value ranges from 0 to 255
             // It seems to have a threshold of around 0x70 though,
             // after a certain point values will get floored to 0
-            state.AxisZ = data[GuitarOffset.Tilt].ScaleToInt32();
+            state.AxisZ = report.Tilt.ScaleToInt32();
 
             // Pickup switch
             // Reported values are 0x00, 0x10, 0x20, 0x30, and 0x40 (ranges from 0 to 64)
-            state.AxisX = data[GuitarOffset.PickupSwitch].ScaleToInt32();
+            state.AxisX = report.PickupSwitch.ScaleToInt32();
         }
 
         /// <summary>
         /// Parses drums input data from an input report.
         /// </summary>
-        private void ParseDrums(ReadOnlySpan<byte> data)
+        private void ParseDrums(DrumInput report)
         {
             // Buttons
-            ushort buttons = data.GetUInt16BE(DrumOffset.Buttons);
+            var buttons = (GamepadButton)report.Buttons;
             ParseCoreButtons(buttons);
 
+            // Face buttons
             SetButton(Button.Four, (buttons & GamepadButton.A) != 0);
             SetButton(Button.One, (buttons & GamepadButton.B) != 0);
             SetButton(Button.Three, (buttons & GamepadButton.X) != 0);
             SetButton(Button.Two, (buttons & GamepadButton.Y) != 0);
 
             // Pads
-            SetButton(Button.One, (data[DrumOffset.PadVels] & DrumPadVel.Red) != 0);
-            SetButton(Button.Two, (data[DrumOffset.PadVels] & DrumPadVel.Yellow) != 0);
-            SetButton(Button.Three, (data[DrumOffset.PadVels + 1] & DrumPadVel.Blue) != 0);
-            SetButton(Button.Four, (data[DrumOffset.PadVels + 1] & DrumPadVel.Green) != 0);
+            SetButton(Button.One, report.RedPad != 0);
+            SetButton(Button.Two, report.YellowPad != 0);
+            SetButton(Button.Three, report.BluePad != 0);
+            SetButton(Button.Four, report.GreenPad != 0);
 
             // Cymbals
-            SetButton(Button.Six, (data[DrumOffset.CymbalVels] & DrumCymVel.Yellow) != 0);
-            SetButton(Button.Seven, (data[DrumOffset.CymbalVels] & DrumCymVel.Blue) != 0);
-            SetButton(Button.Eight, (data[DrumOffset.CymbalVels + 1] & DrumCymVel.Green) != 0);
+            SetButton(Button.Six, report.YellowCymbal != 0);
+            SetButton(Button.Seven, report.BlueCymbal != 0);
+            SetButton(Button.Eight, report.GreenCymbal != 0);
 
             // Kick pedals
-            SetButton(Button.Five, (data[DrumOffset.Buttons + 1] & DrumButton.KickOne) != 0);
-            SetButton(Button.Nine, (data[DrumOffset.Buttons + 1] & DrumButton.KickTwo) != 0);
+            SetButton(Button.Five, (report.Buttons & (ushort)DrumInput.Button.KickOne) != 0);
+            SetButton(Button.Nine, (report.Buttons & (ushort)DrumInput.Button.KickTwo) != 0);
         }
 
         /// <summary>

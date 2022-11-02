@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace RB4InstrumentMapper.Parsing
 {
@@ -43,12 +44,17 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses command data from a packet.
         /// </summary>
-        public void ParseCommand(ReadOnlySpan<byte> commandData)
+        public unsafe void ParseCommand(ReadOnlySpan<byte> commandData)
         {
-            switch (commandData[CommandOffset.CommandId])
+            if (!MemoryMarshal.TryRead(commandData, out CommandHeader header))
             {
-                case CommandId.Input:
-                    deviceMapper.ParseInput(commandData.Slice(Length.CommandHeader), commandData[CommandOffset.DataLength], commandData[CommandOffset.SequenceCount]);
+                return;
+            }
+
+            switch (header.CommandId)
+            {
+                case (byte)CommandHeader.Command.Input:
+                    deviceMapper.ParseInput(header, commandData.Slice(sizeof(CommandHeader)));
                     break;
 
                 default:

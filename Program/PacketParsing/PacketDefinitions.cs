@@ -1,173 +1,202 @@
+using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
 namespace RB4InstrumentMapper.Parsing
 {
     /// <summary>
-    /// Definitions for the receiver header.
+    /// Header data from the receiver.
     /// </summary>
-    static class Length
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    struct ReceiverHeader
     {
-        public const int
-        ReceiverHeader = 26,
-        CommandHeader = 4,
-        Input_Gamepad = 0x0C,
-        Input_Guitar = 0x0A,
-        Input_Drums = 0x06;
+        byte unk0;
+        byte unk1;
+        ushort unk2;
+        uint receiverId1_1;
+        ushort receiverId1_2;
+        uint deviceId_1;
+        ushort deviceId_2;
+        uint receiverId2_1;
+        ushort receiverId2_2;
+        ushort sequence;
+        byte unk3;
+        byte unk4;
+
+        public unsafe ulong DeviceId
+        {
+            get
+            {
+                fixed (uint* ptr = &deviceId_1)
+                {
+                    // Read a ulong starting from deviceId_1
+                    ulong deviceId = *(ulong*)ptr;
+                    // Last 2 bytes aren't part of the device ID
+                    deviceId &= 0x0000FFFF_FFFFFFFF;
+                    return deviceId;
+                }
+            }
+        }
     }
 
     /// <summary>
-    /// Definitions for the receiver header.
+    /// Header data for a message.
     /// </summary>
-    static class HeaderOffset
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    struct CommandHeader
     {
-        public const int
-        DeviceId = 10;
-    }
+        /// <summary>
+        /// Command ID definitions.
+        /// </summary>
+        public enum Command : byte
+        {
+            Input = 0x20
+        }
 
-    /// <summary>
-    /// Command header offsets relative to the end of the receiver header.
-    /// </summary>
-    static class CommandOffset
-    {
-        public const int
-        CommandId = 0,
-        Flags = 1,
-        SequenceCount = 2,
-        DataLength = 3;
-    }
-
-    /// <summary>
-    /// Command IDs to be parsed.
-    /// </summary>
-    static class CommandId
-    {
-        public const int
-        Input = 0x20;
+        public byte CommandId;
+        public byte Flags;
+        public byte SequenceCount;
+        public byte DataLength;
     }
 
     /// <summary>
     /// Flag definitions for the buttons bytes.
     /// </summary>
-    static class GamepadButton
+    [Flags]
+    enum GamepadButton : ushort
     {
-        public const ushort
-        DpadUp = 0x01,
-        DpadDown = 0x02,
-        DpadLeft = 0x04,
-        DpadRight = 0x08,
-        LeftBumper = 0x10,
-        RightBumper = 0x20,
-        LeftStickPress = 0x40,
-        RightStickPress = 0x80,
-
-        // Nothing useful can be done with this
-        // Sync = 0x0100,
-        // No known use for this bit
-        // Unused = 0x0200,
-
-        Menu = 0x0400,
-        Options = 0x0800,
-        A = 0x1000,
-        B = 0x2000,
-        X = 0x4000,
-        Y = 0x8000;
-    }
-
-    static class GamepadOffset
-    {
-        public const int
-        Buttons = 0,
-        LeftTrigger = 2,
-        RightTrigger = 4,
-        LeftStickX = 6,
-        LeftStickY = 8,
-        RightStickX = 10,
-        RightStickY = 12;
+        Sync = 0x0001,
+        Unused = 0x0002,
+        Menu = 0x0004,
+        Options = 0x0008,
+        A = 0x0010,
+        B = 0x0020,
+        X = 0x0040,
+        Y = 0x0080,
+        DpadUp = 0x0100,
+        DpadDown = 0x0200,
+        DpadLeft = 0x0400,
+        DpadRight = 0x0800,
+        LeftBumper = 0x1000,
+        RightBumper = 0x2000,
+        LeftStickPress = 0x4000,
+        RightStickPress = 0x8000
     }
 
     /// <summary>
-    /// Guitar input data offsets relative to the end of the command header.
+    /// An input report from a guitar.
     /// </summary>
-    static class GuitarOffset
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    struct GuitarInput
     {
-        public const int
-        Buttons = 0,
-        Tilt = 2,
-        WhammyBar = 3,
-        PickupSwitch = 4,
-        UpperFrets = 5,
-        LowerFrets = 6;
+        /// <summary>
+        /// Re-definitions for button flags that have specific meanings.
+        /// </summary>
+        [Flags]
+        public enum Button : ushort
+        {
+            StrumUp = GamepadButton.DpadUp,
+            StrumDown = GamepadButton.DpadDown,
+            GreenFret = GamepadButton.A,
+            RedFret = GamepadButton.B,
+            YellowFret = GamepadButton.Y,
+            BlueFret = GamepadButton.X,
+            OrangeFret = GamepadButton.LeftBumper,
+            LowerFretFlag = GamepadButton.LeftStickPress
+        }
 
-        // Final 3 bytes are uknown
-    }
+        /// <summary>
+        /// Flags used in <see cref="UpperFrets"/> and <see cref="LowerFrets"/>
+        /// </summary>
+        [Flags]
+        public enum Fret : byte
+        {
+            Green = 0x01,
+            Red = 0x02,
+            Yellow = 0x04,
+            Blue = 0x08,
+            Orange = 0x10
+        }
 
-    static class GuitarButton
-    {
-        public const ushort
-        StrumUp = GamepadButton.DpadUp,
-        StrumDown = GamepadButton.DpadDown,
-        GreenFret = GamepadButton.A,
-        RedFret = GamepadButton.B,
-        YellowFret = GamepadButton.Y,
-        BlueFret = GamepadButton.X,
-        OrangeFret = GamepadButton.LeftBumper,
-        LowerFretFlag = GamepadButton.LeftStickPress;
+        public ushort Buttons;
+        public byte Tilt;
+        public byte WhammyBar;
+        public byte PickupSwitch;
+        public byte UpperFrets;
+        public byte LowerFrets;
+        byte unk1;
+        byte unk2;
+        byte unk3;
+
+        public bool Green => ((UpperFrets | LowerFrets) & (byte)Fret.Green) != 0;
+        public bool Red => ((UpperFrets | LowerFrets) & (byte)Fret.Red) != 0;
+        public bool Yellow => ((UpperFrets | LowerFrets) & (byte)Fret.Yellow) != 0;
+        public bool Blue => ((UpperFrets | LowerFrets) & (byte)Fret.Blue) != 0;
+        public bool Orange => ((UpperFrets | LowerFrets) & (byte)Fret.Orange) != 0;
+
+        public bool LowerFretFlag => (Buttons & (ushort)Button.LowerFretFlag) != 0;
     }
 
     /// <summary>
-    /// Flag definitions for the guitar fret bytes.
+    /// An input report from a drumkit.
     /// </summary>
-    static class GuitarFret
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    struct DrumInput
     {
-        public const byte
-        Green = 0x01,
-        Red = 0x02,
-        Yellow = 0x04,
-        Blue = 0x08,
-        Orange = 0x10,
-        All = 0x1F;
-    }
+        /// <summary>
+        /// Re-definitions for button flags that have specific meanings.
+        /// </summary>
+        [Flags]
+        public enum Button : ushort
+        {
+            // Not used as these are for menu navigation purposes
+            // RedPad = GamepadButton.B,
+            // GreenPad = GamepadButton.A,
+            KickOne = GamepadButton.LeftBumper,
+            KickTwo = GamepadButton.RightBumper
+        }
 
-    /// <summary>
-    /// Drums input data offsets relative to the end of the command header.
-    /// </summary>
-    static class DrumOffset
-    {
-        public const int
-        Buttons = 0,
-        PadVels = 2,
-        CymbalVels = 4;
-    }
+        /// <summary>
+        /// Masks for each pad's value.
+        /// </summary>
+        enum Pad : ushort
+        {
+            Red = 0x00F0,
+            Yellow = 0x000F,
+            Blue = 0xF000,
+            Green = 0x0F00
+        }
 
-    static class DrumButton
-    {
-        public const ushort
-        RedPad = GamepadButton.B,
-        GreenPad = GamepadButton.A,
-        KickOne = GamepadButton.LeftBumper,
-        KickTwo = GamepadButton.RightBumper;
-    }
+        /// <summary>
+        /// Masks for each cymbal's value.
+        /// </summary>
+        enum Cymbal : ushort
+        {
+            Yellow = 0x00F0,
+            Blue = 0x000F,
+            Green = 0xF000
+        }
 
-    /// <summary>
-    /// Definitions for drumkit pad velocity data.
-    /// </summary>
-    static class DrumPadVel
-    {
-        public const byte
-        Red = 0xF0,
-        Yellow = 0x0F,
-        Blue = 0xF0,
-        Green = 0x0F;
-    }
+        public ushort Buttons;
+        ushort pads;
+        ushort cymbals;
 
-    /// <summary>
-    /// Definitions for drumkit pad velocity data.
-    /// </summary>
-    static class DrumCymVel
-    {
-        public const byte
-        // No red cymbal
-        // Red = 0,
-        Yellow = 0xF0,
-        Blue = 0x0F,
-        Green = 0xF0;
+        public byte RedPad => getByteValue(pads, (ushort)Pad.Red, 4);
+        public byte YellowPad => getByteValue(pads, (ushort)Pad.Yellow, 0);
+        public byte BluePad => getByteValue(pads, (ushort)Pad.Blue, 12);
+        public byte GreenPad => getByteValue(pads, (ushort)Pad.Green, 8);
+
+        public byte YellowCymbal => getByteValue(cymbals, (ushort)Cymbal.Yellow, 4);
+        public byte BlueCymbal => getByteValue(cymbals, (ushort)Cymbal.Blue, 0);
+        public byte GreenCymbal => getByteValue(cymbals, (ushort)Cymbal.Green, 12);
+
+        /// <summary>
+        /// Gets a byte value from a ushort field of multiple values.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        byte getByteValue(ushort field, ushort mask, ushort offset)
+        {
+            return (byte)((field & mask) >> offset);
+        }
     }
 }

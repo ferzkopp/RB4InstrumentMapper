@@ -46,37 +46,5 @@ namespace RB4InstrumentMapper.Parsing
             // first bit of each region set to 1
             return (ushort)(input * 0x0101);
         }
-
-        /// <summary>
-        /// Gets an unsigned short value from a specified index, parsed as a little-endian value.
-        /// </summary>
-        public static ushort GetUInt16LE(this ReadOnlySpan<byte> span, int index)
-        {
-            return (ushort)(span[index + 1] << 8 | span[index]);
-        }
-
-        /// <summary>
-        /// Gets an unsigned short value from a specified index, parsed as a big-endian value.
-        /// </summary>
-        public static ushort GetUInt16BE(this ReadOnlySpan<byte> span, int index)
-        {
-            return (ushort)(span[index] << 8 | span[index + 1]);
-        }
-
-        /// <summary>
-        /// Gets a short value from a specified index, parsed as a little-endian value.
-        /// </summary>
-        public static short GetInt16LE(this ReadOnlySpan<byte> span, int index)
-        {
-            return (short)(span[index + 1] << 8 | span[index]);
-        }
-
-        /// <summary>
-        /// Gets a short value from a specified index, parsed as a big-endian value.
-        /// </summary>
-        public static short GetInt16BE(this ReadOnlySpan<byte> span, int index)
-        {
-            return (short)(span[index] << 8 | span[index + 1]);
-        }
     }
 }
