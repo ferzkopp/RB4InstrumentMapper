@@ -4,6 +4,8 @@ This document provides some details on how Xbox One device data packets are rece
 
 This documentation is far from fully comprehensive, as there are many parts of the Xbox One controller protocol that don't pertain to sniffing inputs. There are also some parts of the receiver header data that are not well understood.
 
+A note: There is a more direct/built-in way to get Xbox One controller data, [detailed here](https://gist.github.com/TheNathannator/bcebc77e653f71e77634144940871596), however this method only works while the application has focus, so packet sniffing is still required for remapper programs.
+
 All values are listed as little-endian. Byte numbers are 0-indexed.
 
 ## Table of Contents
