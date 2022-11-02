@@ -17,7 +17,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private bool deviceConnected = false;
 
-        private int prevInputSeqCount = -1;
+        private byte prevInputSeqCount = 0xFF;
 
         /// <summary>
         /// Creates a new VigemMapper.

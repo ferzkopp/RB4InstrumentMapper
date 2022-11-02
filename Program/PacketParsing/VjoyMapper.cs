@@ -11,7 +11,7 @@ namespace RB4InstrumentMapper.Parsing
         private vJoy.JoystickState state = new vJoy.JoystickState();
         private uint deviceId = 0;
 
-        private int prevInputSeqCount = -1;
+        private byte prevInputSeqCount = 0xFF;
 
         /// <summary>
         /// Creates a new VjoyMapper.
