@@ -12,7 +12,6 @@ namespace RB4InstrumentMapper.Parsing
         private uint deviceId = 0;
 
         private int prevInputSeqCount = -1;
-        private int prevVirtualKeySeqCount = -1;
 
         /// <summary>
         /// Creates a new VjoyMapper.
