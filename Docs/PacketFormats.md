@@ -100,7 +100,7 @@ The standard Xbox One controller layout is as follows:
     - Bit 0 (`0x0001`) - Sync button
     - Bit 1 (`0x0002`) - Unused
     - Bit 2 (`0x0004`) - Menu Button
-    - Bit 3 (`0x0008`) - Options Button
+    - Bit 3 (`0x0008`) - View Button
     - Bit 4 (`0x0010`) - A Button
     - Bit 5 (`0x0020`) - B Button
     - Bit 6 (`0x0040`) - X Button
@@ -126,7 +126,7 @@ The standard Xbox One controller layout is as follows:
   - Bit 0 (`0x0001`) - Sync button
   - Bit 1 (`0x0002`) - Unused
   - Bit 2 (`0x0004`) - Menu Button
-  - Bit 3 (`0x0008`) - Options Button
+  - Bit 3 (`0x0008`) - View Button
   - Bit 4 (`0x0010`) - Green Fret Flag (equivalent to A Button)
   - Bit 5 (`0x0020`) - Red Fret Flag (equivalent to B Button)
   - Bit 6 (`0x0040`) - Blue Fret Flag (equivalent to X Button)
@@ -178,8 +178,6 @@ The standard Xbox One controller layout is as follows:
 
 ## Drums Input Data
 
-Some of the data here is speculatory. It needs to be verified using packet captures.
-
 6 bytes long
 
 `<buttons> <pad velocities> <cymbal velocities>`
@@ -190,11 +188,11 @@ Bytes:
   - Bit 0 (`0x0001`) - Sync button
   - Bit 1 (`0x0002`) - Unused
   - Bit 2 (`0x0004`) - Menu Button
-  - Bit 3 (`0x0008`) - Options Button
-  - Bit 4 (`0x0010`) - Green Pad (equivalent to A Button)
-  - Bit 5 (`0x0020`) - Red Pad (equivalent to B Button)
-  - Bit 6 (`0x0040`) - Unused (equivalent to X Button)
-  - Bit 7 (`0x0080`) - Unused (equivalent to Y Button)
+  - Bit 3 (`0x0008`) - View Button
+  - Bit 4 (`0x0010`) - A Button/Green Pad
+  - Bit 5 (`0x0020`) - B Button/Red Pad
+  - Bit 6 (`0x0040`) - X Button
+  - Bit 7 (`0x0080`) - Y Button
   - Bit 8 (`0x0100`) - D-pad Up
   - Bit 9 (`0x0200`) - D-pad Down
   - Bit 10 (`0x0400`) - D-pad Left
