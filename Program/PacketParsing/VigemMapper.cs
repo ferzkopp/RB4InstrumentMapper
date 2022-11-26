@@ -156,6 +156,15 @@ namespace RB4InstrumentMapper.Parsing
             device.SetSliderValue(Xbox360Slider.LeftTrigger, report.PickupSwitch);
         }
 
+        // Constants for masks below
+        const int yellowBit = 0x01;
+        const int blueBit = 0x02;
+
+        // The previous state of the yellow/blue cymbals
+        int previousDpadCymbals;
+        // The current state of the d-pad mask from the hit yellow/blue cymbals
+        int dpadMask;
+
         /// <summary>
         /// Parses drums input data from an input report.
         /// </summary>
@@ -180,6 +189,40 @@ namespace RB4InstrumentMapper.Parsing
             byte blueCym   = report.BlueCymbal;
             byte greenCym  = report.GreenCymbal;
 
+            // Yellow and blue cymbal trigger d-pad up and down respectively on the RB2/3 kit we're emulating
+            // However, they only trigger one or the other, not both at the same time, so we need to mimic that
+            int cymbalMask = (yellowCym != 0 ? yellowBit : 0) | (blueCym != 0 ? blueBit : 0);
+            if (cymbalMask != previousDpadCymbals)
+            {
+                if (cymbalMask == 0)
+                    dpadMask = 0;
+
+                // This could probably be done more simply, but this works
+                if (dpadMask != 0)
+                {
+                    // D-pad is already set
+                    // Only remove the set value
+                    if ((cymbalMask & yellowBit) == 0)
+                        dpadMask &= ~yellowBit;
+                    else if ((cymbalMask & blueBit) == 0)
+                        dpadMask &= ~blueBit;
+                }
+                else
+                {
+                    // D-pad is not set
+                    // If both cymbals are hit at the same time, yellow takes priority
+                    if ((cymbalMask & yellowBit) != 0)
+                        dpadMask |= yellowBit;
+                    else if ((cymbalMask & blueBit) != 0)
+                        dpadMask |= blueBit;
+                }
+
+                previousDpadCymbals = cymbalMask;
+            }
+
+            device.SetButtonState(Xbox360Button.Up, ((dpadMask & yellowBit) != 0) || ((buttons & GamepadButton.DpadUp) != 0));
+            device.SetButtonState(Xbox360Button.Down, ((dpadMask & blueBit) != 0) || ((buttons & GamepadButton.DpadDown) != 0));
+
             // Color flags
             device.SetButtonState(Xbox360Button.B, (redPad) != 0);
             device.SetButtonState(Xbox360Button.Y, (yellowPad | yellowCym) != 0);
@@ -192,6 +235,9 @@ namespace RB4InstrumentMapper.Parsing
             // Cymbal flag
             device.SetButtonState(Xbox360Button.RightShoulder,
                 (yellowCym | blueCym | greenCym) != 0);
+
+            device.SetButtonState(Xbox360Button.Up, (buttons & GamepadButton.DpadUp) != 0);
+            device.SetButtonState(Xbox360Button.Down, (buttons & GamepadButton.DpadDown) != 0);
 
             // Pedals
             device.SetButtonState(Xbox360Button.LeftShoulder, 
