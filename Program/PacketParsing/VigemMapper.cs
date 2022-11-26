@@ -174,11 +174,6 @@ namespace RB4InstrumentMapper.Parsing
             var buttons = (GamepadButton)report.Buttons;
             ParseCoreButtons(buttons);
 
-            device.SetButtonState(Xbox360Button.A, (buttons & GamepadButton.A) != 0);
-            device.SetButtonState(Xbox360Button.B, (buttons & GamepadButton.B) != 0);
-            device.SetButtonState(Xbox360Button.X, (buttons & GamepadButton.X) != 0);
-            device.SetButtonState(Xbox360Button.Y, (buttons & GamepadButton.Y) != 0);
-
             // Pads and cymbals
             byte redPad    = report.RedPad;
             byte yellowPad = report.YellowPad;
