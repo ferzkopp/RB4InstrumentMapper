@@ -227,10 +227,10 @@ namespace RB4InstrumentMapper.Parsing
             device.SetButtonState(Xbox360Button.Down, ((dpadMask & blueBit) != 0) || ((buttons & GamepadButton.DpadDown) != 0));
 
             // Color flags
-            device.SetButtonState(Xbox360Button.B, (redPad) != 0);
-            device.SetButtonState(Xbox360Button.Y, (yellowPad | yellowCym) != 0);
-            device.SetButtonState(Xbox360Button.X, (bluePad | blueCym) != 0);
-            device.SetButtonState(Xbox360Button.A, (greenPad | greenCym) != 0);
+            device.SetButtonState(Xbox360Button.B, (redPad != 0) || ((buttons & GamepadButton.A) != 0));
+            device.SetButtonState(Xbox360Button.Y, ((yellowPad | yellowCym) != 0) || ((buttons & GamepadButton.B) != 0));
+            device.SetButtonState(Xbox360Button.X, ((bluePad | blueCym) != 0) || ((buttons & GamepadButton.X) != 0));
+            device.SetButtonState(Xbox360Button.A, ((greenPad | greenCym) != 0) || ((buttons & GamepadButton.Y) != 0));
 
             // Pad flag
             device.SetButtonState(Xbox360Button.RightThumb,
