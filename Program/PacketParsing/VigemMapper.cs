@@ -239,9 +239,6 @@ namespace RB4InstrumentMapper.Parsing
             device.SetButtonState(Xbox360Button.RightShoulder,
                 (yellowCym | blueCym | greenCym) != 0);
 
-            device.SetButtonState(Xbox360Button.Up, (buttons & GamepadButton.DpadUp) != 0);
-            device.SetButtonState(Xbox360Button.Down, (buttons & GamepadButton.DpadDown) != 0);
-
             // Pedals
             device.SetButtonState(Xbox360Button.LeftShoulder, 
                 (report.Buttons & (ushort)DrumInput.Button.KickOne) != 0);
