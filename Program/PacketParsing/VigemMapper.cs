@@ -207,7 +207,10 @@ namespace RB4InstrumentMapper.Parsing
                     else if ((cymbalMask & blueBit) == 0)
                         dpadMask &= ~blueBit;
                 }
-                else
+
+                // Explicitly check this so that if the d-pad is cleared but the other cymbal is still active,
+                // it will get set to that cymbal's d-pad
+                if (dpadMask == 0)
                 {
                     // D-pad is not set
                     // If both cymbals are hit at the same time, yellow takes priority
