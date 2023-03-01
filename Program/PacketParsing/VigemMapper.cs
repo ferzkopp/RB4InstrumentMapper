@@ -90,7 +90,7 @@ namespace RB4InstrumentMapper.Parsing
                 return;
             }
 
-            header.SequenceCount = prevInputSeqCount;
+            prevInputSeqCount = header.SequenceCount;
 
             int length = header.DataLength;
             if (length == sizeof(GuitarInput) && MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
