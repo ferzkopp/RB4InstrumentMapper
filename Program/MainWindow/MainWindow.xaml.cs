@@ -113,6 +113,13 @@ namespace RB4InstrumentMapper
             {
                 // Log vJoy driver attributes (Vendor Name, Product Name, Version Number)
                 Console.WriteLine($"vJoy found! - Vendor: {VjoyClient.Manufacturer}, Product: {VjoyClient.Product}, Version Number: {VjoyClient.SerialNumber}");
+
+                // Check if versions match
+                if (!VjoyClient.DriverMatch(out uint libraryVersion, out uint driverVersion))
+                {
+                    Console.WriteLine($"WARNING: vJoy library version (0x{libraryVersion:X8}) does not match driver version (0x{driverVersion:X8})! vJoy mode may cause errors!");
+                }
+
                 if (CountAvailableVjoyDevices() > 0)
                 {
                     (controllerDeviceTypeCombo.Items[0] as ComboBoxItem).IsEnabled = true;
