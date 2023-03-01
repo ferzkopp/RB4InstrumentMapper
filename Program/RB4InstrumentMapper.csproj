@@ -107,6 +107,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="LogUtils.cs" />
+    <Compile Include="PacketParsing\Backends\PcapBackend.cs" />
     <Compile Include="PacketParsing\IDeviceMapper.cs" />
     <Compile Include="PacketParsing\PacketDefinitions.cs" />
     <Compile Include="PacketParsing\PacketParser.cs" />

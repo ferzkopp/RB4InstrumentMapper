@@ -36,17 +36,9 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Handles a received Pcap packet.
         /// </summary>
-        public static unsafe void HandlePcapPacket(ReadOnlySpan<byte> data)
+        public static unsafe void HandlePacket(ulong deviceId, ReadOnlySpan<byte> data)
         {
-            // Packet must be at least 30 bytes long, to contain both the receiver and command headers
-            if (data.Length < (sizeof(ReceiverHeader) + sizeof(CommandHeader))
-                || !MemoryMarshal.TryRead(data, out ReceiverHeader header))
-            {
-                return;
-            }
-
             // Check if device ID has been encountered yet
-            ulong deviceId = header.DeviceId;
             if (!pcapIds.ContainsKey(deviceId))
             {
                 if (!canHandleNewDevices)
@@ -71,8 +63,8 @@ namespace RB4InstrumentMapper.Parsing
                 Console.WriteLine($"Encountered new device with ID {deviceId.ToString("X12")}");
             }
 
-            // Strip off receiver header and send the data to be parsed
-            pcapIds[deviceId].ParseCommand(data.Slice(sizeof(ReceiverHeader)));
+            // Parse data
+            pcapIds[deviceId].ParseCommand(data);
         }
 
         // TODO: Add libusb support

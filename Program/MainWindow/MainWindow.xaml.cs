@@ -409,22 +409,9 @@ namespace RB4InstrumentMapper
                 }
             }
 
-            // Register handler for packet debugging/logging and status reporting
-            pcapSelectedDevice.OnPacketArrival += OnPacketArrival;
-
-            // Open the device
-            pcapSelectedDevice.Open(new DeviceConfiguration()
-            {
-                Snaplen = 45, // Capture small packets
-                Mode = DeviceModes.Promiscuous | DeviceModes.MaxResponsiveness, // Promiscuous mode with maximum speed
-                ReadTimeout = 50 // Read timeout
-            });
-
-            // Configure packet receive event handler
-            pcapSelectedDevice.OnPacketArrival += OnPacketArrival;
-            
             // Start capture
-            pcapSelectedDevice.StartCapture();
+            PcapBackend.LogPackets = packetDebug;
+            PcapBackend.StartCapture(pcapSelectedDevice);
             Console.WriteLine($"Listening on {pcapSelectedDevice.Description}...");
         }
 
@@ -433,14 +420,7 @@ namespace RB4InstrumentMapper
         /// </summary>
         private void StopCapture()
         {
-            // Stop packet capture
-            if (pcapSelectedDevice != null)
-            {
-                // Close will automatically remove assigned event handlers and call StopCapture(), 
-                // so we don't need to do those ourselves
-                pcapSelectedDevice.Close();
-            }
-
+            PcapBackend.StopCapture();
             PacketParser.Close();
 
             // Store whether or not the packet log was created
@@ -469,41 +449,6 @@ namespace RB4InstrumentMapper
             if (doPacketLogMessage)
             {
                 Console.WriteLine($"Packet logs may be found in {Logging.PacketLogFolderPath}");
-            }
-        }
-
-        /// <summary>
-        /// Handles captured packets.
-        /// </summary>
-        /// <param name="packet">The received packet</param>
-        private void OnPacketArrival(object sender, PacketCapture packet)
-        {
-            try
-            {
-                PacketParser.HandlePcapPacket(packet.Data);
-            }
-            catch (ThreadAbortException)
-            {
-                // Don't log ThreadAbortExceptions, just return
-                return;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error while handling packet: {ex.GetFirstLine()}");
-                Logging.Main_WriteException(ex, "Context: Unhandled error during packet handling");
-
-                // Stop capture
-                uiDispatcher.Invoke(StopCapture);
-                return;
-            }
-
-            // Debugging (if enabled)
-            if (packetDebug)
-            {
-                RawCapture raw = packet.GetPacket();
-                string packetLogString = raw.Timeval.Date.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{raw.PacketLength}] " + ParsingHelpers.ByteArrayToHexString(raw.Data);;
-                Console.WriteLine(packetLogString);
-                Logging.Packet_WriteLine(packetLogString);
             }
         }
 
