@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -22,6 +22,7 @@ using Nefarius.ViGEm.Client;
 using Nefarius.ViGEm.Client.Exceptions;
 using SharpPcap;
 using SharpPcap.LibPcap;
+using RB4InstrumentMapper.Parsing;
 
 namespace RB4InstrumentMapper
 {

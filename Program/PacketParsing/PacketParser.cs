@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using RB4InstrumentMapper.Parsing;
 
-// This is in the regular namespace to keep the other packet parsing stuff from bogging up
-// auto-completions when the code in this file is the only code that needs to be referenced elsewhere 
-namespace RB4InstrumentMapper
+namespace RB4InstrumentMapper.Parsing
 {
     /// <summary>
     /// Emulated devices that can be parsed to.
