@@ -70,11 +70,6 @@ namespace RB4InstrumentMapper
         /// </summary>
         private static readonly vJoy vjoy = new vJoy();
 
-        /// <summary>
-        /// Counter for processed packets.
-        /// </summary>
-        private ulong processedPacketCount = 0;
-
         private enum ControllerType
         {
             None = -1,
@@ -403,12 +398,6 @@ namespace RB4InstrumentMapper
 
             startButton.Content = "Stop";
 
-            // Enable packet count display
-            packetsProcessedLabel.Visibility = Visibility.Visible;
-            packetsProcessedCountLabel.Visibility = Visibility.Visible;
-            packetsProcessedCountLabel.Content = "0";
-            processedPacketCount = 0;
-
             // Initialize packet log
             if (packetDebugLog)
             {
@@ -472,12 +461,6 @@ namespace RB4InstrumentMapper
 
             startButton.Content = "Start";
 
-            // Disable packet count display
-            packetsProcessedLabel.Visibility = Visibility.Hidden;
-            packetsProcessedCountLabel.Visibility = Visibility.Hidden;
-            packetsProcessedCountLabel.Content = string.Empty;
-            processedPacketCount = 0;
-
             // Force a refresh of the controller textbox
             controllerDeviceTypeCombo_SelectionChanged(null, null);
 
@@ -496,7 +479,7 @@ namespace RB4InstrumentMapper
         {
             try
             {
-                PacketParser.HandlePcapPacket(packet.Data, ref processedPacketCount);
+                PacketParser.HandlePcapPacket(packet.Data);
             }
             catch (ThreadAbortException)
             {
@@ -520,19 +503,6 @@ namespace RB4InstrumentMapper
                 string packetLogString = raw.Timeval.Date.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{raw.PacketLength}] " + ParsingHelpers.ByteArrayToHexString(raw.Data);;
                 Console.WriteLine(packetLogString);
                 Logging.Packet_WriteLine(packetLogString);
-            }
-
-            // Status reporting (slow)
-            if ((processedPacketCount < 10) ||
-               ((processedPacketCount < 100) && (processedPacketCount % 10 == 0)) ||
-                (processedPacketCount % 100 == 0))
-            {
-                // Update UI
-                uiDispatcher.Invoke(() =>
-                {
-                    string ulongString = processedPacketCount.ToString("N0");
-                    packetsProcessedCountLabel.Content = ulongString;
-                });
             }
         }
 
