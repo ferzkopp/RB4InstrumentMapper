@@ -3,31 +3,36 @@ using System.Runtime.InteropServices;
 
 namespace RB4InstrumentMapper.Parsing
 {
+    public enum MappingMode
+    {
+        ViGEmBus = 1,
+        vJoy = 2
+    }
+
     /// <summary>
     /// Interface for Xbox devices.
     /// </summary>
     class XboxDevice
     {
+        public static MappingMode MapperMode;
+
         /// <summary>
         /// Mapper interface to use.
         /// </summary>
         private IDeviceMapper deviceMapper;
 
-        // Lock off parameterless constructor
-        private XboxDevice() {}
-
         /// <summary>
         /// Creates a new XboxDevice with the given device ID and parsing mode.
         /// </summary>
-        public XboxDevice(ParsingMode parseMode)
+        public XboxDevice()
         {
-            switch (parseMode)
+            switch (MapperMode)
             {
-                case ParsingMode.ViGEmBus:
+                case MappingMode.ViGEmBus:
                     deviceMapper = new VigemMapper();
                     break;
 
-                case ParsingMode.vJoy:
+                case MappingMode.vJoy:
                     deviceMapper = new VjoyMapper();
                     break;
             }

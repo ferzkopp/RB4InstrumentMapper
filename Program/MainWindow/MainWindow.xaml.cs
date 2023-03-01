@@ -407,7 +407,6 @@ namespace RB4InstrumentMapper
         private void StopCapture()
         {
             PcapBackend.StopCapture();
-            PacketParser.Close();
 
             // Store whether or not the packet log was created
             bool doPacketLogMessage = Logging.PacketLogExists;
@@ -576,7 +575,7 @@ namespace RB4InstrumentMapper
                 case 0:
                     if (CountAvailableVjoyDevices() > 0)
                     {
-                        PacketParser.ParseMode = ParsingMode.vJoy;
+                        XboxDevice.MapperMode = MappingMode.vJoy;
                         Properties.Settings.Default.controllerDeviceType = (int)ControllerType.vJoy;
                     }
                     else
@@ -590,12 +589,12 @@ namespace RB4InstrumentMapper
 
                 // ViGEmBus
                 case 1:
-                    PacketParser.ParseMode = ParsingMode.ViGEmBus;
+                    XboxDevice.MapperMode = MappingMode.ViGEmBus;
                     Properties.Settings.Default.controllerDeviceType = (int)ControllerType.VigemBus;
                     break;
 
                 default:
-                    PacketParser.ParseMode = (ParsingMode)0;
+                    XboxDevice.MapperMode = 0;
                     Properties.Settings.Default.controllerDeviceType = (int)ControllerType.None;
                     break;
             }

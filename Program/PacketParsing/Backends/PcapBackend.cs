@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using SharpPcap;
@@ -10,7 +11,10 @@ namespace RB4InstrumentMapper.Parsing
     public static class PcapBackend
     {
         public static bool LogPackets = false;
+
         private static ILiveDevice captureDevice = null;
+        private static readonly Dictionary<ulong, XboxDevice> devices = new Dictionary<ulong, XboxDevice>();
+        private static bool canHandleNewDevices = true;
 
         public static event Action OnCaptureStop;
 
@@ -46,6 +50,13 @@ namespace RB4InstrumentMapper.Parsing
                 captureDevice.Close();
                 captureDevice = null;
             }
+
+            // Clean up devices
+            foreach (XboxDevice device in devices.Values)
+            {
+                device.Close();
+            }
+            devices.Clear();
         }
 
         /// <summary>
@@ -61,9 +72,34 @@ namespace RB4InstrumentMapper.Parsing
             }
             data = data.Slice(sizeof(ReceiverHeader));
 
+            // Check if device ID has been encountered yet
+            ulong deviceId = header.DeviceId;
+            if (!devices.TryGetValue(deviceId, out var device))
+            {
+                if (!canHandleNewDevices)
+                {
+                    return;
+                }
+
+                try
+                {
+                    device = new XboxDevice(ParseMode);
+                }
+                catch (ParseException ex)
+                {
+                    canHandleNewDevices = false;
+                    Console.WriteLine("Device limit reached, or an error occured when creating virtual device. No more devices will be registered.");
+                    Console.WriteLine($"Exception: {ex.GetFirstLine()}");
+                    return;
+                }
+
+                devices.Add(deviceId, device);
+                Console.WriteLine($"Encountered new device with ID {deviceId.ToString("X12")}");
+            }
+
             try
             {
-                PacketParser.HandlePacket(header.DeviceId, data);
+                device.ParseCommand(data);
             }
             catch (ThreadAbortException)
             {
