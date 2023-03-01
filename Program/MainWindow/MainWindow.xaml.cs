@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -15,14 +15,13 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using vJoyInterfaceWrap;
 using System.Runtime.InteropServices;
 using System.Windows.Threading;
-using Nefarius.ViGEm.Client;
-using Nefarius.ViGEm.Client.Exceptions;
 using SharpPcap;
 using SharpPcap.LibPcap;
 using RB4InstrumentMapper.Parsing;
+using RB4InstrumentMapper.Vjoy;
+using RB4InstrumentMapper.Vigem;
 
 namespace RB4InstrumentMapper
 {
@@ -65,11 +64,6 @@ namespace RB4InstrumentMapper
         /// Common name for Pcap combo box items.
         /// </summary>
         private const string pcapComboBoxItemName = "pcapDeviceComboBoxItem";
-
-        /// <summary>
-        /// vJoy client.
-        /// </summary>
-        private static readonly vJoy vjoy = new vJoy();
 
         private enum ControllerType
         {
@@ -114,11 +108,11 @@ namespace RB4InstrumentMapper
             int deviceType = controllerDeviceTypeCombo.SelectedIndex = Properties.Settings.Default.controllerDeviceType;
 
             // Check for vJoy
-            bool vjoyFound = vjoy.vJoyEnabled();
+            bool vjoyFound = VjoyClient.Enabled;
             if (vjoyFound)
             {
                 // Log vJoy driver attributes (Vendor Name, Product Name, Version Number)
-                Console.WriteLine("vJoy found! - Vendor: " + vjoy.GetvJoyManufacturerString() + ", Product: " + vjoy.GetvJoyProductString() + ", Version Number: " + vjoy.GetvJoySerialNumberString());
+                Console.WriteLine($"vJoy found! - Vendor: {VjoyClient.Manufacturer}, Product: {VjoyClient.Product}, Version Number: {VjoyClient.SerialNumber}");
                 if (CountAvailableVjoyDevices() > 0)
                 {
                     (controllerDeviceTypeCombo.Items[0] as ComboBoxItem).IsEnabled = true;
@@ -144,16 +138,13 @@ namespace RB4InstrumentMapper
             }
 
             // Check for ViGEmBus
-            bool vigemFound;
-            try
+            bool vigemFound = VigemClient.TryInitialize();
+            if (vigemFound)
             {
-                var vigem = new ViGEmClient();
-                vigemFound = true;
                 Console.WriteLine("ViGEmBus found!");
-                vigem.Dispose();
                 (controllerDeviceTypeCombo.Items[1] as ComboBoxItem).IsEnabled = true;
             }
-            catch (VigemBusNotFoundException)
+            else
             {
                 vigemFound = false;
                 Console.WriteLine("ViGEmBus not found. ViGEmBus selection will be unavailable.");
@@ -192,6 +183,9 @@ namespace RB4InstrumentMapper
 
             // Close the log files
             Logging.CloseAll();
+
+            // Dispose ViGEmBus
+            VigemClient.Dispose();
         }
 
         /// <summary>
@@ -287,7 +281,7 @@ namespace RB4InstrumentMapper
         /// </summary>
         private int CountAvailableVjoyDevices()
         {
-            if (!vjoy.vJoyEnabled())
+            if (!VjoyClient.Enabled)
             {
                 return 0;
             }
@@ -296,24 +290,9 @@ namespace RB4InstrumentMapper
             int freeDeviceCount = 0;
             for (uint id = 1; id <= 16; id++)
             {
-                if (vjoy.GetVJDStatus(id) == VjdStat.VJD_STAT_FREE)
+                if (VjoyClient.IsDeviceAvailable(id))
                 {
-                    // Check that the vJoy device is configured correctly
-                    int numButtons = vjoy.GetVJDButtonNumber(id);
-                    int numContPov = vjoy.GetVJDContPovNumber(id);
-                    bool xExists = vjoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_X); // X axis
-                    bool yExists = vjoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Y); // Y axis
-                    bool zExists = vjoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Z); // Z axis
-
-                    if (numButtons >= 16 &&
-                        numContPov >= 1 &&
-                        xExists &&
-                        yExists &&
-                        zExists
-                    )
-                    {
-                        freeDeviceCount++;
-                    }
+                    freeDeviceCount++;
                 }
             }
 

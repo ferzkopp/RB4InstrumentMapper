@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using Nefarius.ViGEm.Client.Exceptions;
 using Nefarius.ViGEm.Client.Targets;
 using Nefarius.ViGEm.Client.Targets.Xbox360;
+using RB4InstrumentMapper.Vigem;
 
 namespace RB4InstrumentMapper.Parsing
 {
@@ -26,7 +27,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public VigemMapper()
         {
-            device = VigemStatic.CreateDevice();
+            device = VigemClient.CreateDevice();
             device.FeedbackReceived += ReceiveUserIndex;
 
             try

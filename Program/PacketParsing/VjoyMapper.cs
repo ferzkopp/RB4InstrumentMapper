@@ -2,9 +2,8 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using RB4InstrumentMapper.Vjoy;
 using vJoyInterfaceWrap;
-
-using Button = RB4InstrumentMapper.Parsing.VjoyStatic.Button;
 
 namespace RB4InstrumentMapper.Parsing
 {
@@ -20,7 +19,17 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public VjoyMapper()
         {
-            deviceId = VjoyStatic.ClaimNextAvailableDevice();
+            deviceId = VjoyClient.GetNextAvailableID();
+            if (deviceId == 0)
+            {
+                throw new ParseException("No new vJoy devices are available.");
+            }
+
+            if (!VjoyClient.AcquireDevice(deviceId))
+            {
+                throw new ParseException($"Could not claim vJoy device {deviceId}.");
+            }
+
             state.bDevice = (byte)deviceId;
             Console.WriteLine($"Acquired vJoy device with ID of {deviceId}");
         }
@@ -70,22 +79,22 @@ namespace RB4InstrumentMapper.Parsing
             }
 
             // Send data
-            VjoyStatic.Client.UpdateVJD(deviceId, ref state);
+            VjoyClient.UpdateDevice(deviceId, ref state);
         }
 
         /// <summary>
         /// Sets the state of the specified button.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetButton(uint button, bool condition)
+        protected void SetButton(VjoyButton button, bool set)
         {
-            if (condition)
+            if (set)
             {
-                state.Buttons |= button;
+                state.Buttons |= (uint)button;
             }
             else
             {
-                state.Buttons &= ~button;
+                state.Buttons &= (uint)~button;
             }
         }
 
@@ -95,57 +104,59 @@ namespace RB4InstrumentMapper.Parsing
         private void ParseCoreButtons(GamepadButton buttons)
         {
             // Menu
-            SetButton(Button.Fifteen, (buttons & GamepadButton.Menu) != 0);
+            SetButton(VjoyButton.Fifteen, (buttons & GamepadButton.Menu) != 0);
 
             // Options
-            SetButton(Button.Sixteen, (buttons & GamepadButton.Options) != 0);
+            SetButton(VjoyButton.Sixteen, (buttons & GamepadButton.Options) != 0);
 
-            // D-pad to POV
+            VjoyPoV direction;
             if ((buttons & GamepadButton.DpadUp) != 0)
             {
                 if ((buttons & GamepadButton.DpadLeft) != 0)
                 {
-                    state.bHats = VjoyStatic.PoV.UpLeft;
+                    direction = VjoyPoV.UpLeft;
                 }
                 else if ((buttons & GamepadButton.DpadRight) != 0)
                 {
-                    state.bHats = VjoyStatic.PoV.UpRight;
+                    direction = VjoyPoV.UpRight;
                 }
                 else
                 {
-                    state.bHats = VjoyStatic.PoV.Up;
+                    direction = VjoyPoV.Up;
                 }
             }
             else if ((buttons & GamepadButton.DpadDown) != 0)
             {
                 if ((buttons & GamepadButton.DpadLeft) != 0)
                 {
-                    state.bHats = VjoyStatic.PoV.DownLeft;
+                    direction = VjoyPoV.DownLeft;
                 }
                 else if ((buttons & GamepadButton.DpadRight) != 0)
                 {
-                    state.bHats = VjoyStatic.PoV.DownRight;
+                    direction = VjoyPoV.DownRight;
                 }
                 else
                 {
-                    state.bHats = VjoyStatic.PoV.Down;
+                    direction = VjoyPoV.Down;
                 }
             }
             else
             {
                 if ((buttons & GamepadButton.DpadLeft) != 0)
                 {
-                    state.bHats = VjoyStatic.PoV.Left;
+                    direction = VjoyPoV.Left;
                 }
                 else if ((buttons & GamepadButton.DpadRight) != 0)
                 {
-                    state.bHats = VjoyStatic.PoV.Right;
+                    direction = VjoyPoV.Right;
                 }
                 else
                 {
-                    state.bHats = VjoyStatic.PoV.Neutral;
+                    direction = VjoyPoV.Neutral;
                 }
             }
+
+            state.bHats = (uint)direction;
 
             // Other buttons are not mapped here since they may have specific uses
         }
@@ -158,11 +169,11 @@ namespace RB4InstrumentMapper.Parsing
             // Buttons
             ParseCoreButtons((GamepadButton)report.Buttons);
 
-            SetButton(Button.One, report.Green);
-            SetButton(Button.Two, report.Red);
-            SetButton(Button.Three, report.Yellow);
-            SetButton(Button.Four, report.Blue);
-            SetButton(Button.Five, report.Orange);
+            SetButton(VjoyButton.One, report.Green);
+            SetButton(VjoyButton.Two, report.Red);
+            SetButton(VjoyButton.Three, report.Yellow);
+            SetButton(VjoyButton.Four, report.Blue);
+            SetButton(VjoyButton.Five, report.Orange);
 
             // Whammy
             // Value ranges from 0 (not pressed) to 255 (fully pressed)
@@ -189,25 +200,25 @@ namespace RB4InstrumentMapper.Parsing
             ParseCoreButtons(buttons);
 
             // Face buttons
-            SetButton(Button.Four, (buttons & GamepadButton.A) != 0);
-            SetButton(Button.One, (buttons & GamepadButton.B) != 0);
-            SetButton(Button.Three, (buttons & GamepadButton.X) != 0);
-            SetButton(Button.Two, (buttons & GamepadButton.Y) != 0);
+            SetButton(VjoyButton.Four, (buttons & GamepadButton.A) != 0);
+            SetButton(VjoyButton.One, (buttons & GamepadButton.B) != 0);
+            SetButton(VjoyButton.Three, (buttons & GamepadButton.X) != 0);
+            SetButton(VjoyButton.Two, (buttons & GamepadButton.Y) != 0);
 
             // Pads
-            SetButton(Button.One, report.RedPad != 0);
-            SetButton(Button.Two, report.YellowPad != 0);
-            SetButton(Button.Three, report.BluePad != 0);
-            SetButton(Button.Four, report.GreenPad != 0);
+            SetButton(VjoyButton.One, report.RedPad != 0);
+            SetButton(VjoyButton.Two, report.YellowPad != 0);
+            SetButton(VjoyButton.Three, report.BluePad != 0);
+            SetButton(VjoyButton.Four, report.GreenPad != 0);
 
             // Cymbals
-            SetButton(Button.Six, report.YellowCymbal != 0);
-            SetButton(Button.Seven, report.BlueCymbal != 0);
-            SetButton(Button.Eight, report.GreenCymbal != 0);
+            SetButton(VjoyButton.Six, report.YellowCymbal != 0);
+            SetButton(VjoyButton.Seven, report.BlueCymbal != 0);
+            SetButton(VjoyButton.Eight, report.GreenCymbal != 0);
 
             // Kick pedals
-            SetButton(Button.Five, (report.Buttons & (ushort)DrumInput.Button.KickOne) != 0);
-            SetButton(Button.Nine, (report.Buttons & (ushort)DrumInput.Button.KickTwo) != 0);
+            SetButton(VjoyButton.Five, (report.Buttons & (ushort)DrumInput.Button.KickOne) != 0);
+            SetButton(VjoyButton.Nine, (report.Buttons & (ushort)DrumInput.Button.KickTwo) != 0);
         }
 
         /// <summary>
@@ -216,11 +227,11 @@ namespace RB4InstrumentMapper.Parsing
         public void Close()
         {
             // Reset report
-            state.ResetState();
-            VjoyStatic.Client.UpdateVJD(deviceId, ref state);
+            state.Reset();
+            VjoyClient.UpdateDevice(deviceId, ref state);
 
             // Free device
-            VjoyStatic.ReleaseDevice(deviceId);
+            VjoyClient.ReleaseDevice(deviceId);
         }
     }
 }
