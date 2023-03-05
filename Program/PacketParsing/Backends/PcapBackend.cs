@@ -8,6 +8,39 @@ namespace RB4InstrumentMapper.Parsing
 {
     public delegate void PacketReceivedHandler(DateTime timestamp, ReadOnlySpan<byte> data);
 
+    /// <summary>
+    /// A standard IEEE 802.11 QoS header.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    unsafe struct QoSHeader
+    {
+        ushort frameControl;
+        ushort durationId;
+        fixed byte receiverAddress[6];
+        fixed byte transmitterAddress[6];
+        fixed byte destinationAddress[6];
+        ushort sequenceControl;
+        ushort qosControl;
+
+        public byte FrameType => (byte)((frameControl & 0xC) >> 2);
+        public byte FrameSubtype => (byte)((frameControl & 0xF0) >> 4);
+
+        public ulong DeviceId
+        {
+            get
+            {
+                fixed (byte* ptr = transmitterAddress)
+                {
+                    // Read a ulong starting from deviceId_1
+                    ulong deviceId = *(ulong*)ptr;
+                    // Last 2 bytes aren't part of the device ID
+                    deviceId &= 0x0000FFFF_FFFFFFFF;
+                    return deviceId;
+                }
+            }
+        }
+    }
+
     public static class PcapBackend
     {
         public static bool LogPackets = false;
@@ -66,11 +99,18 @@ namespace RB4InstrumentMapper.Parsing
         {
             // Read out receiver header
             var data = packet.Data;
-            if (data.Length < sizeof(ReceiverHeader) || !MemoryMarshal.TryRead(data, out ReceiverHeader header))
+            if (data.Length < sizeof(QoSHeader) || !MemoryMarshal.TryRead(data, out QoSHeader header))
             {
                 return;
             }
-            data = data.Slice(sizeof(ReceiverHeader));
+            data = data.Slice(sizeof(QoSHeader));
+
+            // Ensure type and subtype are Data, QoS Data respectively
+            // Other frame types are irrelevant for our purposes
+            if (header.FrameType != 2 || header.FrameSubtype != 8)
+            {
+                return;
+            }
 
             // Check if device ID has been encountered yet
             ulong deviceId = header.DeviceId;

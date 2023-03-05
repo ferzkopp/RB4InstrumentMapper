@@ -5,41 +5,6 @@ using System.Runtime.InteropServices;
 namespace RB4InstrumentMapper.Parsing
 {
     /// <summary>
-    /// Header data from the receiver.
-    /// </summary>
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct ReceiverHeader
-    {
-        byte unk0;
-        byte unk1;
-        ushort unk2;
-        uint receiverId1_1;
-        ushort receiverId1_2;
-        uint deviceId_1;
-        ushort deviceId_2;
-        uint receiverId2_1;
-        ushort receiverId2_2;
-        ushort sequence;
-        byte unk3;
-        byte unk4;
-
-        public unsafe ulong DeviceId
-        {
-            get
-            {
-                fixed (uint* ptr = &deviceId_1)
-                {
-                    // Read a ulong starting from deviceId_1
-                    ulong deviceId = *(ulong*)ptr;
-                    // Last 2 bytes aren't part of the device ID
-                    deviceId &= 0x0000FFFF_FFFFFFFF;
-                    return deviceId;
-                }
-            }
-        }
-    }
-
-    /// <summary>
     /// Header data for a message.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
