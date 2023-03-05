@@ -83,7 +83,7 @@ namespace RB4InstrumentMapper.Parsing
 
                 try
                 {
-                    device = new XboxDevice(ParseMode);
+                    device = new XboxDevice();
                 }
                 catch (ParseException ex)
                 {
