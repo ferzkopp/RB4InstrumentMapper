@@ -59,7 +59,7 @@ namespace RB4InstrumentMapper.Parsing
 
             switch (header.CommandId)
             {
-                case CommandHeader.Command.Input:
+                case CommandId.Input:
                     deviceMapper.ParseInput(header, commandData.Slice(sizeof(CommandHeader)));
                     break;
 

@@ -5,34 +5,34 @@ using System.Runtime.InteropServices;
 namespace RB4InstrumentMapper.Parsing
 {
     /// <summary>
+    /// Command ID definitions.
+    /// </summary>
+    public enum CommandId : byte
+    {
+        Input = 0x20
+    }
+
+    /// <summary>
+    /// Command flag definitions.
+    /// </summary>
+    [Flags]
+    public enum CommandFlags : byte
+    {
+        None = 0,
+        NeedsAcknowledgement = 0x10,
+        SystemCommand = 0x20,
+        ChunkStart = 0x40,
+        ChunkPacket = 0x80
+    }
+
+    /// <summary>
     /// Header data for a message.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     struct CommandHeader
     {
-        /// <summary>
-        /// Command ID definitions.
-        /// </summary>
-        public enum Command : byte
-        {
-            Input = 0x20
-        }
-
-        /// <summary>
-        /// Flag definitions.
-        /// </summary>
-        [Flags]
-        public enum Flags : byte
-        {
-            None = 0,
-            NeedsAcknowledgement = 0x10,
-            SystemCommand = 0x20,
-            ChunkStart = 0x40,
-            ChunkPacket = 0x80
-        }
-
-        public Command CommandId;
-        public Flags CommandFlags;
+        public CommandId CommandId;
+        public CommandFlags Flags;
         public byte SequenceCount;
         public int DataLength;
 
@@ -52,8 +52,8 @@ namespace RB4InstrumentMapper.Parsing
 
             header = new CommandHeader()
             {
-                CommandId = (Command)data[0],
-                CommandFlags = (Flags)data[1],
+                CommandId = (CommandId)data[0],
+                Flags = (CommandFlags)data[1],
                 SequenceCount = data[2],
                 DataLength = dataLength
             };
