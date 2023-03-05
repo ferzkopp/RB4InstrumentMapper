@@ -18,10 +18,49 @@ namespace RB4InstrumentMapper.Parsing
             Input = 0x20
         }
 
-        public byte CommandId;
-        public byte Flags;
+        /// <summary>
+        /// Flag definitions.
+        /// </summary>
+        [Flags]
+        public enum Flags : byte
+        {
+            None = 0,
+            NeedsAcknowledgement = 0x10,
+            SystemCommand = 0x20,
+            ChunkStart = 0x40,
+            ChunkPacket = 0x80
+        }
+
+        public Command CommandId;
+        public Flags CommandFlags;
         public byte SequenceCount;
-        public byte DataLength;
+        public int DataLength;
+
+        public static bool TryParse(ReadOnlySpan<byte> data, out CommandHeader header, out int bytesRead)
+        {
+            header = default;
+            bytesRead = 0;
+            if (data == null || data.Length < 4)
+            {
+                return false;
+            }
+
+            if (!ParsingUtils.DecodeLEB128(data.Slice(3), out int dataLength, out int byteLength))
+            {
+                return false;
+            }
+
+            header = new CommandHeader()
+            {
+                CommandId = (Command)data[0],
+                CommandFlags = (Flags)data[1],
+                SequenceCount = data[2],
+                DataLength = dataLength
+            };
+            bytesRead = 3 + byteLength;
+
+            return true;
+        }
     }
 
     /// <summary>

@@ -51,14 +51,15 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public unsafe void ParseCommand(ReadOnlySpan<byte> commandData)
         {
-            if (!MemoryMarshal.TryRead(commandData, out CommandHeader header))
+            if (!CommandHeader.TryParse(commandData, out var header, out int bytesRead))
             {
                 return;
             }
+            commandData = commandData.Slice(bytesRead);
 
             switch (header.CommandId)
             {
-                case (byte)CommandHeader.Command.Input:
+                case CommandHeader.Command.Input:
                     deviceMapper.ParseInput(header, commandData.Slice(sizeof(CommandHeader)));
                     break;
 
