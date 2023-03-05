@@ -87,7 +87,8 @@ Packet Data:
 
 - [GuitarSniffer guitar packet logs](https://1drv.ms/f/s!AgQGk0OeTMLwhA-uDO9IQHEHqGhv)
 - GuitarSniffer guitar packet spreadsheets: [New](https://docs.google.com/spreadsheets/d/1ITZUvRniGpfS_HV_rBpSwlDdGukc3GC1CeOe7SavQBo/edit?usp=sharing), [Old](https://1drv.ms/x/s!AgQGk0OeTMLwg3GBDXFUC3Erj4Wb)
-- See [PacketFormats.md](/Docs/PacketFormats.md) for a breakdown of the known packet data.
+
+Additional documentation is available in the [PlasticBand documentation repository](https://github.com/TheNathannator/PlasticBand).
 
 ## Building
 
