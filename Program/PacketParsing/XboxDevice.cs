@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -26,6 +27,11 @@ namespace RB4InstrumentMapper.Parsing
         /// Buffer used to assemble chunked packets.
         /// </summary>
         private byte[] chunkBuffer;
+
+        /// <summary>
+        /// The previous sequence ID for received command IDs.
+        /// </summary>
+        private readonly Dictionary<CommandId, byte> previousSequenceIds = new Dictionary<CommandId, byte>();
 
         /// <summary>
         /// Creates a new XboxDevice with the given device ID and parsing mode.
@@ -102,6 +108,24 @@ namespace RB4InstrumentMapper.Parsing
                         return;
                     }
                 }
+            }
+
+            // Ensure lengths match
+            if (header.DataLength != commandData.Length)
+            {
+                // This is probably a bug
+                Debug.Fail($"Command header length does not match buffer length! Header: {header.DataLength}  Buffer: {commandData.Length}");
+                return;
+            }
+
+            // Don't handle the same packet twice
+            if (!previousSequenceIds.TryGetValue(header.CommandId, out byte previousSequence))
+            {
+                previousSequenceIds.Add(header.CommandId, header.SequenceCount);
+            }
+            else if (header.SequenceCount == previousSequence)
+            {
+                return;
             }
 
             switch (header.CommandId)

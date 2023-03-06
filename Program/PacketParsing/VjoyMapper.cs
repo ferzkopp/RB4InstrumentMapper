@@ -12,8 +12,6 @@ namespace RB4InstrumentMapper.Parsing
         private vJoy.JoystickState state = new vJoy.JoystickState();
         private uint deviceId = 0;
 
-        private byte prevInputSeqCount = 0xFF;
-
         /// <summary>
         /// Creates a new VjoyMapper.
         /// </summary>
@@ -47,22 +45,6 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public unsafe void ParseInput(CommandHeader header, ReadOnlySpan<byte> data)
         {
-            // Ensure lengths match
-            if (header.DataLength != data.Length)
-            {
-                // This is probably a bug, emit a debug message
-                Debug.Fail($"Command header length does not match buffer length! Header: {header.DataLength}  Buffer: {data.Length}");
-                return;
-            }
-
-            // Don't parse the same report twice
-            if (header.SequenceCount == prevInputSeqCount)
-            {
-                return;
-            }
-
-            header.SequenceCount = prevInputSeqCount;
-
             int length = header.DataLength;
             if (length == sizeof(GuitarInput) && MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
             {

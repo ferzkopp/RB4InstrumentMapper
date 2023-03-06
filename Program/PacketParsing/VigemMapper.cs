@@ -20,8 +20,6 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private bool deviceConnected = false;
 
-        private byte prevInputSeqCount = 0xFF;
-
         /// <summary>
         /// Creates a new VigemMapper.
         /// </summary>
@@ -76,22 +74,6 @@ namespace RB4InstrumentMapper.Parsing
             {
                 return;
             }
-
-            // Ensure lengths match
-            if (header.DataLength != data.Length)
-            {
-                // This is probably a bug, emit a debug message
-                Debug.Fail($"Command header length does not match buffer length! Header: {header.DataLength}  Buffer: {data.Length}");
-                return;
-            }
-
-            // Don't parse the same report twice
-            if (header.SequenceCount == prevInputSeqCount)
-            {
-                return;
-            }
-
-            prevInputSeqCount = header.SequenceCount;
 
             int length = header.DataLength;
             if (length == sizeof(GuitarInput) && MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
