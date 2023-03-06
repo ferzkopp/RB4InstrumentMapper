@@ -95,6 +95,7 @@ namespace RB4InstrumentMapper.Parsing
                         }
 
                         commandData.CopyTo(chunkBuffer.AsSpan(bufferIndex, commandData.Length));
+                        return;
                     }
                 }
             }
