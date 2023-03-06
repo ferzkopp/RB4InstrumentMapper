@@ -21,6 +21,10 @@ namespace RB4InstrumentMapper.Parsing
         /// Mapper interface to use.
         /// </summary>
         private IDeviceMapper deviceMapper;
+
+        /// <summary>
+        /// Buffer used to assemble chunked packets.
+        /// </summary>
         private byte[] chunkBuffer;
 
         /// <summary>
