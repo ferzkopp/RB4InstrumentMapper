@@ -8,8 +8,8 @@ namespace RB4InstrumentMapper.Parsing
     interface IDeviceMapper : IDisposable
     {
         /// <summary>
-        /// Parses an input packet.
+        /// Handles an incoming packet.
         /// </summary>
-        void ParseInput(CommandHeader header, ReadOnlySpan<byte> data);
+        void HandlePacket(CommandId command, ReadOnlySpan<byte> data);
     }
 }

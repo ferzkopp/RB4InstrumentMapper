@@ -65,25 +65,40 @@ namespace RB4InstrumentMapper.Parsing
         }
 
         /// <summary>
-        /// Parses an input report.
+        /// Handles an incoming packet.
         /// </summary>
-        public unsafe void ParseInput(CommandHeader header, ReadOnlySpan<byte> data)
+        public void HandlePacket(CommandId command, ReadOnlySpan<byte> data)
         {
             if (device == null)
                 throw new ObjectDisposedException(nameof(device));
 
+            switch (command)
+            {
+                case CommandId.Input:
+                    ParseInput(data);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Parses an input report.
+        /// </summary>
+        public unsafe void ParseInput(ReadOnlySpan<byte> data)
+        {
             // Don't process if not connected
             if (!deviceConnected)
             {
                 return;
             }
 
-            int length = header.DataLength;
-            if (length == sizeof(GuitarInput) && MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
+            if (data.Length == sizeof(GuitarInput) && MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
             {
                 ParseGuitar(guitarReport);
             }
-            else if (length == sizeof(DrumInput) && MemoryMarshal.TryRead(data, out DrumInput drumReport))
+            else if (data.Length == sizeof(DrumInput) && MemoryMarshal.TryRead(data, out DrumInput drumReport))
             {
                 ParseDrums(drumReport);
             }

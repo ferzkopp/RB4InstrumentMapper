@@ -130,12 +130,9 @@ namespace RB4InstrumentMapper.Parsing
 
             switch (header.CommandId)
             {
-                case CommandId.Input:
-                    deviceMapper.ParseInput(header, commandData.Slice(sizeof(CommandHeader)));
-                    break;
-
                 default:
-                    // Don't do anything with unrecognized command IDs
+                    // Hand off unrecognized commands to the mapper
+                    deviceMapper.HandlePacket(header.CommandId, commandData);
                     break;
             }
         }
