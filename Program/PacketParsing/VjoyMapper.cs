@@ -217,8 +217,8 @@ namespace RB4InstrumentMapper.Parsing
             SetButton(VjoyButton.Eight, report.GreenCymbal != 0);
 
             // Kick pedals
-            SetButton(VjoyButton.Five, (report.Buttons & (ushort)DrumInput.Button.KickOne) != 0);
-            SetButton(VjoyButton.Nine, (report.Buttons & (ushort)DrumInput.Button.KickTwo) != 0);
+            SetButton(VjoyButton.Five, (report.Buttons & (ushort)DrumButton.KickOne) != 0);
+            SetButton(VjoyButton.Nine, (report.Buttons & (ushort)DrumButton.KickTwo) != 0);
         }
 
         /// <summary>

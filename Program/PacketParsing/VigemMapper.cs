@@ -237,9 +237,9 @@ namespace RB4InstrumentMapper.Parsing
 
             // Pedals
             device.SetButtonState(Xbox360Button.LeftShoulder, 
-                (report.Buttons & (ushort)DrumInput.Button.KickOne) != 0);
+                (report.Buttons & (ushort)DrumButton.KickOne) != 0);
             device.SetButtonState(Xbox360Button.LeftThumb, 
-                (report.Buttons & (ushort)DrumInput.Button.KickTwo) != 0);
+                (report.Buttons & (ushort)DrumButton.KickTwo) != 0);
 
             // Velocities
             device.SetAxisValue(

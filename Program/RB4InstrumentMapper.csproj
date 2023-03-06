@@ -108,8 +108,11 @@
     </ApplicationDefinition>
     <Compile Include="LogUtils.cs" />
     <Compile Include="PacketParsing\Backends\PcapBackend.cs" />
+    <Compile Include="PacketParsing\Packets\CommandHeader.cs" />
+    <Compile Include="PacketParsing\Packets\DrumInput.cs" />
+    <Compile Include="PacketParsing\Packets\GamepadButton.cs" />
+    <Compile Include="PacketParsing\Packets\GuitarInput.cs" />
     <Compile Include="PacketParsing\IDeviceMapper.cs" />
-    <Compile Include="PacketParsing\PacketDefinitions.cs" />
     <Compile Include="PacketParsing\PacketParser.cs" />
     <Compile Include="PacketParsing\ParseException.cs" />
     <Compile Include="PacketParsing\ParsingUtils.cs" />
