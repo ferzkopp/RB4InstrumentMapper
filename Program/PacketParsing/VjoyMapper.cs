@@ -37,7 +37,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         ~VjoyMapper()
         {
-            Close();
+            Dispose(false);
         }
 
         /// <summary>
@@ -45,6 +45,9 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public unsafe void ParseInput(CommandHeader header, ReadOnlySpan<byte> data)
         {
+            if (deviceId == 0)
+                throw new ObjectDisposedException("this");
+
             int length = header.DataLength;
             if (length == sizeof(GuitarInput) && MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
             {
@@ -206,7 +209,13 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Performs cleanup for the vJoy mapper.
         /// </summary>
-        public void Close()
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
         {
             // Reset report
             state.Reset();
@@ -214,6 +223,7 @@ namespace RB4InstrumentMapper.Parsing
 
             // Free device
             VjoyClient.ReleaseDevice(deviceId);
+            deviceId = 0;
         }
     }
 }

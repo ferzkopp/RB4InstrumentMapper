@@ -14,7 +14,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// Interface for Xbox devices.
     /// </summary>
-    class XboxDevice
+    class XboxDevice : IDisposable
     {
         public static MappingMode MapperMode;
 
@@ -55,7 +55,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         ~XboxDevice()
         {
-            Close();
+            Dispose(false);
         }
 
         /// <summary>
@@ -143,10 +143,19 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Performs cleanup for the device.
         /// </summary>
-        public void Close()
+        public void Dispose()
         {
-            deviceMapper?.Close();
-            deviceMapper = null;
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                deviceMapper?.Dispose();
+                deviceMapper = null;
+            }
         }
     }
 }

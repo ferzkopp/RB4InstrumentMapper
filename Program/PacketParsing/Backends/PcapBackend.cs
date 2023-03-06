@@ -87,7 +87,7 @@ namespace RB4InstrumentMapper.Parsing
             // Clean up devices
             foreach (XboxDevice device in devices.Values)
             {
-                device.Close();
+                device.Dispose();
             }
             devices.Clear();
         }

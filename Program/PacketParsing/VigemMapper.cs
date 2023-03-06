@@ -46,7 +46,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         ~VigemMapper()
         {
-            Close();
+            Dispose(false);
         }
 
         /// <summary>
@@ -69,6 +69,9 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public unsafe void ParseInput(CommandHeader header, ReadOnlySpan<byte> data)
         {
+            if (device == null)
+                throw new ObjectDisposedException(nameof(device));
+
             // Don't process if not connected
             if (!deviceConnected)
             {
@@ -273,15 +276,24 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Performs cleanup for the object.
         /// </summary>
-        public void Close()
+        public void Dispose()
         {
-            // Reset report
-            try { device.ResetReport(); } catch {}
-            try { device.SubmitReport(); } catch {}
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-            // Disconnect device
-            try { device?.Disconnect(); } catch {}
-            device = null;
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // Reset report
+                try { device?.ResetReport(); } catch {}
+                try { device?.SubmitReport(); } catch {}
+
+                // Disconnect device
+                try { device?.Disconnect(); } catch {}
+                device = null;
+            }
         }
     }
 }
