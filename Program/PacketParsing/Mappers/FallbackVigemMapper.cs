@@ -1,66 +1,23 @@
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Nefarius.ViGEm.Client.Targets;
 using Nefarius.ViGEm.Client.Targets.Xbox360;
-using RB4InstrumentMapper.Vigem;
 
 namespace RB4InstrumentMapper.Parsing
 {
-    class FallbackVigemMapper : IDeviceMapper
+    /// <summary>
+    /// The ViGEmBus mapper used when device type could not be determined. Maps based on report length.
+    /// </summary>
+    class FallbackVigemMapper : VigemMapper
     {
-        /// <summary>
-        /// The device to map to.
-        /// </summary>
-        private IXbox360Controller device;
-
-        /// <summary>
-        /// Whether or not feedback has been received to indicate that the device has connected.
-        /// </summary>
-        private bool deviceConnected = false;
-
-        /// <summary>
-        /// Creates a new VigemMapper.
-        /// </summary>
-        public FallbackVigemMapper()
+        public FallbackVigemMapper() : base()
         {
-            device = VigemClient.CreateDevice();
-            device.FeedbackReceived += ReceiveUserIndex;
-            device.Connect();
-            device.AutoSubmitReport = false;
-        }
-
-        /// <summary>
-        /// Performs cleanup on object finalization.
-        /// </summary>
-        ~FallbackVigemMapper()
-        {
-            Dispose(false);
-        }
-
-        /// <summary>
-        /// Temporary event handler for logging the user index of a ViGEm device.
-        /// </summary>
-        void ReceiveUserIndex(object sender, Xbox360FeedbackReceivedEventArgs args)
-        {
-            // Device has connected
-            deviceConnected = true;
-
-            // Log the user index
-            Console.WriteLine($"Created new ViGEmBus device with user index {args.LedNumber}");
-
-            // Unregister the event handler
-            (sender as IXbox360Controller).FeedbackReceived -= ReceiveUserIndex;
         }
 
         /// <summary>
         /// Handles an incoming packet.
         /// </summary>
-        public void HandlePacket(CommandId command, ReadOnlySpan<byte> data)
+        protected override void OnPacketReceived(CommandId command, ReadOnlySpan<byte> data)
         {
-            if (device == null)
-                throw new ObjectDisposedException(nameof(device));
-
             switch (command)
             {
                 case CommandId.Input:
@@ -75,14 +32,8 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses an input report.
         /// </summary>
-        public unsafe void ParseInput(ReadOnlySpan<byte> data)
+        private unsafe void ParseInput(ReadOnlySpan<byte> data)
         {
-            // Don't process if not connected
-            if (!deviceConnected)
-            {
-                return;
-            }
-
             if (data.Length == sizeof(GuitarInput) && MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
             {
                 ParseGuitar(guitarReport);
@@ -93,7 +44,7 @@ namespace RB4InstrumentMapper.Parsing
             }
             else
             {
-                // Report is not valid
+                // Not handled
                 return;
             }
 
@@ -102,13 +53,13 @@ namespace RB4InstrumentMapper.Parsing
         }
 
         /// <summary>
-        /// Parses common button data from an input report.
+        /// Parses guitar input data from an input report.
         /// </summary>
-        private void ParseCoreButtons(GamepadButton buttons)
+        private void ParseGuitar(GuitarInput report)
         {
-            // Menu
+            // Menu and Options
+            var buttons = (GamepadButton)report.Buttons;
             device.SetButtonState(Xbox360Button.Start, (buttons & GamepadButton.Menu) != 0);
-            // Options
             device.SetButtonState(Xbox360Button.Back, (buttons & GamepadButton.Options) != 0);
 
             // Dpad
@@ -116,17 +67,6 @@ namespace RB4InstrumentMapper.Parsing
             device.SetButtonState(Xbox360Button.Down, (buttons & GamepadButton.DpadDown) != 0);
             device.SetButtonState(Xbox360Button.Left, (buttons & GamepadButton.DpadLeft) != 0);
             device.SetButtonState(Xbox360Button.Right, (buttons & GamepadButton.DpadRight) != 0);
-
-            // Other buttons are not mapped here since they may have specific uses
-        }
-
-        /// <summary>
-        /// Parses guitar input data from an input report.
-        /// </summary>
-        private void ParseGuitar(GuitarInput report)
-        {
-            // Buttons
-            ParseCoreButtons((GamepadButton)report.Buttons);
 
             // Frets
             device.SetButtonState(Xbox360Button.A, report.Green);
@@ -160,9 +100,16 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private void ParseDrums(DrumInput report)
         {
-            // Buttons
+            // Menu and Options
             var buttons = (GamepadButton)report.Buttons;
-            ParseCoreButtons(buttons);
+            device.SetButtonState(Xbox360Button.Start, (buttons & GamepadButton.Menu) != 0);
+            device.SetButtonState(Xbox360Button.Back, (buttons & GamepadButton.Options) != 0);
+
+            // Dpad
+            device.SetButtonState(Xbox360Button.Up, (buttons & GamepadButton.DpadUp) != 0);
+            device.SetButtonState(Xbox360Button.Down, (buttons & GamepadButton.DpadDown) != 0);
+            device.SetButtonState(Xbox360Button.Left, (buttons & GamepadButton.DpadLeft) != 0);
+            device.SetButtonState(Xbox360Button.Right, (buttons & GamepadButton.DpadRight) != 0);
 
             // Pads and cymbals
             byte redPad    = report.RedPad;
@@ -274,29 +221,6 @@ namespace RB4InstrumentMapper.Parsing
                     // Bitwise invert to flip the value, then shift down one to exclude the sign bit, then add our own
                     ((~value.ScaleToUInt16()) >> 1) | 0x8000
                 );
-            }
-        }
-
-        /// <summary>
-        /// Performs cleanup for the object.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                // Reset report
-                try { device?.ResetReport(); } catch {}
-                try { device?.SubmitReport(); } catch {}
-
-                // Disconnect device
-                try { device?.Disconnect(); } catch {}
-                device = null;
             }
         }
     }

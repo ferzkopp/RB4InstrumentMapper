@@ -110,6 +110,8 @@
     <Compile Include="PacketParsing\Backends\PcapBackend.cs" />
     <Compile Include="PacketParsing\Mappers\FallbackVigemMapper.cs" />
     <Compile Include="PacketParsing\Mappers\FallbackVjoyMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\VigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\VjoyMapper.cs" />
     <Compile Include="PacketParsing\Packets\CommandHeader.cs" />
     <Compile Include="PacketParsing\Packets\DrumInput.cs" />
     <Compile Include="PacketParsing\Packets\GamepadButton.cs" />
