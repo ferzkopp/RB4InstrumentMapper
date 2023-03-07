@@ -7,7 +7,7 @@ using vJoyInterfaceWrap;
 
 namespace RB4InstrumentMapper.Parsing
 {
-    class VjoyMapper : IDeviceMapper
+    class FallbackVjoyMapper : IDeviceMapper
     {
         private vJoy.JoystickState state = new vJoy.JoystickState();
         private uint deviceId = 0;
@@ -15,7 +15,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Creates a new VjoyMapper.
         /// </summary>
-        public VjoyMapper()
+        public FallbackVjoyMapper()
         {
             deviceId = VjoyClient.GetNextAvailableID();
             if (deviceId == 0)
@@ -35,7 +35,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Performs cleanup on object finalization.
         /// </summary>
-        ~VjoyMapper()
+        ~FallbackVjoyMapper()
         {
             Dispose(false);
         }

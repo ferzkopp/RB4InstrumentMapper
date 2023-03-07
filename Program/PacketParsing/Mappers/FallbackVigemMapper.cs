@@ -8,7 +8,7 @@ using RB4InstrumentMapper.Vigem;
 
 namespace RB4InstrumentMapper.Parsing
 {
-    class VigemMapper : IDeviceMapper
+    class FallbackVigemMapper : IDeviceMapper
     {
         /// <summary>
         /// The device to map to.
@@ -23,7 +23,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Creates a new VigemMapper.
         /// </summary>
-        public VigemMapper()
+        public FallbackVigemMapper()
         {
             device = VigemClient.CreateDevice();
             device.FeedbackReceived += ReceiveUserIndex;
@@ -44,7 +44,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Performs cleanup on object finalization.
         /// </summary>
-        ~VigemMapper()
+        ~FallbackVigemMapper()
         {
             Dispose(false);
         }

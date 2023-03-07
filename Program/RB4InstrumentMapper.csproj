@@ -108,6 +108,8 @@
     </ApplicationDefinition>
     <Compile Include="LogUtils.cs" />
     <Compile Include="PacketParsing\Backends\PcapBackend.cs" />
+    <Compile Include="PacketParsing\Mappers\FallbackVigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\FallbackVjoyMapper.cs" />
     <Compile Include="PacketParsing\Packets\CommandHeader.cs" />
     <Compile Include="PacketParsing\Packets\DrumInput.cs" />
     <Compile Include="PacketParsing\Packets\GamepadButton.cs" />
@@ -116,8 +118,6 @@
     <Compile Include="PacketParsing\PacketParser.cs" />
     <Compile Include="PacketParsing\ParseException.cs" />
     <Compile Include="PacketParsing\ParsingUtils.cs" />
-    <Compile Include="PacketParsing\VigemMapper.cs" />
-    <Compile Include="PacketParsing\VjoyMapper.cs" />
     <Compile Include="PacketParsing\XboxDevice.cs" />
     <Compile Include="MainWindow\ParsingHelpers.cs" />
     <Compile Include="MainWindow\TextBoxConsole.cs" />

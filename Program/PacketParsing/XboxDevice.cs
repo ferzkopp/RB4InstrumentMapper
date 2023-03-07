@@ -41,11 +41,11 @@ namespace RB4InstrumentMapper.Parsing
             switch (MapperMode)
             {
                 case MappingMode.ViGEmBus:
-                    deviceMapper = new VigemMapper();
+                    deviceMapper = new FallbackVigemMapper();
                     break;
 
                 case MappingMode.vJoy:
-                    deviceMapper = new VjoyMapper();
+                    deviceMapper = new FallbackVjoyMapper();
                     break;
             }
         }
