@@ -1,9 +1,26 @@
+using System.Runtime.CompilerServices;
 using vJoyInterfaceWrap;
 
 namespace RB4InstrumentMapper.Vjoy
 {
     public static class VjoyExtensions
     {
+        /// <summary>
+        /// Sets the state of the specified button.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void SetButton(this vJoy.JoystickState state, VjoyButton button, bool set)
+        {
+            if (set)
+            {
+                state.Buttons |= (uint)button;
+            }
+            else
+            {
+                state.Buttons &= (uint)~button;
+            }
+        }
+
         /// <summary>
         /// Resets the values of this state.
         /// </summary>

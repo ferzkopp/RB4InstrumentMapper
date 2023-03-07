@@ -83,31 +83,15 @@ namespace RB4InstrumentMapper.Parsing
         }
 
         /// <summary>
-        /// Sets the state of the specified button.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void SetButton(VjoyButton button, bool set)
-        {
-            if (set)
-            {
-                state.Buttons |= (uint)button;
-            }
-            else
-            {
-                state.Buttons &= (uint)~button;
-            }
-        }
-
-        /// <summary>
         /// Parses common button data from an input report.
         /// </summary>
         private void ParseCoreButtons(GamepadButton buttons)
         {
             // Menu
-            SetButton(VjoyButton.Fifteen, (buttons & GamepadButton.Menu) != 0);
+            state.SetButton(VjoyButton.Fifteen, (buttons & GamepadButton.Menu) != 0);
 
             // Options
-            SetButton(VjoyButton.Sixteen, (buttons & GamepadButton.Options) != 0);
+            state.SetButton(VjoyButton.Sixteen, (buttons & GamepadButton.Options) != 0);
 
             VjoyPoV direction;
             if ((buttons & GamepadButton.DpadUp) != 0)
@@ -169,11 +153,11 @@ namespace RB4InstrumentMapper.Parsing
             // Buttons
             ParseCoreButtons((GamepadButton)report.Buttons);
 
-            SetButton(VjoyButton.One, report.Green);
-            SetButton(VjoyButton.Two, report.Red);
-            SetButton(VjoyButton.Three, report.Yellow);
-            SetButton(VjoyButton.Four, report.Blue);
-            SetButton(VjoyButton.Five, report.Orange);
+            state.SetButton(VjoyButton.One, report.Green);
+            state.SetButton(VjoyButton.Two, report.Red);
+            state.SetButton(VjoyButton.Three, report.Yellow);
+            state.SetButton(VjoyButton.Four, report.Blue);
+            state.SetButton(VjoyButton.Five, report.Orange);
 
             // Whammy
             // Value ranges from 0 (not pressed) to 255 (fully pressed)
@@ -200,25 +184,25 @@ namespace RB4InstrumentMapper.Parsing
             ParseCoreButtons(buttons);
 
             // Face buttons
-            SetButton(VjoyButton.Four, (buttons & GamepadButton.A) != 0);
-            SetButton(VjoyButton.One, (buttons & GamepadButton.B) != 0);
-            SetButton(VjoyButton.Three, (buttons & GamepadButton.X) != 0);
-            SetButton(VjoyButton.Two, (buttons & GamepadButton.Y) != 0);
+            state.SetButton(VjoyButton.Four, (buttons & GamepadButton.A) != 0);
+            state.SetButton(VjoyButton.One, (buttons & GamepadButton.B) != 0);
+            state.SetButton(VjoyButton.Three, (buttons & GamepadButton.X) != 0);
+            state.SetButton(VjoyButton.Two, (buttons & GamepadButton.Y) != 0);
 
             // Pads
-            SetButton(VjoyButton.One, report.RedPad != 0);
-            SetButton(VjoyButton.Two, report.YellowPad != 0);
-            SetButton(VjoyButton.Three, report.BluePad != 0);
-            SetButton(VjoyButton.Four, report.GreenPad != 0);
+            state.SetButton(VjoyButton.One, report.RedPad != 0);
+            state.SetButton(VjoyButton.Two, report.YellowPad != 0);
+            state.SetButton(VjoyButton.Three, report.BluePad != 0);
+            state.SetButton(VjoyButton.Four, report.GreenPad != 0);
 
             // Cymbals
-            SetButton(VjoyButton.Six, report.YellowCymbal != 0);
-            SetButton(VjoyButton.Seven, report.BlueCymbal != 0);
-            SetButton(VjoyButton.Eight, report.GreenCymbal != 0);
+            state.SetButton(VjoyButton.Six, report.YellowCymbal != 0);
+            state.SetButton(VjoyButton.Seven, report.BlueCymbal != 0);
+            state.SetButton(VjoyButton.Eight, report.GreenCymbal != 0);
 
             // Kick pedals
-            SetButton(VjoyButton.Five, (report.Buttons & (ushort)DrumButton.KickOne) != 0);
-            SetButton(VjoyButton.Nine, (report.Buttons & (ushort)DrumButton.KickTwo) != 0);
+            state.SetButton(VjoyButton.Five, (report.Buttons & (ushort)DrumButton.KickOne) != 0);
+            state.SetButton(VjoyButton.Nine, (report.Buttons & (ushort)DrumButton.KickTwo) != 0);
         }
 
         /// <summary>
