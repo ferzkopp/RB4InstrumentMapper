@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Nefarius.ViGEm.Client.Exceptions;
 using Nefarius.ViGEm.Client.Targets;
 using Nefarius.ViGEm.Client.Targets.Xbox360;
 using RB4InstrumentMapper.Vigem;
@@ -27,17 +26,7 @@ namespace RB4InstrumentMapper.Parsing
         {
             device = VigemClient.CreateDevice();
             device.FeedbackReceived += ReceiveUserIndex;
-
-            try
-            {
-                device.Connect();
-            }
-            catch (VigemNoFreeSlotException ex)
-            {
-                device = null;
-                throw new ParseException("ViGEmBus device slots are full.", ex);
-            }
-
+            device.Connect();
             device.AutoSubmitReport = false;
         }
 

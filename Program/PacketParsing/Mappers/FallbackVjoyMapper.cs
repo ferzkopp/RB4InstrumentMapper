@@ -20,12 +20,12 @@ namespace RB4InstrumentMapper.Parsing
             deviceId = VjoyClient.GetNextAvailableID();
             if (deviceId == 0)
             {
-                throw new ParseException("No new vJoy devices are available.");
+                throw new VjoyException("No vJoy devices are available.");
             }
 
             if (!VjoyClient.AcquireDevice(deviceId))
             {
-                throw new ParseException($"Could not claim vJoy device {deviceId}.");
+                throw new VjoyException($"Could not claim vJoy device {deviceId}.");
             }
 
             state.bDevice = (byte)deviceId;

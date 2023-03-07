@@ -116,7 +116,6 @@
     <Compile Include="PacketParsing\Packets\GuitarInput.cs" />
     <Compile Include="PacketParsing\IDeviceMapper.cs" />
     <Compile Include="PacketParsing\PacketParser.cs" />
-    <Compile Include="PacketParsing\ParseException.cs" />
     <Compile Include="PacketParsing\ParsingUtils.cs" />
     <Compile Include="PacketParsing\XboxDevice.cs" />
     <Compile Include="MainWindow\ParsingHelpers.cs" />
@@ -124,6 +123,7 @@
     <Compile Include="Vigem\VigemClient.cs" />
     <Compile Include="Vjoy\VjoyClient.cs" />
     <Compile Include="Vjoy\VjoyDefinitions.cs" />
+    <Compile Include="Vjoy\VjoyException.cs" />
     <Compile Include="Vjoy\VjoyExtensions.cs" />
     <Page Include="MainWindow\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

@@ -125,7 +125,7 @@ namespace RB4InstrumentMapper.Parsing
                 {
                     device = new XboxDevice();
                 }
-                catch (ParseException ex)
+                catch (Exception ex)
                 {
                     canHandleNewDevices = false;
                     Console.WriteLine("Device limit reached, or an error occured when creating virtual device. No more devices will be registered.");
