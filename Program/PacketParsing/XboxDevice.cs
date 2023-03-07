@@ -38,16 +38,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public XboxDevice()
         {
-            switch (MapperMode)
-            {
-                case MappingMode.ViGEmBus:
-                    deviceMapper = new FallbackVigemMapper();
-                    break;
-
-                case MappingMode.vJoy:
-                    deviceMapper = new FallbackVjoyMapper();
-                    break;
-            }
+            deviceMapper = MapperFactory.GetFallbackMapper(MapperMode);
         }
 
         /// <summary>
