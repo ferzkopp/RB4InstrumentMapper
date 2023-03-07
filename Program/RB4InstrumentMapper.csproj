@@ -121,7 +121,6 @@
     <Compile Include="PacketParsing\Packets\DrumInput.cs" />
     <Compile Include="PacketParsing\Packets\GamepadButton.cs" />
     <Compile Include="PacketParsing\Packets\GuitarInput.cs" />
-    <Compile Include="PacketParsing\PacketParser.cs" />
     <Compile Include="PacketParsing\ParsingUtils.cs" />
     <Compile Include="PacketParsing\XboxDevice.cs" />
     <Compile Include="MainWindow\ParsingHelpers.cs" />
