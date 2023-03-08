@@ -58,21 +58,36 @@ namespace RB4InstrumentMapper.Parsing
         }
 
         /// <summary>
+        /// Handles an incoming packet for this device.
+        /// </summary>
+        public unsafe void HandlePacket(ReadOnlySpan<byte> data)
+        {
+            // Some devices may send multiple messages in a single packet, placing them back-to-back
+            // The header length is very important in these scenarios, as it determines which bytes are part of the message
+            // and where the next message's header begins.
+            while (data.Length > 0)
+            {
+                if (!CommandHeader.TryParse(data, out var header, out int bytesRead) || data.Length < (bytesRead + header.DataLength))
+                {
+                    return;
+                }
+                var commandData = data.Slice(bytesRead, header.DataLength);
+                data = data.Slice(bytesRead + header.DataLength);
+
+                HandleMessage(header, commandData);
+            }
+        }
+
+        /// <summary>
         /// Parses command data from a packet.
         /// </summary>
-        public unsafe void ParseCommand(ReadOnlySpan<byte> commandData)
+        private unsafe void HandleMessage(CommandHeader header, ReadOnlySpan<byte> commandData)
         {
-            if (!CommandHeader.TryParse(commandData, out var header, out int bytesRead))
-            {
-                return;
-            }
-            commandData = commandData.Slice(bytesRead);
-
             // Chunked packets
             if ((header.Flags & CommandFlags.ChunkPacket) != 0)
             {
                 // Get sequence length/index
-                if (!ParsingUtils.DecodeLEB128(commandData, out int bufferIndex, out bytesRead))
+                if (!ParsingUtils.DecodeLEB128(commandData, out int bufferIndex, out int bytesRead))
                 {
                     return;
                 }

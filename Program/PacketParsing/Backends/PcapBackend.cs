@@ -148,7 +148,7 @@ namespace RB4InstrumentMapper.Parsing
 
             try
             {
-                device.ParseCommand(data);
+                device.HandlePacket(data);
             }
             catch (ThreadAbortException)
             {
