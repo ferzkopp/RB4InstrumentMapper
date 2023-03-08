@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using RB4InstrumentMapper.Vjoy;
 using vJoyInterfaceWrap;
 
@@ -45,10 +46,36 @@ namespace RB4InstrumentMapper.Parsing
             if (deviceId == 0)
                 throw new ObjectDisposedException("this");
 
-            OnPacketReceived(command, data);
+            switch (command)
+            {
+                case CommandId.Keystroke:
+                    HandleKeystroke(data);
+                    break;
+
+                default:
+                    OnPacketReceived(command, data);
+                    break;
+            }
         }
 
         protected abstract void OnPacketReceived(CommandId command, ReadOnlySpan<byte> data);
+
+        private unsafe void HandleKeystroke(ReadOnlySpan<byte> data)
+        {
+            if (data.Length < sizeof(Keystroke))
+                return;
+
+            // Multiple keystrokes can be sent in a single message
+            var keys = MemoryMarshal.Cast<byte, Keystroke>(data);
+            foreach (var key in keys)
+            {
+                if ((KeyCode)key.Keycode == KeyCode.LeftWindows)
+                {
+                    state.SetButton(VjoyButton.Fourteen, key.Pressed);
+                    VjoyClient.UpdateDevice(deviceId, ref state);
+                }
+            }
+        }
 
         /// <summary>
         /// Parses the state of the d-pad.

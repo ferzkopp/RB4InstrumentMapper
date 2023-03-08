@@ -10,6 +10,7 @@ namespace RB4InstrumentMapper.Parsing
     {
         Arrival = 0x02,
         Descriptor = 0x04,
+        Keystroke = 0x07,
         Input = 0x20
     }
 

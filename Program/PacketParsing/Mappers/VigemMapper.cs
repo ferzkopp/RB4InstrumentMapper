@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using Nefarius.ViGEm.Client.Targets;
 using Nefarius.ViGEm.Client.Targets.Xbox360;
 using RB4InstrumentMapper.Vigem;
@@ -62,10 +63,36 @@ namespace RB4InstrumentMapper.Parsing
             if (!deviceConnected)
                 return;
 
-            OnPacketReceived(command, data);
+            switch (command)
+            {
+                case CommandId.Keystroke:
+                    HandleKeystroke(data);
+                    break;
+
+                default:
+                    OnPacketReceived(command, data);
+                    break;
+            }
         }
 
         protected abstract void OnPacketReceived(CommandId command, ReadOnlySpan<byte> data);
+
+        private unsafe void HandleKeystroke(ReadOnlySpan<byte> data)
+        {
+            if (data.Length < sizeof(Keystroke))
+                return;
+
+            // Multiple keystrokes can be sent in a single message
+            var keys = MemoryMarshal.Cast<byte, Keystroke>(data);
+            foreach (var key in keys)
+            {
+                if ((KeyCode)key.Keycode == KeyCode.LeftWindows)
+                {
+                    device.SetButtonState(Xbox360Button.Guide, key.Pressed);
+                    device.SubmitReport();
+                }
+            }
+        }
 
         /// <summary>
         /// Performs cleanup for the object.
