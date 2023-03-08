@@ -11,6 +11,8 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal abstract class VigemMapper : IDeviceMapper
     {
+        public bool MapGuideButton { get; set; } = false;
+
         /// <summary>
         /// The device to map to.
         /// </summary>
@@ -79,7 +81,7 @@ namespace RB4InstrumentMapper.Parsing
 
         private unsafe void HandleKeystroke(ReadOnlySpan<byte> data)
         {
-            if (data.Length < sizeof(Keystroke))
+            if (!MapGuideButton || data.Length < sizeof(Keystroke))
                 return;
 
             // Multiple keystrokes can be sent in a single message

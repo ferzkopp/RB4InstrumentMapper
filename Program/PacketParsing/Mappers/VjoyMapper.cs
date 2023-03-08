@@ -10,6 +10,8 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal abstract class VjoyMapper : IDeviceMapper
     {
+        public bool MapGuideButton { get; set; } = false;
+
         protected vJoy.JoystickState state = new vJoy.JoystickState();
         protected uint deviceId = 0;
 
@@ -62,7 +64,7 @@ namespace RB4InstrumentMapper.Parsing
 
         private unsafe void HandleKeystroke(ReadOnlySpan<byte> data)
         {
-            if (data.Length < sizeof(Keystroke))
+            if (!MapGuideButton || data.Length < sizeof(Keystroke))
                 return;
 
             // Multiple keystrokes can be sent in a single message

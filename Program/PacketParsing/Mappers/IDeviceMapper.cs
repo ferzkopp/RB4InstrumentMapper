@@ -7,6 +7,8 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal interface IDeviceMapper : IDisposable
     {
+        bool MapGuideButton { get; set; }
+
         /// <summary>
         /// Handles an incoming packet.
         /// </summary>
