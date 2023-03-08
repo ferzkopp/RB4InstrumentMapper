@@ -1,12 +1,48 @@
 using System;
+using System.Diagnostics;
 
 namespace RB4InstrumentMapper.Parsing
 {
     /// <summary>
     /// Helper functions for parsing.
     /// </summary>
-    static class ParsingUtils
+    internal static class ParsingUtils
     {
+        // https://en.wikipedia.org/wiki/LEB128
+        public static bool DecodeLEB128(ReadOnlySpan<byte> data, out int result, out int byteLength)
+        {
+            byteLength = 0;
+            result = 0;
+
+            if (data == null || data.Length < 1)
+            {
+                return false;
+            }
+
+            // Decode variable-length length value
+            // Sequence length is limited to 4 bytes
+            byte value = data[0];
+            for (int index = 0;
+                (index < data.Length) && (index < sizeof(int)) && ((value & 0x80) != 0);
+                index++)
+            {
+                value = data[index];
+                result |= (value & 0x7F) << (index * 7);
+                byteLength++;
+            }
+
+            // Detect length sequences longer than 4 bytes
+            if ((value & 0x80) != 0)
+            {
+                Debug.WriteLine($"Variable-length value is greater than 4 bytes! Buffer: {BitConverter.ToString(data.ToArray())}");
+                byteLength = 0;
+                result = 0;
+                return false;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Scales this byte to an int, starting from the negative end.
         /// </summary>

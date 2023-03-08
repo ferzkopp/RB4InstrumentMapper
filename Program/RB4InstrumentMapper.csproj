@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -107,18 +107,34 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="LogUtils.cs" />
-    <Compile Include="PacketParsing\IDeviceMapper.cs" />
-    <Compile Include="PacketParsing\PacketDefinitions.cs" />
-    <Compile Include="PacketParsing\PacketParser.cs" />
-    <Compile Include="PacketParsing\ParseException.cs" />
+    <Compile Include="PacketParsing\Backends\PcapBackend.cs" />
+    <Compile Include="PacketParsing\Mappers\DrumsVigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\DrumsVjoyMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\FallbackVigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\FallbackVjoyMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\GuitarVigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\GuitarVjoyMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\IDeviceMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\MapperFactory.cs" />
+    <Compile Include="PacketParsing\Mappers\VigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\VjoyMapper.cs" />
+    <Compile Include="PacketParsing\Packets\CommandHeader.cs" />
+    <Compile Include="PacketParsing\Packets\DeviceArrival.cs" />
+    <Compile Include="PacketParsing\Packets\DrumInput.cs" />
+    <Compile Include="PacketParsing\Packets\GamepadButton.cs" />
+    <Compile Include="PacketParsing\Packets\GuitarInput.cs" />
+    <Compile Include="PacketParsing\Packets\Keystroke.cs" />
+    <Compile Include="PacketParsing\Packets\XboxDescriptor.cs" />
+    <Compile Include="PacketParsing\DeviceGuids.cs" />
     <Compile Include="PacketParsing\ParsingUtils.cs" />
-    <Compile Include="PacketParsing\VigemMapper.cs" />
-    <Compile Include="PacketParsing\VigemStatic.cs" />
-    <Compile Include="PacketParsing\VjoyMapper.cs" />
-    <Compile Include="PacketParsing\VjoyStatic.cs" />
     <Compile Include="PacketParsing\XboxDevice.cs" />
     <Compile Include="MainWindow\ParsingHelpers.cs" />
     <Compile Include="MainWindow\TextBoxConsole.cs" />
+    <Compile Include="Vigem\VigemClient.cs" />
+    <Compile Include="Vjoy\VjoyClient.cs" />
+    <Compile Include="Vjoy\VjoyDefinitions.cs" />
+    <Compile Include="Vjoy\VjoyException.cs" />
+    <Compile Include="Vjoy\VjoyExtensions.cs" />
     <Page Include="MainWindow\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

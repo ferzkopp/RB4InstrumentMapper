@@ -15,13 +15,13 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using vJoyInterfaceWrap;
 using System.Runtime.InteropServices;
 using System.Windows.Threading;
-using Nefarius.ViGEm.Client;
-using Nefarius.ViGEm.Client.Exceptions;
 using SharpPcap;
 using SharpPcap.LibPcap;
+using RB4InstrumentMapper.Parsing;
+using RB4InstrumentMapper.Vjoy;
+using RB4InstrumentMapper.Vigem;
 
 namespace RB4InstrumentMapper
 {
@@ -64,11 +64,6 @@ namespace RB4InstrumentMapper
         /// Common name for Pcap combo box items.
         /// </summary>
         private const string pcapComboBoxItemName = "pcapDeviceComboBoxItem";
-
-        /// <summary>
-        /// vJoy client.
-        /// </summary>
-        private static readonly vJoy vjoy = new vJoy();
 
         private enum ControllerType
         {
@@ -113,11 +108,18 @@ namespace RB4InstrumentMapper
             int deviceType = controllerDeviceTypeCombo.SelectedIndex = Properties.Settings.Default.controllerDeviceType;
 
             // Check for vJoy
-            bool vjoyFound = vjoy.vJoyEnabled();
+            bool vjoyFound = VjoyClient.Enabled;
             if (vjoyFound)
             {
                 // Log vJoy driver attributes (Vendor Name, Product Name, Version Number)
-                Console.WriteLine("vJoy found! - Vendor: " + vjoy.GetvJoyManufacturerString() + ", Product: " + vjoy.GetvJoyProductString() + ", Version Number: " + vjoy.GetvJoySerialNumberString());
+                Console.WriteLine($"vJoy found! - Vendor: {VjoyClient.Manufacturer}, Product: {VjoyClient.Product}, Version Number: {VjoyClient.SerialNumber}");
+
+                // Check if versions match
+                if (!VjoyClient.DriverMatch(out uint libraryVersion, out uint driverVersion))
+                {
+                    Console.WriteLine($"WARNING: vJoy library version (0x{libraryVersion:X8}) does not match driver version (0x{driverVersion:X8})! vJoy mode may cause errors!");
+                }
+
                 if (CountAvailableVjoyDevices() > 0)
                 {
                     (controllerDeviceTypeCombo.Items[0] as ComboBoxItem).IsEnabled = true;
@@ -143,16 +145,13 @@ namespace RB4InstrumentMapper
             }
 
             // Check for ViGEmBus
-            bool vigemFound;
-            try
+            bool vigemFound = VigemClient.TryInitialize();
+            if (vigemFound)
             {
-                var vigem = new ViGEmClient();
-                vigemFound = true;
                 Console.WriteLine("ViGEmBus found!");
-                vigem.Dispose();
                 (controllerDeviceTypeCombo.Items[1] as ComboBoxItem).IsEnabled = true;
             }
-            catch (VigemBusNotFoundException)
+            else
             {
                 vigemFound = false;
                 Console.WriteLine("ViGEmBus not found. ViGEmBus selection will be unavailable.");
@@ -191,6 +190,9 @@ namespace RB4InstrumentMapper
 
             // Close the log files
             Logging.CloseAll();
+
+            // Dispose ViGEmBus
+            VigemClient.Dispose();
         }
 
         /// <summary>
@@ -286,7 +288,7 @@ namespace RB4InstrumentMapper
         /// </summary>
         private int CountAvailableVjoyDevices()
         {
-            if (!vjoy.vJoyEnabled())
+            if (!VjoyClient.Enabled)
             {
                 return 0;
             }
@@ -295,24 +297,9 @@ namespace RB4InstrumentMapper
             int freeDeviceCount = 0;
             for (uint id = 1; id <= 16; id++)
             {
-                if (vjoy.GetVJDStatus(id) == VjdStat.VJD_STAT_FREE)
+                if (VjoyClient.IsDeviceAvailable(id))
                 {
-                    // Check that the vJoy device is configured correctly
-                    int numButtons = vjoy.GetVJDButtonNumber(id);
-                    int numContPov = vjoy.GetVJDContPovNumber(id);
-                    bool xExists = vjoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_X); // X axis
-                    bool yExists = vjoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Y); // Y axis
-                    bool zExists = vjoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Z); // Z axis
-
-                    if (numButtons >= 16 &&
-                        numContPov >= 1 &&
-                        xExists &&
-                        yExists &&
-                        zExists
-                    )
-                    {
-                        freeDeviceCount++;
-                    }
+                    freeDeviceCount++;
                 }
             }
 
@@ -408,22 +395,9 @@ namespace RB4InstrumentMapper
                 }
             }
 
-            // Register handler for packet debugging/logging and status reporting
-            pcapSelectedDevice.OnPacketArrival += OnPacketArrival;
-
-            // Open the device
-            pcapSelectedDevice.Open(new DeviceConfiguration()
-            {
-                Snaplen = 45, // Capture small packets
-                Mode = DeviceModes.Promiscuous | DeviceModes.MaxResponsiveness, // Promiscuous mode with maximum speed
-                ReadTimeout = 50 // Read timeout
-            });
-
-            // Configure packet receive event handler
-            pcapSelectedDevice.OnPacketArrival += OnPacketArrival;
-            
             // Start capture
-            pcapSelectedDevice.StartCapture();
+            PcapBackend.LogPackets = packetDebug;
+            PcapBackend.StartCapture(pcapSelectedDevice);
             Console.WriteLine($"Listening on {pcapSelectedDevice.Description}...");
         }
 
@@ -432,15 +406,7 @@ namespace RB4InstrumentMapper
         /// </summary>
         private void StopCapture()
         {
-            // Stop packet capture
-            if (pcapSelectedDevice != null)
-            {
-                // Close will automatically remove assigned event handlers and call StopCapture(), 
-                // so we don't need to do those ourselves
-                pcapSelectedDevice.Close();
-            }
-
-            PacketParser.Close();
+            PcapBackend.StopCapture();
 
             // Store whether or not the packet log was created
             bool doPacketLogMessage = Logging.PacketLogExists;
@@ -468,41 +434,6 @@ namespace RB4InstrumentMapper
             if (doPacketLogMessage)
             {
                 Console.WriteLine($"Packet logs may be found in {Logging.PacketLogFolderPath}");
-            }
-        }
-
-        /// <summary>
-        /// Handles captured packets.
-        /// </summary>
-        /// <param name="packet">The received packet</param>
-        private void OnPacketArrival(object sender, PacketCapture packet)
-        {
-            try
-            {
-                PacketParser.HandlePcapPacket(packet.Data);
-            }
-            catch (ThreadAbortException)
-            {
-                // Don't log ThreadAbortExceptions, just return
-                return;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error while handling packet: {ex.GetFirstLine()}");
-                Logging.Main_WriteException(ex, "Context: Unhandled error during packet handling");
-
-                // Stop capture
-                uiDispatcher.Invoke(StopCapture);
-                return;
-            }
-
-            // Debugging (if enabled)
-            if (packetDebug)
-            {
-                RawCapture raw = packet.GetPacket();
-                string packetLogString = raw.Timeval.Date.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{raw.PacketLength}] " + ParsingHelpers.ByteArrayToHexString(raw.Data);;
-                Console.WriteLine(packetLogString);
-                Logging.Packet_WriteLine(packetLogString);
             }
         }
 
@@ -644,7 +575,7 @@ namespace RB4InstrumentMapper
                 case 0:
                     if (CountAvailableVjoyDevices() > 0)
                     {
-                        PacketParser.ParseMode = ParsingMode.vJoy;
+                        XboxDevice.MapperMode = MappingMode.vJoy;
                         Properties.Settings.Default.controllerDeviceType = (int)ControllerType.vJoy;
                     }
                     else
@@ -658,12 +589,12 @@ namespace RB4InstrumentMapper
 
                 // ViGEmBus
                 case 1:
-                    PacketParser.ParseMode = ParsingMode.ViGEmBus;
+                    XboxDevice.MapperMode = MappingMode.ViGEmBus;
                     Properties.Settings.Default.controllerDeviceType = (int)ControllerType.VigemBus;
                     break;
 
                 default:
-                    PacketParser.ParseMode = (ParsingMode)0;
+                    XboxDevice.MapperMode = 0;
                     Properties.Settings.Default.controllerDeviceType = (int)ControllerType.None;
                     break;
             }

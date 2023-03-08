@@ -1,164 +1,34 @@
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Nefarius.ViGEm.Client.Exceptions;
 using Nefarius.ViGEm.Client.Targets;
 using Nefarius.ViGEm.Client.Targets.Xbox360;
 
 namespace RB4InstrumentMapper.Parsing
 {
-    class VigemMapper : IDeviceMapper
+    /// <summary>
+    /// Maps drumkit inputs to a ViGEmBus device.
+    /// </summary>
+    internal class DrumsVigemMapper : VigemMapper
     {
-        /// <summary>
-        /// The device to map to.
-        /// </summary>
-        private IXbox360Controller device;
-
-        /// <summary>
-        /// Whether or not feedback has been received to indicate that the device has connected.
-        /// </summary>
-        private bool deviceConnected = false;
-
-        private byte prevInputSeqCount = 0xFF;
-
-        /// <summary>
-        /// Creates a new VigemMapper.
-        /// </summary>
-        public VigemMapper()
+        public DrumsVigemMapper() : base()
         {
-            device = VigemStatic.CreateDevice();
-            device.FeedbackReceived += ReceiveUserIndex;
-
-            try
-            {
-                device.Connect();
-            }
-            catch (VigemNoFreeSlotException ex)
-            {
-                device = null;
-                throw new ParseException("ViGEmBus device slots are full.", ex);
-            }
-
-            device.AutoSubmitReport = false;
         }
 
         /// <summary>
-        /// Performs cleanup on object finalization.
+        /// Handles an incoming packet.
         /// </summary>
-        ~VigemMapper()
+        protected override void OnPacketReceived(CommandId command, ReadOnlySpan<byte> data)
         {
-            Close();
+            switch (command)
+            {
+                case CommandId.Input:
+                    ParseInput(data);
+                    break;
+
+                default:
+                    break;
+            }
         }
-
-        /// <summary>
-        /// Temporary event handler for logging the user index of a ViGEm device.
-        /// </summary>
-        void ReceiveUserIndex(object sender, Xbox360FeedbackReceivedEventArgs args)
-        {
-            // Device has connected
-            deviceConnected = true;
-
-            // Log the user index
-            Console.WriteLine($"Created new ViGEmBus device with user index {args.LedNumber}");
-
-            // Unregister the event handler
-            (sender as IXbox360Controller).FeedbackReceived -= ReceiveUserIndex;
-        }
-
-        /// <summary>
-        /// Parses an input report.
-        /// </summary>
-        public unsafe void ParseInput(CommandHeader header, ReadOnlySpan<byte> data)
-        {
-            // Don't process if not connected
-            if (!deviceConnected)
-            {
-                return;
-            }
-
-            // Ensure lengths match
-            if (header.DataLength != data.Length)
-            {
-                // This is probably a bug, emit a debug message
-                Debug.Fail($"Command header length does not match buffer length! Header: {header.DataLength}  Buffer: {data.Length}");
-                return;
-            }
-
-            // Don't parse the same report twice
-            if (header.SequenceCount == prevInputSeqCount)
-            {
-                return;
-            }
-
-            prevInputSeqCount = header.SequenceCount;
-
-            int length = header.DataLength;
-            if (length == sizeof(GuitarInput) && MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
-            {
-                ParseGuitar(guitarReport);
-            }
-            else if (length == sizeof(DrumInput) && MemoryMarshal.TryRead(data, out DrumInput drumReport))
-            {
-                ParseDrums(drumReport);
-            }
-            else
-            {
-                // Report is not valid
-                return;
-            }
-
-            // Send data
-            device.SubmitReport();
-        }
-
-        /// <summary>
-        /// Parses common button data from an input report.
-        /// </summary>
-        private void ParseCoreButtons(GamepadButton buttons)
-        {
-            // Menu
-            device.SetButtonState(Xbox360Button.Start, (buttons & GamepadButton.Menu) != 0);
-            // Options
-            device.SetButtonState(Xbox360Button.Back, (buttons & GamepadButton.Options) != 0);
-
-            // Dpad
-            device.SetButtonState(Xbox360Button.Up, (buttons & GamepadButton.DpadUp) != 0);
-            device.SetButtonState(Xbox360Button.Down, (buttons & GamepadButton.DpadDown) != 0);
-            device.SetButtonState(Xbox360Button.Left, (buttons & GamepadButton.DpadLeft) != 0);
-            device.SetButtonState(Xbox360Button.Right, (buttons & GamepadButton.DpadRight) != 0);
-
-            // Other buttons are not mapped here since they may have specific uses
-        }
-
-        /// <summary>
-        /// Parses guitar input data from an input report.
-        /// </summary>
-        private void ParseGuitar(GuitarInput report)
-        {
-            // Buttons
-            ParseCoreButtons((GamepadButton)report.Buttons);
-
-            // Frets
-            device.SetButtonState(Xbox360Button.A, report.Green);
-            device.SetButtonState(Xbox360Button.B, report.Red);
-            device.SetButtonState(Xbox360Button.Y, report.Yellow);
-            device.SetButtonState(Xbox360Button.X, report.Blue);
-            device.SetButtonState(Xbox360Button.LeftShoulder, report.Orange);
-
-            // Lower fret flag
-            device.SetButtonState(Xbox360Button.LeftThumb, report.LowerFretFlag);
-
-            // Whammy
-            device.SetAxisValue(Xbox360Axis.RightThumbX, report.WhammyBar.ScaleToInt16());
-            // Tilt
-            device.SetAxisValue(Xbox360Axis.RightThumbY, report.Tilt.ScaleToInt16());
-            // Pickup Switch
-            device.SetSliderValue(Xbox360Slider.LeftTrigger, report.PickupSwitch);
-        }
-
-        // Constants for masks below
-        const int yellowBit = 0x01;
-        const int blueBit = 0x02;
 
         // The previous state of the yellow/blue cymbals
         int previousDpadCymbals;
@@ -166,13 +36,38 @@ namespace RB4InstrumentMapper.Parsing
         int dpadMask;
 
         /// <summary>
-        /// Parses drums input data from an input report.
+        /// Parses an input report.
         /// </summary>
-        private void ParseDrums(DrumInput report)
+        private unsafe void ParseInput(ReadOnlySpan<byte> data)
         {
-            // Buttons
+            if (data.Length != sizeof(DrumInput) || !MemoryMarshal.TryRead(data, out DrumInput drumReport))
+                return;
+
+            HandleReport(device, drumReport, ref previousDpadCymbals, ref dpadMask);
+
+            // Send data
+            device.SubmitReport();
+        }
+
+        /// <summary>
+        /// Maps drumkit input data to an Xbox 360 controller.
+        /// </summary>
+        internal static void HandleReport(IXbox360Controller device, in DrumInput report, ref int previousDpadCymbals, ref int dpadMask)
+        {
+            // Constants for the d-pad masks
+            const int yellowBit = 0x01;
+            const int blueBit = 0x02;
+
+            // Menu and Options
             var buttons = (GamepadButton)report.Buttons;
-            ParseCoreButtons(buttons);
+            device.SetButtonState(Xbox360Button.Start, (buttons & GamepadButton.Menu) != 0);
+            device.SetButtonState(Xbox360Button.Back, (buttons & GamepadButton.Options) != 0);
+
+            // Dpad
+            device.SetButtonState(Xbox360Button.Up, (buttons & GamepadButton.DpadUp) != 0);
+            device.SetButtonState(Xbox360Button.Down, (buttons & GamepadButton.DpadDown) != 0);
+            device.SetButtonState(Xbox360Button.Left, (buttons & GamepadButton.DpadLeft) != 0);
+            device.SetButtonState(Xbox360Button.Right, (buttons & GamepadButton.DpadRight) != 0);
 
             // Pads and cymbals
             byte redPad    = report.RedPad;
@@ -236,9 +131,9 @@ namespace RB4InstrumentMapper.Parsing
 
             // Pedals
             device.SetButtonState(Xbox360Button.LeftShoulder, 
-                (report.Buttons & (ushort)DrumInput.Button.KickOne) != 0);
+                (report.Buttons & (ushort)DrumButton.KickOne) != 0);
             device.SetButtonState(Xbox360Button.LeftThumb, 
-                (report.Buttons & (ushort)DrumInput.Button.KickTwo) != 0);
+                (report.Buttons & (ushort)DrumButton.KickTwo) != 0);
 
             // Velocities
             device.SetAxisValue(
@@ -285,20 +180,6 @@ namespace RB4InstrumentMapper.Parsing
                     ((~value.ScaleToUInt16()) >> 1) | 0x8000
                 );
             }
-        }
-
-        /// <summary>
-        /// Performs cleanup for the object.
-        /// </summary>
-        public void Close()
-        {
-            // Reset report
-            try { device.ResetReport(); } catch {}
-            try { device.SubmitReport(); } catch {}
-
-            // Disconnect device
-            try { device?.Disconnect(); } catch {}
-            device = null;
         }
     }
 }
