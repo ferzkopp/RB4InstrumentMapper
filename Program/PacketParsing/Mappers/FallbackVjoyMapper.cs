@@ -7,7 +7,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// The vJoy mapper used when device type could not be determined. Maps based on report length.
     /// </summary>
-    class FallbackVjoyMapper : VjoyMapper
+    internal class FallbackVjoyMapper : VjoyMapper
     {
         public FallbackVjoyMapper() : base()
         {

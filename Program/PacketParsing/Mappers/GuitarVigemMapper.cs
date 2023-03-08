@@ -8,7 +8,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// Maps guitar inputs to a ViGEmBus device.
     /// </summary>
-    class GuitarVigemMapper : VigemMapper
+    internal class GuitarVigemMapper : VigemMapper
     {
         public GuitarVigemMapper() : base()
         {

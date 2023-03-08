@@ -98,7 +98,7 @@ namespace RB4InstrumentMapper.Parsing
             return true;
         }
 
-        static bool VerifyOffset(ReadOnlySpan<byte> buffer, ushort offset, int elementSize, out byte count, string elementName)
+        private static bool VerifyOffset(ReadOnlySpan<byte> buffer, ushort offset, int elementSize, out byte count, string elementName)
         {
             // Null offset means no elements are available
             if (offset == 0)
@@ -144,7 +144,7 @@ namespace RB4InstrumentMapper.Parsing
             return true;
         }
 
-        static unsafe T[] ParseElements<T>(ReadOnlySpan<byte> buffer, ushort offset, string elementName, Func<T, bool> customCheck = null)
+        private static unsafe T[] ParseElements<T>(ReadOnlySpan<byte> buffer, ushort offset, string elementName, Func<T, bool> customCheck = null)
             where T : unmanaged
         {
             if (!VerifyOffset(buffer, offset, sizeof(T), out byte count, elementName) || count == 0)
@@ -186,7 +186,7 @@ namespace RB4InstrumentMapper.Parsing
             return elements;
         }
 
-        static unsafe string[] ParseStrings(ReadOnlySpan<byte> buffer, ushort offset, string elementName)
+        private static unsafe string[] ParseStrings(ReadOnlySpan<byte> buffer, ushort offset, string elementName)
         {
             if (!VerifyOffset(buffer, offset, 0, out byte count, elementName) || count == 0)
             {
@@ -228,7 +228,7 @@ namespace RB4InstrumentMapper.Parsing
             return elements;
         }
 
-        static void TruncateArray<T>(ref T[] array, int length)
+        private static void TruncateArray<T>(ref T[] array, int length)
         {
             if (length == 0)
                 array = null;

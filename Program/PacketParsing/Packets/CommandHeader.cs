@@ -6,7 +6,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// Command ID definitions.
     /// </summary>
-    public enum CommandId : byte
+    internal enum CommandId : byte
     {
         Arrival = 0x02,
         Descriptor = 0x04,
@@ -17,7 +17,7 @@ namespace RB4InstrumentMapper.Parsing
     /// Command flag definitions.
     /// </summary>
     [Flags]
-    public enum CommandFlags : byte
+    internal enum CommandFlags : byte
     {
         None = 0,
         NeedsAcknowledgement = 0x10,
@@ -30,7 +30,7 @@ namespace RB4InstrumentMapper.Parsing
     /// Header data for a message.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct CommandHeader
+    internal struct CommandHeader
     {
         public CommandId CommandId;
         public CommandFlags Flags;

@@ -8,7 +8,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// Maps drumkit inputs to a vJoy device.
     /// </summary>
-    class DrumsVjoyMapper : VjoyMapper
+    internal class DrumsVjoyMapper : VjoyMapper
     {
         public DrumsVjoyMapper() : base()
         {

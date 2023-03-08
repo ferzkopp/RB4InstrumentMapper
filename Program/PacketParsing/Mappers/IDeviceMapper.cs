@@ -5,7 +5,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// Common interface for device mappers.
     /// </summary>
-    interface IDeviceMapper : IDisposable
+    internal interface IDeviceMapper : IDisposable
     {
         /// <summary>
         /// Handles an incoming packet.

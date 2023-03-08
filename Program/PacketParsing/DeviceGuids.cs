@@ -5,7 +5,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// Xbox device interface GUIDs.
     /// </summary>
-    public static class DeviceGuids
+    internal static class DeviceGuids
     {
         public static readonly Guid MadCatzGuitar = Guid.Parse("0D2AE438-7F7D-4933-8693-30FC55018E77");
         public static readonly Guid MadCatzDrumkit = Guid.Parse("06182893-CCE0-4B85-9271-0A10DBAB7E07");

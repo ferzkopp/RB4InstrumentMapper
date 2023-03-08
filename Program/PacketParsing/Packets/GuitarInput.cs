@@ -7,7 +7,7 @@ namespace RB4InstrumentMapper.Parsing
     /// Re-definitions for button flags that have specific meanings.
     /// </summary>
     [Flags]
-    public enum GuitarButton : ushort
+    internal enum GuitarButton : ushort
     {
         StrumUp = GamepadButton.DpadUp,
         StrumDown = GamepadButton.DpadDown,
@@ -23,7 +23,7 @@ namespace RB4InstrumentMapper.Parsing
     /// Flags used in <see cref="GuitarInput.UpperFrets"/> and <see cref="GuitarInput.LowerFrets"/>
     /// </summary>
     [Flags]
-    public enum GuitarFret : byte
+    internal enum GuitarFret : byte
     {
         Green = 0x01,
         Red = 0x02,
@@ -36,7 +36,7 @@ namespace RB4InstrumentMapper.Parsing
     /// An input report from a guitar.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct GuitarInput
+    internal struct GuitarInput
     {
         public ushort Buttons;
         public byte Tilt;

@@ -8,7 +8,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// Maps guitar inputs to a vJoy device.
     /// </summary>
-    class GuitarVjoyMapper : VjoyMapper
+    internal class GuitarVjoyMapper : VjoyMapper
     {
         public GuitarVjoyMapper() : base()
         {

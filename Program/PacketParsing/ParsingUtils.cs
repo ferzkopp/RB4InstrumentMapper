@@ -6,7 +6,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// Helper functions for parsing.
     /// </summary>
-    static class ParsingUtils
+    internal static class ParsingUtils
     {
         // https://en.wikipedia.org/wiki/LEB128
         public static bool DecodeLEB128(ReadOnlySpan<byte> data, out int result, out int byteLength)

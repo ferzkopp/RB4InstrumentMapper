@@ -14,7 +14,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// Interface for Xbox devices.
     /// </summary>
-    class XboxDevice : IDisposable
+    public class XboxDevice : IDisposable
     {
         public static MappingMode MapperMode;
 

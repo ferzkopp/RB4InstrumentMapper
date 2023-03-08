@@ -6,7 +6,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// The ViGEmBus mapper used when device type could not be determined. Maps based on report length.
     /// </summary>
-    class FallbackVigemMapper : VigemMapper
+    internal class FallbackVigemMapper : VigemMapper
     {
         public FallbackVigemMapper() : base()
         {

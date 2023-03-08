@@ -8,7 +8,7 @@ namespace RB4InstrumentMapper.Parsing
     /// Re-definitions for button flags that have specific meanings.
     /// </summary>
     [Flags]
-    public enum DrumButton : ushort
+    internal enum DrumButton : ushort
     {
         // Not used as these are for menu navigation purposes
         // RedPad = GamepadButton.B,
@@ -21,7 +21,7 @@ namespace RB4InstrumentMapper.Parsing
     /// An input report from a drumkit.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct DrumInput
+    internal struct DrumInput
     {
         /// <summary>
         /// Masks for each pad's value.

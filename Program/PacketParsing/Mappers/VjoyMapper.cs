@@ -7,7 +7,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// A mapper that maps to a vJoy device.
     /// </summary>
-    abstract class VjoyMapper : IDeviceMapper
+    internal abstract class VjoyMapper : IDeviceMapper
     {
         protected vJoy.JoystickState state = new vJoy.JoystickState();
         protected uint deviceId = 0;

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace RB4InstrumentMapper.Parsing
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct DeviceArrival
+    internal struct DeviceArrival
     {
         public ulong SerialNumber;
         public ushort VendorId;

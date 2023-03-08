@@ -8,7 +8,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// A mapper that maps to a ViGEmBus device.
     /// </summary>
-    abstract class VigemMapper : IDeviceMapper
+    internal abstract class VigemMapper : IDeviceMapper
     {
         /// <summary>
         /// The device to map to.

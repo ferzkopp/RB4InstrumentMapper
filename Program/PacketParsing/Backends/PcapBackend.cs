@@ -12,7 +12,7 @@ namespace RB4InstrumentMapper.Parsing
     /// A standard IEEE 802.11 QoS header.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    unsafe struct QoSHeader
+    internal unsafe struct QoSHeader
     {
         ushort frameControl;
         ushort durationId;

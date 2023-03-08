@@ -6,7 +6,7 @@ namespace RB4InstrumentMapper.Parsing
     /// Flag definitions for the buttons bytes.
     /// </summary>
     [Flags]
-    public enum GamepadButton : ushort
+    internal enum GamepadButton : ushort
     {
         Sync = 0x0001,
         Unused = 0x0002,
