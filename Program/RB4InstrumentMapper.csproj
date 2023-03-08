@@ -119,6 +119,7 @@
     <Compile Include="PacketParsing\Mappers\VigemMapper.cs" />
     <Compile Include="PacketParsing\Mappers\VjoyMapper.cs" />
     <Compile Include="PacketParsing\Packets\CommandHeader.cs" />
+    <Compile Include="PacketParsing\Packets\DeviceArrival.cs" />
     <Compile Include="PacketParsing\Packets\DrumInput.cs" />
     <Compile Include="PacketParsing\Packets\GamepadButton.cs" />
     <Compile Include="PacketParsing\Packets\GuitarInput.cs" />

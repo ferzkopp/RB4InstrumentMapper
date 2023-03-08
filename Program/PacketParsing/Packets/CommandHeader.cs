@@ -8,6 +8,7 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     public enum CommandId : byte
     {
+        Arrival = 0x02,
         Descriptor = 0x04,
         Input = 0x20
     }

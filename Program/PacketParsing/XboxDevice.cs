@@ -18,6 +18,9 @@ namespace RB4InstrumentMapper.Parsing
     {
         public static MappingMode MapperMode;
 
+        public ushort VendorId { get; private set; }
+        public ushort ProductId { get; private set; }
+
         /// <summary>
         /// The descriptor of the device.
         /// </summary>
@@ -126,6 +129,10 @@ namespace RB4InstrumentMapper.Parsing
 
             switch (header.CommandId)
             {
+                case CommandId.Arrival:
+                    HandleArrival(commandData);
+                    break;
+
                 case CommandId.Descriptor:
                     HandleDescriptor(commandData);
                     break;
@@ -135,6 +142,18 @@ namespace RB4InstrumentMapper.Parsing
                     deviceMapper.HandlePacket(header.CommandId, commandData);
                     break;
             }
+        }
+
+        /// <summary>
+        /// Handles the arrival message of the device.
+        /// </summary>
+        private unsafe void HandleArrival(ReadOnlySpan<byte> data)
+        {
+            if (data.Length < sizeof(DeviceArrival) || MemoryMarshal.TryRead(data, out DeviceArrival arrival))
+                return;
+
+            VendorId = arrival.VendorId;
+            ProductId = arrival.ProductId;
         }
 
         /// <summary>
