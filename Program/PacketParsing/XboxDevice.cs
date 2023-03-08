@@ -19,6 +19,11 @@ namespace RB4InstrumentMapper.Parsing
         public static MappingMode MapperMode;
 
         /// <summary>
+        /// The descriptor of the device.
+        /// </summary>
+        public XboxDescriptor Descriptor { get; private set; }
+
+        /// <summary>
         /// Mapper interface to use.
         /// </summary>
         private IDeviceMapper deviceMapper;
@@ -121,11 +126,27 @@ namespace RB4InstrumentMapper.Parsing
 
             switch (header.CommandId)
             {
+                case CommandId.Descriptor:
+                    HandleDescriptor(commandData);
+                    break;
+
                 default:
                     // Hand off unrecognized commands to the mapper
                     deviceMapper.HandlePacket(header.CommandId, commandData);
                     break;
             }
+        }
+
+        /// <summary>
+        /// Handles the Xbox One descriptor of the device.
+        /// </summary>
+        private void HandleDescriptor(ReadOnlySpan<byte> data)
+        {
+            if (!XboxDescriptor.Parse(data, out var descriptor))
+                return;
+
+            Descriptor = descriptor;
+            deviceMapper = MapperFactory.GetMapper(descriptor.InterfaceGuids, MapperMode);
         }
 
         /// <summary>
