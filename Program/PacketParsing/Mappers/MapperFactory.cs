@@ -43,6 +43,8 @@ namespace RB4InstrumentMapper.Parsing
                     }
                     return GetFallbackMapper(mode);
                 }
+
+                interfaceGuid = guid;
             }
 
             // Get mapper creation delegate for interface GUID
