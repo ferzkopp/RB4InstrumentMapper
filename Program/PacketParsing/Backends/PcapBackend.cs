@@ -135,6 +135,15 @@ namespace RB4InstrumentMapper.Parsing
 
                 devices.Add(deviceId, device);
                 Console.WriteLine($"Encountered new device with ID {deviceId.ToString("X12")}");
+
+                // Check if device was found during its initialization
+                CommandId command = (CommandId)data[0];
+                if (command != CommandId.Arrival && command != CommandId.Descriptor)
+                {
+                    Console.WriteLine("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
+                    Console.WriteLine("Consider hitting Start before connecting it to ensure correct behavior.");
+                    // TODO: Figure out how to detect disconnections
+                }
             }
 
             try
