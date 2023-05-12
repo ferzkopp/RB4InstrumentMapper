@@ -9,7 +9,7 @@ Both guitars and drums are supported through an Xbox One wireless receiver.
 ## Software Requirements
 
 - Windows 10 64-bit
-- [WinPCap](https://www.winpcap.org/install/default.htm)
+- [WinPCap](https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe)
 - [USBPCap](https://desowin.org/usbpcap/)
 - [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest) or [vJoy](https://github.com/jshafer817/vJoy/releases/latest)
 
@@ -20,7 +20,7 @@ Jaguar guitars require a firmware update in order to connect to the receiver.
 - [Instructions](https://bit.ly/2UHzonU)
 - [Firmware installer backup](https://drive.google.com/file/d/1DQxkkbBfi-UOqdX6vp5TaX6F2N2OBDra/view?usp=drivesdk)
 
-Some guitars/drumkits might not sync properly when using just the sync button. This includes the PDP drumkit. Follow these steps to sync your device correctly:
+Some guitars/drumkits might not sync properly when using just the sync button. This includes the PDP drumkit and occasionally the Jaguar guitar. Follow these steps to sync your device correctly:
 
 1. Go to Windows settings > Devices > Bluetooth & other devices
 2. Click `Add Bluetooth or other device` and pick the `Everything else` option.
@@ -30,8 +30,7 @@ Some guitars/drumkits might not sync properly when using just the sync button. T
 
 ## Installation
 
-1. Install [WinPCap](https://www.winpcap.org/install/default.htm).
-   - While Npcap is newer, it does not seem to work with Xbox One receivers currently, and trying it isn't recommended unless WinPcap doesn't work and none of the other troubleshooting helps.
+1. Install [WinPCap](https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe).
 2. Install [USBPCap](https://desowin.org/usbpcap/).
 3. Install [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest) (recommended) or [vJoy](https://github.com/jshafer817/vJoy/releases/latest).
    - If you installed vJoy, configure it:
@@ -94,20 +93,9 @@ Additional documentation is available in the [PlasticBand documentation reposito
 
 To build this program, you will need:
 
-- Visual Studio (or MSBuild + your code editor of choice) for the program
-- [WiX Toolset](https://wixtoolset.org/) for the installer
+- Visual Studio (or MSBuild + your code editor of choice).
+- [WiX Toolset](https://wixtoolset.org/) if you wish to build the installer.
 
 ## License
 
-Copyright (c) 2021 Andreas Schiffler
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), 
-to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-IN THE SOFTWARE.
+This program is licensed under the MIT license. See [LICENSE](LICENSE) for details.
