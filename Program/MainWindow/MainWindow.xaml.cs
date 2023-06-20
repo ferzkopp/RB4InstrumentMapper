@@ -200,17 +200,14 @@ namespace RB4InstrumentMapper
         /// </summary>
         private bool IsXboxOneReceiver(ILiveDevice device)
         {
-            if (device.Description != null)
-            {
-                // TODO: Research if there are any other device names to check for, or other methods to detect receivers
-                // This won't work anymore if the receiver changes device name down the line
-                if (device.Description == "MT7612US_RL")
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            // Depending on the receiver, there are two ways of detection:
+            // - Description of "MT7612US_RL"
+            // - Empty device properties
+            return device.Description == "MT7612US_RL" ||
+                (string.IsNullOrWhiteSpace(device.Description) &&
+                string.IsNullOrWhiteSpace(device.Filter) &&
+                (device.MacAddress == null || device.MacAddress.GetAddressBytes() == null ||
+                    device.MacAddress.GetAddressBytes().Length == 0));
         }
 
         /// <summary>
