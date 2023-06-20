@@ -665,7 +665,7 @@ namespace RB4InstrumentMapper
 
             // Prompt user to unplug their receiver
             result = MessageBox.Show(
-                "Unplug your receiver, then click OK.\n(A 1-second delay will be taken to ensure that it registers as disconnected.)",
+                "Unplug your receiver, then click OK.",
                 "Auto-Detect Receiver",
                 MessageBoxButton.OKCancel
             );
@@ -673,16 +673,13 @@ namespace RB4InstrumentMapper
             {
                 return;
             }
-
-            // Wait for a moment before getting the new list to ensure the device is registered
-            Thread.Sleep(1000);
 
             // Get the list of devices for when receiver is unplugged
             CaptureDeviceList notPlugged = CaptureDeviceList.New();
 
             // Prompt user to plug in their receiver
             result = MessageBox.Show(
-                "Now plug in your receiver, wait a bit for it to register, then click OK.\n(A 1-second delay will be taken to ensure that it registers as connected.)",
+                "Now plug in your receiver, wait a bit for it to register, then click OK.",
                 "Auto-Detect Receiver",
                 MessageBoxButton.OKCancel
             );
@@ -690,9 +687,6 @@ namespace RB4InstrumentMapper
             {
                 return;
             }
-
-            // Wait for a moment before getting the new list to ensure the device is registered
-            Thread.Sleep(1000);
 
             // Get the list of devices for when receiver is plugged in
             CaptureDeviceList plugged = CaptureDeviceList.New();
