@@ -38,7 +38,7 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// List of available Pcap devices.
         /// </summary>
-        private CaptureDeviceList pcapDeviceList = null;
+        private readonly CaptureDeviceList pcapDeviceList = CaptureDeviceList.Instance;
 
         /// <summary>
         /// The selected Pcap device.
@@ -224,9 +224,8 @@ namespace RB4InstrumentMapper
             // Clear combo list
             pcapDeviceCombo.Items.Clear();
 
-            // Retrieve the device list from the local machine
-            pcapDeviceList = CaptureDeviceList.Instance;
-
+            // Refresh the device list
+            pcapDeviceList.Refresh();
             if (pcapDeviceList.Count == 0)
             {
                 Console.WriteLine("No Pcap devices found!");
@@ -616,15 +615,17 @@ namespace RB4InstrumentMapper
         {
             MessageBoxResult result;
 
-            // Get the list of devices for when receiver is unplugged
-            CaptureDeviceList deviceList = CaptureDeviceList.Instance;
-            foreach (var device in deviceList)
+            // Refresh and check for Xbox One receivers
+            pcapDeviceList.Refresh();
+            bool foundDevice = false;
+            foreach (var device in pcapDeviceList)
             {
                 if (!IsXboxOneReceiver(device))
                 {
                     continue;
                 }
 
+                foundDevice = true;
                 result = MessageBox.Show(
                     $"Found Xbox One receiver device: {device.Description}\nPress OK to set this device as your selected Pcap device, or press Cancel to continue with the auto-detection process.",
                     "Auto-Detect Receiver",
@@ -649,14 +650,17 @@ namespace RB4InstrumentMapper
                 }
             }
 
-            result = MessageBox.Show(
-                "No Xbox One receivers could be found through checking device properties.\nYou will now be guided through a second auto-detection process. Press Cancel at any time to cancel the process.",
-                "Auto-Detect Receiver",
-                MessageBoxButton.OKCancel
-            );
-            if (result == MessageBoxResult.Cancel)
+            if (!foundDevice)
             {
-                return;
+                result = MessageBox.Show(
+                    "No Xbox One receivers could be found through checking device properties.\nYou will now be guided through a second auto-detection process. Press Cancel at any time to cancel the process.",
+                    "Auto-Detect Receiver",
+                    MessageBoxButton.OKCancel
+                );
+                if (result == MessageBoxResult.Cancel)
+                {
+                    return;
+                }
             }
 
             // Prompt user to unplug their receiver
@@ -674,7 +678,7 @@ namespace RB4InstrumentMapper
             Thread.Sleep(1000);
 
             // Get the list of devices for when receiver is unplugged
-            CaptureDeviceList notPlugged = CaptureDeviceList.Instance;
+            CaptureDeviceList notPlugged = CaptureDeviceList.New();
 
             // Prompt user to plug in their receiver
             result = MessageBox.Show(
@@ -691,7 +695,7 @@ namespace RB4InstrumentMapper
             Thread.Sleep(1000);
 
             // Get the list of devices for when receiver is plugged in
-            CaptureDeviceList plugged = CaptureDeviceList.Instance;
+            CaptureDeviceList plugged = CaptureDeviceList.New();
 
             // Get device names for both not plugged and plugged lists
             List<string> notPluggedNames = new List<string>();
