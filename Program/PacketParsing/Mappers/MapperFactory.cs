@@ -12,7 +12,7 @@ namespace RB4InstrumentMapper.Parsing
         private static Dictionary<Guid, Func<MappingMode, IDeviceMapper>> guidToMapper = new Dictionary<Guid, Func<MappingMode, IDeviceMapper>>()
         {
             { DeviceGuids.MadCatzGuitar, GetGuitarMapper },
-            // { DeviceGuids.PdpGuitar, GetGuitarMapper },
+            { DeviceGuids.PdpGuitar, GetGuitarMapper },
             { DeviceGuids.MadCatzDrumkit, GetDrumsMapper },
             { DeviceGuids.PdpDrumkit, GetDrumsMapper },
         };
