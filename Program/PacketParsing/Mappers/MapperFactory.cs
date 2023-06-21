@@ -91,8 +91,8 @@ namespace RB4InstrumentMapper.Parsing
             Console.WriteLine($"Creating new fallback {mode} mapper...");
             switch (mode)
             {
-                case MappingMode.ViGEmBus: return new DrumsVigemMapper();
-                case MappingMode.vJoy: return new DrumsVjoyMapper();
+                case MappingMode.ViGEmBus: return new FallbackVigemMapper();
+                case MappingMode.vJoy: return new FallbackVjoyMapper();
                 default: throw new Exception("Unhandled mapping mode!");
             }
         }
