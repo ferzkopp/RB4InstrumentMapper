@@ -67,14 +67,36 @@ namespace RB4InstrumentMapper.Parsing
             // and where the next message's header begins.
             while (data.Length > 0)
             {
-                if (!CommandHeader.TryParse(data, out var header, out int bytesRead) || data.Length < (bytesRead + header.DataLength))
+                // Command header
+                if (!CommandHeader.TryParse(data, out var header, out int headerLength))
                 {
                     return;
                 }
-                var commandData = data.Slice(bytesRead, header.DataLength);
-                data = data.Slice(bytesRead + header.DataLength);
+                int messageLength = headerLength + header.DataLength;
 
+                // Chunked messages
+                if ((header.Flags & CommandFlags.ChunkPacket) != 0)
+                {
+                    if (!ParsingUtils.DecodeLEB128(data.Slice(headerLength), out int _, out int indexLength))
+                    {
+                        return;
+                    }
+
+                    messageLength += indexLength;
+                }
+
+                // Verify bounds
+                if (data.Length < messageLength)
+                {
+                    return;
+                }
+
+                var messageData = data.Slice(0, messageLength);
+                var commandData = messageData.Slice(headerLength); // Chunk index is not removed here, as message handling needs it
                 HandleMessage(header, commandData);
+
+                // Progress to next message
+                data = data.Slice(messageData.Length);
             }
         }
 
@@ -86,48 +108,19 @@ namespace RB4InstrumentMapper.Parsing
             // Chunked packets
             if ((header.Flags & CommandFlags.ChunkPacket) != 0)
             {
-                // Get sequence length/index
-                if (!ParsingUtils.DecodeLEB128(commandData, out int bufferIndex, out int bytesRead))
+                if (!ProcessPacketChunk(header, ref commandData))
                 {
+                    // Chunk is ongoing or there was an error
                     return;
                 }
-                commandData = commandData.Slice(bytesRead);
 
-                // Do nothing with chunks of length 0
-                if (bufferIndex > 0)
-                {
-                    // Buffer index equalling buffer length signals the end of the sequence
-                    if (chunkBuffer != null && bufferIndex >= chunkBuffer.Length)
-                    {
-                        Debug.Assert(commandData.Length == 0);
-                        commandData = chunkBuffer;
-                    }
-                    else
-                    {
-                        if ((header.Flags & CommandFlags.ChunkStart) != 0)
-                        {
-                            Debug.Assert(chunkBuffer == null);
-                            // Buffer index is the total size of the buffer on the starting packet
-                            chunkBuffer = new byte[bufferIndex];
-                        }
-
-                        Debug.Assert(chunkBuffer != null);
-                        Debug.Assert((bufferIndex + commandData.Length) >= chunkBuffer.Length);
-                        if (chunkBuffer == null || ((bufferIndex + commandData.Length) >= chunkBuffer.Length))
-                        {
-                            return;
-                        }
-
-                        commandData.CopyTo(chunkBuffer.AsSpan(bufferIndex, commandData.Length));
-                        return;
-                    }
-                }
+                header.DataLength = commandData.Length;
+                header.Flags &= ~(CommandFlags.ChunkPacket | CommandFlags.ChunkStart);
             }
 
             // Ensure lengths match
             if (header.DataLength != commandData.Length)
             {
-                // This is probably a bug
                 Debug.Fail($"Command header length does not match buffer length! Header: {header.DataLength}  Buffer: {commandData.Length}");
                 return;
             }
@@ -157,6 +150,80 @@ namespace RB4InstrumentMapper.Parsing
                     deviceMapper.HandlePacket(header.CommandId, commandData);
                     break;
             }
+        }
+
+        private unsafe bool ProcessPacketChunk(CommandHeader header, ref ReadOnlySpan<byte> chunkData)
+        {
+            // Get sequence length/index
+            if (!ParsingUtils.DecodeLEB128(chunkData, out int bufferIndex, out int bytesRead))
+            {
+                return false;
+            }
+            chunkData = chunkData.Slice(bytesRead);
+
+            // Verify packet length
+            if (header.DataLength != chunkData.Length)
+            {
+                Debug.Fail($"Command header length does not match buffer length! Header: {header.DataLength}  Buffer: {chunkData.Length}");
+                return false;
+            }
+
+            // Do nothing with chunks of length 0
+            if (bufferIndex <= 0)
+            {
+                // Chunked packets with a length of 0 are valid and have been observed with Elite controllers
+                bool emptySequence = bufferIndex == 0;
+                Debug.Assert(emptySequence, $"Negative buffer index {bufferIndex}!");
+                return emptySequence;
+            }
+
+            // Start of the chunk sequence
+            if (chunkBuffer == null || (header.Flags & CommandFlags.ChunkStart) != 0)
+            {
+                // Safety check
+                if ((header.Flags & CommandFlags.ChunkStart) == 0)
+                {
+                    Debug.Fail("Invalid chunk sequence start! No chunk buffer exists, expected a chunk start packet");
+                    return false;
+                }
+
+                // Buffer index is the total size of the buffer on the starting packet
+                chunkBuffer = new byte[bufferIndex];
+                bufferIndex = 0;
+            }
+
+            // Buffer index equalling buffer length signals the end of the sequence
+            if (bufferIndex >= chunkBuffer.Length)
+            {
+                // Safety checks
+                if (bufferIndex > chunkBuffer.Length)
+                {
+                    Debug.Fail("Invalid chunk sequence end! Buffer index is beyond the end of the chunk buffer");
+                    return false;
+                }
+
+                if (chunkData.Length != 0)
+                {
+                    Debug.Fail("Invalid chunk sequence end! Data was provided beyond the end of the buffer");
+                    return false;
+                }
+
+                // Send off finished chunk buffer
+                chunkData = chunkBuffer;
+                chunkBuffer = null;
+                return true;
+            }
+
+            // Verify chunk data bounds
+            if ((bufferIndex + chunkData.Length) > chunkBuffer.Length)
+            {
+                Debug.Fail($"Invalid chunk sequence! Data was provided beyond the end of the buffer");
+                return false;
+            }
+
+            // Copy data to buffer
+            chunkData.CopyTo(chunkBuffer.AsSpan(bufferIndex, chunkData.Length));
+            return false;
         }
 
         /// <summary>
