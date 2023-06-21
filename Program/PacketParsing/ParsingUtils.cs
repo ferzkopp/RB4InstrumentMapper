@@ -21,15 +21,14 @@ namespace RB4InstrumentMapper.Parsing
 
             // Decode variable-length length value
             // Sequence length is limited to 4 bytes
-            byte value = data[0];
-            for (int index = 0;
-                (index < data.Length) && (index < sizeof(int)) && ((value & 0x80) != 0);
-                index++)
+            byte value;
+            do
             {
-                value = data[index];
-                result |= (value & 0x7F) << (index * 7);
+                value = data[byteLength];
+                result |= (value & 0x7F) << (byteLength * 7);
                 byteLength++;
             }
+            while ((value & 0x80) != 0 && byteLength < sizeof(int));
 
             // Detect length sequences longer than 4 bytes
             if ((value & 0x80) != 0)
