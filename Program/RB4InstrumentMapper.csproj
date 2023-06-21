@@ -112,6 +112,8 @@
     <Compile Include="PacketParsing\Mappers\DrumsVjoyMapper.cs" />
     <Compile Include="PacketParsing\Mappers\FallbackVigemMapper.cs" />
     <Compile Include="PacketParsing\Mappers\FallbackVjoyMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\GamepadVigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\GamepadVjoyMapper.cs" />
     <Compile Include="PacketParsing\Mappers\GuitarVigemMapper.cs" />
     <Compile Include="PacketParsing\Mappers\GuitarVjoyMapper.cs" />
     <Compile Include="PacketParsing\Mappers\IDeviceMapper.cs" />
@@ -121,7 +123,7 @@
     <Compile Include="PacketParsing\Packets\CommandHeader.cs" />
     <Compile Include="PacketParsing\Packets\DeviceArrival.cs" />
     <Compile Include="PacketParsing\Packets\DrumInput.cs" />
-    <Compile Include="PacketParsing\Packets\GamepadButton.cs" />
+    <Compile Include="PacketParsing\Packets\GamepadInput.cs" />
     <Compile Include="PacketParsing\Packets\GuitarInput.cs" />
     <Compile Include="PacketParsing\Packets\Keystroke.cs" />
     <Compile Include="PacketParsing\Packets\XboxDescriptor.cs" />

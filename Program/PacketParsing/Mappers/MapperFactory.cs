@@ -15,6 +15,9 @@ namespace RB4InstrumentMapper.Parsing
             { DeviceGuids.PdpGuitar, GetGuitarMapper },
             { DeviceGuids.MadCatzDrumkit, GetDrumsMapper },
             { DeviceGuids.PdpDrumkit, GetDrumsMapper },
+#if DEBUG
+            { DeviceGuids.XboxGamepad, GetGamepadMapper },
+#endif
         };
 
         public static IDeviceMapper GetMapper(IReadOnlyList<Guid> interfaceGuids, MappingMode mode)
@@ -61,6 +64,19 @@ namespace RB4InstrumentMapper.Parsing
 
             return func(mode);
         }
+
+#if DEBUG
+        public static IDeviceMapper GetGamepadMapper(MappingMode mode)
+        {
+            Console.WriteLine($"Ganepad found, creating new {mode} mapper...");
+            switch (mode)
+            {
+                case MappingMode.ViGEmBus: return new GamepadVigemMapper();
+                case MappingMode.vJoy: return new GamepadVjoyMapper();
+                default: throw new Exception("Unhandled mapping mode!");
+            }
+        }
+#endif
 
         public static IDeviceMapper GetGuitarMapper(MappingMode mode)
         {

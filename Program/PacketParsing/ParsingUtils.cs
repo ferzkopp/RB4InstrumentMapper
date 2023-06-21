@@ -53,6 +53,17 @@ namespace RB4InstrumentMapper.Parsing
         }
 
         /// <summary>
+        /// Scales this short to an int.
+        /// </summary>
+        public static int ScaleToInt32(this short input)
+        {
+            // Duplicate the input value to the higher 16-bit regions by multiplying by a number with the
+            // first bit of each region set to 1
+            // Shorts already
+            return input * 0x00010001;
+        }
+
+        /// <summary>
         /// Scales this byte to a uint.
         /// </summary>
         public static uint ScaleToUInt32(this byte input)

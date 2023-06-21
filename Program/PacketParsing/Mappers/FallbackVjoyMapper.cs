@@ -42,6 +42,12 @@ namespace RB4InstrumentMapper.Parsing
             {
                 DrumsVjoyMapper.HandleReport(ref state, drumReport);
             }
+#if DEBUG
+            else if (data.Length == sizeof(GamepadInput) && MemoryMarshal.TryRead(data, out GamepadInput gamepadReport))
+            {
+                GamepadVjoyMapper.HandleReport(ref state, gamepadReport);
+            }
+#endif
             else
             {
                 // Not handled

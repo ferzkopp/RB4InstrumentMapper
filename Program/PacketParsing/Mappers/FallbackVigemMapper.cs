@@ -46,6 +46,12 @@ namespace RB4InstrumentMapper.Parsing
             {
                 DrumsVigemMapper.HandleReport(device, drumReport, ref previousDpadCymbals, ref dpadMask);
             }
+#if DEBUG
+            else if (data.Length == sizeof(GamepadInput) && MemoryMarshal.TryRead(data, out GamepadInput gamepadReport))
+            {
+                GamepadVigemMapper.HandleReport(device, gamepadReport);
+            }
+#endif
             else
             {
                 // Not handled
