@@ -97,13 +97,19 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private static unsafe void OnPacketArrival(object sender, PacketCapture packet)
         {
-            // Read out receiver header
-            var data = packet.Data;
-            if (data.Length < sizeof(QoSHeader) || !MemoryMarshal.TryRead(data, out QoSHeader header))
+            // Ignore invalid packets or packets with only a header
+            if (packet.Data.Length <= sizeof(QoSHeader))
             {
                 return;
             }
-            data = data.Slice(sizeof(QoSHeader));
+
+            // Split header and packet data, and read header out
+            var headerData = packet.Data.Slice(0, sizeof(QoSHeader));
+            var packetData = packet.Data.Slice(sizeof(QoSHeader));
+            if (!MemoryMarshal.TryRead(packet.Data, out QoSHeader header))
+            {
+                return;
+            }
 
             // Ensure type and subtype are Data, QoS Data respectively
             // Other frame types are irrelevant for our purposes
@@ -137,7 +143,7 @@ namespace RB4InstrumentMapper.Parsing
                 Console.WriteLine($"Encountered new device with ID {deviceId.ToString("X12")}");
 
                 // Check if device was found during its initialization
-                CommandId command = (CommandId)data[0];
+                CommandId command = (CommandId)packetData[0];
                 if (command != CommandId.Arrival && command != CommandId.Descriptor)
                 {
                     Console.WriteLine("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
@@ -148,7 +154,7 @@ namespace RB4InstrumentMapper.Parsing
 
             try
             {
-                device.HandlePacket(data);
+                device.HandlePacket(packetData);
             }
             catch (ThreadAbortException)
             {
@@ -168,8 +174,8 @@ namespace RB4InstrumentMapper.Parsing
             // Debugging (if enabled)
             if (LogPackets)
             {
-                RawCapture raw = packet.GetPacket();
-                string packetLogString = raw.Timeval.Date.ToString("yyyy-MM-dd hh:mm:ss.fff") + $" [{raw.PacketLength}] " + ParsingHelpers.ByteArrayToHexString(raw.Data);;
+                string packetLogString = $"{packet.Header.Timeval.Date:yyyy-MM-dd hh:mm:ss.fff} [{packet.Data.Length}] " +
+                    $"{BitConverter.ToString(headerData.ToArray())} | {BitConverter.ToString(packetData.ToArray())}";
                 Console.WriteLine(packetLogString);
                 Logging.Packet_WriteLine(packetLogString);
             }
