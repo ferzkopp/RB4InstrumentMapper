@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -196,21 +196,6 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Determines whether or not a device is an Xbox One receiver.
-        /// </summary>
-        private bool IsXboxOneReceiver(ILiveDevice device)
-        {
-            // Depending on the receiver, there are two ways of detection:
-            // - Description of "MT7612US_RL"
-            // - Empty device properties
-            return device.Description == "MT7612US_RL" ||
-                (string.IsNullOrWhiteSpace(device.Description) &&
-                string.IsNullOrWhiteSpace(device.Filter) &&
-                (device.MacAddress == null || device.MacAddress.GetAddressBytes() == null ||
-                    device.MacAddress.GetAddressBytes().Length == 0));
-        }
-
-        /// <summary>
         /// Populates the Pcap device combo.
         /// </summary>
         /// <remarks>
@@ -255,7 +240,7 @@ namespace RB4InstrumentMapper
                 string itemName = pcapComboBoxItemName + itemNumber;
                 bool isSelected = device.Name.Equals(currentPcapSelection) || device.Name.Equals(pcapSelectedDevice?.Name);
 
-                if (isSelected || (string.IsNullOrEmpty(currentPcapSelection) && IsXboxOneReceiver(device)))
+                if (isSelected || (string.IsNullOrEmpty(currentPcapSelection) && device.IsXboxOneReceiver()))
                 {
                     pcapSelectedDevice = device;
                 }
@@ -617,7 +602,7 @@ namespace RB4InstrumentMapper
             bool foundDevice = false;
             foreach (var device in pcapDeviceList)
             {
-                if (!IsXboxOneReceiver(device))
+                if (!device.IsXboxOneReceiver())
                 {
                     continue;
                 }
