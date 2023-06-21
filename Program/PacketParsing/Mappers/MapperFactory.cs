@@ -47,6 +47,12 @@ namespace RB4InstrumentMapper.Parsing
                 interfaceGuid = guid;
             }
 
+            if (interfaceGuid == default)
+            {
+                Console.WriteLine($"Could not find interface GUID for device! Using fallback mapper instead.");
+                return GetFallbackMapper(mode);
+            }
+
             // Get mapper creation delegate for interface GUID
             if (!guidToMapper.TryGetValue(interfaceGuid, out var func))
             {
