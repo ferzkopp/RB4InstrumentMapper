@@ -17,20 +17,13 @@ namespace RB4InstrumentMapper.Parsing
             { DeviceGuids.PdpDrumkit, GetDrumsMapper },
         };
 
-        // Non-unique interface GUIDs to ignore
-        private static List<Guid> guidExclusionList = new List<Guid>()
-        {
-            DeviceGuids.XboxInputDevice,
-            DeviceGuids.XboxNavigationController,
-        };
-
         public static IDeviceMapper GetMapper(IReadOnlyList<Guid> interfaceGuids, MappingMode mode)
         {
             // Get unique interface GUID
             Guid interfaceGuid = default;
             foreach (var guid in interfaceGuids)
             {
-                if (guidExclusionList.Contains(guid))
+                if (!guidToMapper.ContainsKey(guid))
                     continue;
 
                 if (interfaceGuid != default)
@@ -50,6 +43,11 @@ namespace RB4InstrumentMapper.Parsing
             if (interfaceGuid == default)
             {
                 Console.WriteLine($"Could not find interface GUID for device! Using fallback mapper instead.");
+                Console.WriteLine($"Consider filing a GitHub issue with the GUIDs below so that this can be addressed:");
+                foreach (var guid2 in interfaceGuids)
+                {
+                    Console.WriteLine($"- {guid2}");
+                }
                 return GetFallbackMapper(mode);
             }
 
