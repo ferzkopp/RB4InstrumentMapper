@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -218,25 +218,12 @@ namespace RB4InstrumentMapper
             string currentPcapSelection = Properties.Settings.Default.pcapDevice;
 
             // Populate combo and print the list
-            StringBuilder sb = new StringBuilder();
             for (int i = 0; i < pcapDeviceList.Count; i++)
             {
                 ILiveDevice device = pcapDeviceList[i];
                 string itemNumber = $"{i + 1}";
 
-                sb.Clear();
-                sb.Append($"{itemNumber}. ");
-                if (device.Description != null)
-                {
-                    sb.Append(device.Description);
-                    sb.Append($" ({device.Name})");
-                }
-                else
-                {
-                    sb.Append(device.Name);
-                }
-
-                string deviceName = sb.ToString();
+                string deviceName = $"{itemNumber}. {device.GetDisplayName()}";
                 string itemName = pcapComboBoxItemName + itemNumber;
                 bool isSelected = device.Name.Equals(currentPcapSelection) || device.Name.Equals(pcapSelectedDevice?.Name);
 
@@ -379,7 +366,7 @@ namespace RB4InstrumentMapper
             // Start capture
             PcapBackend.LogPackets = packetDebug;
             PcapBackend.StartCapture(pcapSelectedDevice);
-            Console.WriteLine($"Listening on {pcapSelectedDevice.Description}...");
+            Console.WriteLine($"Listening on {pcapSelectedDevice.GetDisplayName()}...");
         }
 
         /// <summary>
@@ -448,7 +435,7 @@ namespace RB4InstrumentMapper
 
                 // Assign device
                 pcapSelectedDevice = pcapDeviceList[pcapDeviceIndex];
-                Console.WriteLine($"Selected Pcap device {pcapSelectedDevice.Description}");
+                Console.WriteLine($"Selected Pcap device {pcapSelectedDevice.GetDisplayName()}");
 
                 // Enable start button
                 SetStartButtonEnabled();
@@ -609,7 +596,7 @@ namespace RB4InstrumentMapper
 
                 foundDevice = true;
                 result = MessageBox.Show(
-                    $"Found Xbox One receiver device: {device.Description}\nPress OK to set this device as your selected Pcap device, or press Cancel to continue with the auto-detection process.",
+                    $"Found Xbox One receiver device: {device.GetDisplayName()}\nPress OK to set this device as your selected Pcap device, or press Cancel to continue with the auto-detection process.",
                     "Auto-Detect Receiver",
                     MessageBoxButton.OKCancel
                 );
