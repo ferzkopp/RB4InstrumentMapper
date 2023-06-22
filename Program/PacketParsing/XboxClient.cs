@@ -65,6 +65,12 @@ namespace RB4InstrumentMapper.Parsing
 
             switch (header.CommandId)
             {
+                // Commands to ignore
+                case CommandId.Acknowledgement:
+                case CommandId.Authentication:
+                case CommandId.SerialNumber:
+                    break;
+
                 case CommandId.Arrival:
                     HandleArrival(commandData);
                     break;

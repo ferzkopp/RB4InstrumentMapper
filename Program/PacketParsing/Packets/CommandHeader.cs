@@ -8,10 +8,13 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal enum CommandId : byte
     {
+        Acknowledgement = 0x01,
         Arrival = 0x02,
         Descriptor = 0x04,
+        Authentication = 0x06,
         Keystroke = 0x07,
-        Input = 0x20
+        SerialNumber = 0x1E,
+        Input = 0x20,
     }
 
     /// <summary>
