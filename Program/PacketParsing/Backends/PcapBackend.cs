@@ -153,7 +153,8 @@ namespace RB4InstrumentMapper.Parsing
                 Logging.Main_WriteException(ex, "Context: Unhandled error during packet handling");
 
                 // Stop capture
-                OnCaptureStop.Invoke();
+                StopCapture();
+                OnCaptureStop?.Invoke();
                 return;
             }
 

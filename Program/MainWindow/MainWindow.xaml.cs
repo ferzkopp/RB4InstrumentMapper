@@ -365,8 +365,15 @@ namespace RB4InstrumentMapper
 
             // Start capture
             PcapBackend.LogPackets = packetDebug;
+            PcapBackend.OnCaptureStop += OnCaptureStopped;
             PcapBackend.StartCapture(pcapSelectedDevice);
             Console.WriteLine($"Listening on {pcapSelectedDevice.GetDisplayName()}...");
+        }
+
+        private void OnCaptureStopped()
+        {
+            PcapBackend.OnCaptureStop -= OnCaptureStopped;
+            uiDispatcher.Invoke(StopCapture);
         }
 
         /// <summary>
