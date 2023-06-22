@@ -42,14 +42,6 @@ namespace RB4InstrumentMapper.Parsing
         private readonly Dictionary<CommandId, byte> previousSequenceIds = new Dictionary<CommandId, byte>();
 
         /// <summary>
-        /// Creates a new XboxDevice with the given device ID and parsing mode.
-        /// </summary>
-        public XboxDevice()
-        {
-            deviceMapper = MapperFactory.GetFallbackMapper(MapperMode);
-        }
-
-        /// <summary>
         /// Performs cleanup on object finalization.
         /// </summary>
         ~XboxDevice()
@@ -146,6 +138,13 @@ namespace RB4InstrumentMapper.Parsing
                     break;
 
                 default:
+                    if (deviceMapper == null)
+                    {
+                        Console.WriteLine("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
+                        Console.WriteLine("Consider hitting Start before connecting it to ensure correct behavior.");
+                        deviceMapper = MapperFactory.GetFallbackMapper(MapperMode);
+                    }
+
                     // Hand off unrecognized commands to the mapper
                     deviceMapper.HandlePacket(header.CommandId, commandData);
                     break;
@@ -231,6 +230,9 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private unsafe void HandleArrival(ReadOnlySpan<byte> data)
         {
+            if (VendorId != 0 || ProductId != 0)
+                return;
+
             if (data.Length < sizeof(DeviceArrival) || MemoryMarshal.TryRead(data, out DeviceArrival arrival))
                 return;
 
@@ -243,6 +245,9 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private void HandleDescriptor(ReadOnlySpan<byte> data)
         {
+            if (Descriptor != null)
+                return;
+
             if (!XboxDescriptor.Parse(data, out var descriptor))
                 return;
 
