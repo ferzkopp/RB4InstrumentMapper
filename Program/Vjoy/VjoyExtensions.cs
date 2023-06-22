@@ -9,7 +9,7 @@ namespace RB4InstrumentMapper.Vjoy
         /// Sets the state of the specified button.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void SetButton(this vJoy.JoystickState state, VjoyButton button, bool set)
+        public static void SetButton(ref this vJoy.JoystickState state, VjoyButton button, bool set)
         {
             if (set)
             {
@@ -24,7 +24,7 @@ namespace RB4InstrumentMapper.Vjoy
         /// <summary>
         /// Resets the values of this state.
         /// </summary>
-        public static void Reset(this vJoy.JoystickState state)
+        public static void Reset(ref this vJoy.JoystickState state)
         {
             // Only reset the values we use
             state.Buttons = (uint)VjoyButton.None;

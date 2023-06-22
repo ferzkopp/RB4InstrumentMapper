@@ -79,6 +79,22 @@ namespace RB4InstrumentMapper.Parsing
             }
         }
 
+        // vJoy axes range from 0x0000 to 0x8000, but are exposed as full ints for some reason
+        protected static void SetAxis(ref int axisField, byte value)
+        {
+            axisField = (value * 0x0101) >> 1;
+        }
+
+        protected static void SetAxis(ref int axisField, short value)
+        {
+            axisField = ((ushort)value ^ 0x8000) >> 1;
+        }
+
+        protected static void SetAxisInverted(ref int axisField, short value)
+        {
+            axisField = 0x8000 - (((ushort)value ^ 0x8000) >> 1);
+        }
+
         /// <summary>
         /// Parses the state of the d-pad.
         /// </summary>

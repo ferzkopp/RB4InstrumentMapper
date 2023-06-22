@@ -71,15 +71,14 @@ namespace RB4InstrumentMapper.Parsing
             // D-pad
             ParseDpad(ref state, (GamepadButton)report.Buttons);
 
-            // Sticks
-            state.AxisX = report.LeftStickX.ScaleToInt32();
-            state.AxisY = report.LeftStickY.ScaleToInt32();
-            state.AxisXRot = report.RightStickX.ScaleToInt32();
-            state.AxisYRot = report.RightStickY.ScaleToInt32();
+            // Left stick
+            SetAxis(ref state.AxisX, report.LeftStickX);
+            SetAxisInverted(ref state.AxisY, report.LeftStickY);
 
             // Triggers
             // These are both combined into a single axis
-            state.AxisZ = (report.RightTrigger - report.LeftTrigger) * 0x40100401; // Special scaling, since the triggers are 10-bit values
+            int triggerAxis = (report.LeftTrigger - report.RightTrigger) * 0x20;
+            SetAxis(ref state.AxisZ, (short)triggerAxis);
         }
     }
 }

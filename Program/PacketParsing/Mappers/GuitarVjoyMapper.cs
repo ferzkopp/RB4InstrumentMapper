@@ -65,17 +65,17 @@ namespace RB4InstrumentMapper.Parsing
 
             // Whammy
             // Value ranges from 0 (not pressed) to 255 (fully pressed)
-            state.AxisY = report.WhammyBar.ScaleToInt32();
+            SetAxis(ref state.AxisY, report.WhammyBar);
 
             // Tilt
             // Value ranges from 0 to 255
             // It seems to have a threshold of around 0x70 though,
             // after a certain point values will get floored to 0
-            state.AxisZ = report.Tilt.ScaleToInt32();
+            SetAxis(ref state.AxisZ, report.Tilt);
 
             // Pickup switch
             // Reported values are 0x00, 0x10, 0x20, 0x30, and 0x40 (ranges from 0 to 64)
-            state.AxisX = report.PickupSwitch.ScaleToInt32();
+            state.AxisX = report.PickupSwitch * 0x200;
         }
     }
 }
