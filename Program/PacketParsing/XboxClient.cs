@@ -31,15 +31,19 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses command data from a packet.
         /// </summary>
-        internal unsafe void HandleMessage(CommandHeader header, ReadOnlySpan<byte> commandData)
+        internal unsafe XboxResult HandleMessage(CommandHeader header, ReadOnlySpan<byte> commandData)
         {
             // Chunked packets
             if ((header.Flags & CommandFlags.ChunkPacket) != 0)
             {
-                if (!ProcessPacketChunk(header, ref commandData))
+                var chunkResult = ProcessPacketChunk(header, ref commandData);
+                switch (chunkResult)
                 {
-                    // Chunk is ongoing or there was an error
-                    return;
+                    case XboxResult.Success:
+                        break;
+                    case XboxResult.Pending: // Chunk is unfinished
+                    default: // Error handling the chunk
+                        return chunkResult;
                 }
 
                 header.DataLength = commandData.Length;
@@ -50,7 +54,7 @@ namespace RB4InstrumentMapper.Parsing
             if (header.DataLength != commandData.Length)
             {
                 Debug.Fail($"Command header length does not match buffer length! Header: {header.DataLength}  Buffer: {commandData.Length}");
-                return;
+                return XboxResult.InvalidMessage;
             }
 
             // Don't handle the same packet twice
@@ -60,7 +64,7 @@ namespace RB4InstrumentMapper.Parsing
             }
             else if (header.SequenceCount == previousSequence)
             {
-                return;
+                return XboxResult.Success;
             }
 
             switch (header.CommandId)
@@ -72,12 +76,10 @@ namespace RB4InstrumentMapper.Parsing
                     break;
 
                 case CommandId.Arrival:
-                    HandleArrival(commandData);
-                    break;
+                    return HandleArrival(commandData);
 
                 case CommandId.Descriptor:
-                    HandleDescriptor(commandData);
-                    break;
+                    return HandleDescriptor(commandData);
 
                 default:
                     if (deviceMapper == null)
@@ -85,7 +87,8 @@ namespace RB4InstrumentMapper.Parsing
                         deviceMapper = MapperFactory.GetFallbackMapper(XboxDevice.MapperMode);
                         if (deviceMapper == null)
                         {
-                            return;
+                            // No more devices available, do nothing
+                            return XboxResult.Success;
                         }
 
                         Console.WriteLine("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
@@ -93,17 +96,18 @@ namespace RB4InstrumentMapper.Parsing
                     }
 
                     // Hand off unrecognized commands to the mapper
-                    deviceMapper.HandlePacket(header.CommandId, commandData);
-                    break;
+                    return deviceMapper.HandlePacket(header.CommandId, commandData);
             }
+
+            return XboxResult.Success;
         }
 
-        private unsafe bool ProcessPacketChunk(CommandHeader header, ref ReadOnlySpan<byte> chunkData)
+        private unsafe XboxResult ProcessPacketChunk(CommandHeader header, ref ReadOnlySpan<byte> chunkData)
         {
             // Get sequence length/index
             if (!ParsingUtils.DecodeLEB128(chunkData, out int bufferIndex, out int bytesRead))
             {
-                return false;
+                return XboxResult.InvalidMessage;
             }
             chunkData = chunkData.Slice(bytesRead);
 
@@ -111,7 +115,7 @@ namespace RB4InstrumentMapper.Parsing
             if (header.DataLength != chunkData.Length)
             {
                 Debug.Fail($"Command header length does not match buffer length! Header: {header.DataLength}  Buffer: {chunkData.Length}");
-                return false;
+                return XboxResult.InvalidMessage;
             }
 
             // Do nothing with chunks of length 0
@@ -120,7 +124,7 @@ namespace RB4InstrumentMapper.Parsing
                 // Chunked packets with a length of 0 are valid and have been observed with Elite controllers
                 bool emptySequence = bufferIndex == 0;
                 Debug.Assert(emptySequence, $"Negative buffer index {bufferIndex}!");
-                return emptySequence;
+                return emptySequence ? XboxResult.Success : XboxResult.InvalidMessage;
             }
 
             // Start of the chunk sequence
@@ -130,7 +134,7 @@ namespace RB4InstrumentMapper.Parsing
                 if ((header.Flags & CommandFlags.ChunkStart) == 0)
                 {
                     Debug.Fail("Invalid chunk sequence start! No chunk buffer exists, expected a chunk start packet");
-                    return false;
+                    return XboxResult.InvalidMessage;
                 }
 
                 // Buffer index is the total size of the buffer on the starting packet
@@ -145,61 +149,63 @@ namespace RB4InstrumentMapper.Parsing
                 if (bufferIndex > chunkBuffer.Length)
                 {
                     Debug.Fail("Invalid chunk sequence end! Buffer index is beyond the end of the chunk buffer");
-                    return false;
+                    return XboxResult.InvalidMessage;
                 }
 
                 if (chunkData.Length != 0)
                 {
                     Debug.Fail("Invalid chunk sequence end! Data was provided beyond the end of the buffer");
-                    return false;
+                    return XboxResult.InvalidMessage;
                 }
 
                 // Send off finished chunk buffer
                 chunkData = chunkBuffer;
                 chunkBuffer = null;
-                return true;
+                return XboxResult.Success;
             }
 
             // Verify chunk data bounds
             if ((bufferIndex + chunkData.Length) > chunkBuffer.Length)
             {
                 Debug.Fail($"Invalid chunk sequence! Data was provided beyond the end of the buffer");
-                return false;
+                return XboxResult.InvalidMessage;
             }
 
             // Copy data to buffer
             chunkData.CopyTo(chunkBuffer.AsSpan(bufferIndex, chunkData.Length));
-            return false;
+            return XboxResult.Pending;
         }
 
         /// <summary>
         /// Handles the arrival message of the device.
         /// </summary>
-        private unsafe void HandleArrival(ReadOnlySpan<byte> data)
+        private unsafe XboxResult HandleArrival(ReadOnlySpan<byte> data)
         {
             if (VendorId != 0 || ProductId != 0)
-                return;
+                return XboxResult.Success;
 
             if (data.Length < sizeof(DeviceArrival) || MemoryMarshal.TryRead(data, out DeviceArrival arrival))
-                return;
+                return XboxResult.InvalidMessage;
 
             VendorId = arrival.VendorId;
             ProductId = arrival.ProductId;
+            return XboxResult.Success;
         }
 
         /// <summary>
         /// Handles the Xbox One descriptor of the device.
         /// </summary>
-        private void HandleDescriptor(ReadOnlySpan<byte> data)
+        private XboxResult HandleDescriptor(ReadOnlySpan<byte> data)
         {
             if (Descriptor != null)
-                return;
+                return XboxResult.Success;
 
             if (!XboxDescriptor.Parse(data, out var descriptor))
-                return;
+                return XboxResult.InvalidMessage;
 
             Descriptor = descriptor;
             deviceMapper = MapperFactory.GetMapper(descriptor.InterfaceGuids, XboxDevice.MapperMode);
+            return XboxResult.Success;
         }
 
         public void Dispose()

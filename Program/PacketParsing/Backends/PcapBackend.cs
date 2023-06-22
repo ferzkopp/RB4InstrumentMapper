@@ -137,7 +137,18 @@ namespace RB4InstrumentMapper.Parsing
 
             try
             {
-                device.HandlePacket(packetData);
+                var result = device.HandlePacket(packetData);
+                switch (result)
+                {
+                    case XboxResult.InvalidMessage:
+                        if (LogPackets)
+                        {
+                            string invalidMessage = $"Invalid packet received!";
+                            Console.WriteLine(invalidMessage);
+                            Logging.Packet_WriteLine(invalidMessage);
+                        }
+                        break;
+                }
             }
             catch (ThreadAbortException)
             {

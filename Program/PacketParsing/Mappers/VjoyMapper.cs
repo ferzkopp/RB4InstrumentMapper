@@ -43,7 +43,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Handles an incoming packet.
         /// </summary>
-        public void HandlePacket(CommandId command, ReadOnlySpan<byte> data)
+        public XboxResult HandlePacket(CommandId command, ReadOnlySpan<byte> data)
         {
             if (deviceId == 0)
                 throw new ObjectDisposedException("this");
@@ -51,21 +51,22 @@ namespace RB4InstrumentMapper.Parsing
             switch (command)
             {
                 case CommandId.Keystroke:
-                    HandleKeystroke(data);
-                    break;
+                    return HandleKeystroke(data);
 
                 default:
-                    OnPacketReceived(command, data);
-                    break;
+                    return OnPacketReceived(command, data);
             }
         }
 
-        protected abstract void OnPacketReceived(CommandId command, ReadOnlySpan<byte> data);
+        protected abstract XboxResult OnPacketReceived(CommandId command, ReadOnlySpan<byte> data);
 
-        private unsafe void HandleKeystroke(ReadOnlySpan<byte> data)
+        private unsafe XboxResult HandleKeystroke(ReadOnlySpan<byte> data)
         {
-            if (!MapGuideButton || data.Length < sizeof(Keystroke))
-                return;
+            if (!MapGuideButton)
+                return XboxResult.Success;
+
+            if (data.Length < sizeof(Keystroke))
+                return XboxResult.InvalidMessage;
 
             // Multiple keystrokes can be sent in a single message
             var keys = MemoryMarshal.Cast<byte, Keystroke>(data);
@@ -77,6 +78,8 @@ namespace RB4InstrumentMapper.Parsing
                     VjoyClient.UpdateDevice(deviceId, ref state);
                 }
             }
+
+            return XboxResult.Success;
         }
 
         // vJoy axes range from 0x0000 to 0x8000, but are exposed as full ints for some reason

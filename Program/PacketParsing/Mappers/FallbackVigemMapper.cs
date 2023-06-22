@@ -15,16 +15,15 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Handles an incoming packet.
         /// </summary>
-        protected override void OnPacketReceived(CommandId command, ReadOnlySpan<byte> data)
+        protected override XboxResult OnPacketReceived(CommandId command, ReadOnlySpan<byte> data)
         {
             switch (command)
             {
                 case CommandId.Input:
-                    ParseInput(data);
-                    break;
+                    return ParseInput(data);
 
                 default:
-                    break;
+                    return XboxResult.Success;
             }
         }
 
@@ -36,7 +35,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses an input report.
         /// </summary>
-        private unsafe void ParseInput(ReadOnlySpan<byte> data)
+        private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
             if (data.Length == sizeof(GuitarInput) && MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
             {
@@ -55,11 +54,12 @@ namespace RB4InstrumentMapper.Parsing
             else
             {
                 // Not handled
-                return;
+                return XboxResult.Success;
             }
 
             // Send data
             device.SubmitReport();
+            return XboxResult.Success;
         }
     }
 }

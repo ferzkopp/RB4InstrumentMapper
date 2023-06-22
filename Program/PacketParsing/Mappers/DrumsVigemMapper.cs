@@ -17,16 +17,15 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Handles an incoming packet.
         /// </summary>
-        protected override void OnPacketReceived(CommandId command, ReadOnlySpan<byte> data)
+        protected override XboxResult OnPacketReceived(CommandId command, ReadOnlySpan<byte> data)
         {
             switch (command)
             {
                 case CommandId.Input:
-                    ParseInput(data);
-                    break;
+                    return ParseInput(data);
 
                 default:
-                    break;
+                    return XboxResult.Success;
             }
         }
 
@@ -38,15 +37,16 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses an input report.
         /// </summary>
-        private unsafe void ParseInput(ReadOnlySpan<byte> data)
+        private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
             if (data.Length != sizeof(DrumInput) || !MemoryMarshal.TryRead(data, out DrumInput drumReport))
-                return;
+                return XboxResult.InvalidMessage;
 
             HandleReport(device, drumReport, ref previousDpadCymbals, ref dpadMask);
 
             // Send data
             device.SubmitReport();
+            return XboxResult.Success;
         }
 
         /// <summary>

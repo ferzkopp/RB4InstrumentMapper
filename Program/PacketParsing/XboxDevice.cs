@@ -9,6 +9,14 @@ namespace RB4InstrumentMapper.Parsing
         vJoy = 2
     }
 
+    public enum XboxResult
+    {
+        Success,
+        Pending,
+        Disconnected,
+        InvalidMessage,
+    }
+
     /// <summary>
     /// An Xbox device.
     /// </summary>
@@ -29,7 +37,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Handles an incoming packet for this device.
         /// </summary>
-        public unsafe void HandlePacket(ReadOnlySpan<byte> data)
+        public unsafe XboxResult HandlePacket(ReadOnlySpan<byte> data)
         {
             // Some devices may send multiple messages in a single packet, placing them back-to-back
             // The header length is very important in these scenarios, as it determines which bytes are part of the message
@@ -39,7 +47,7 @@ namespace RB4InstrumentMapper.Parsing
                 // Command header
                 if (!CommandHeader.TryParse(data, out var header, out int headerLength))
                 {
-                    return;
+                    return XboxResult.InvalidMessage;
                 }
                 int messageLength = headerLength + header.DataLength;
 
@@ -48,7 +56,7 @@ namespace RB4InstrumentMapper.Parsing
                 {
                     if (!ParsingUtils.DecodeLEB128(data.Slice(headerLength), out int _, out int indexLength))
                     {
-                        return;
+                        return XboxResult.InvalidMessage;
                     }
 
                     messageLength += indexLength;
@@ -57,7 +65,7 @@ namespace RB4InstrumentMapper.Parsing
                 // Verify bounds
                 if (data.Length < messageLength)
                 {
-                    return;
+                    return XboxResult.InvalidMessage;
                 }
 
                 var messageData = data.Slice(0, messageLength);
@@ -68,11 +76,23 @@ namespace RB4InstrumentMapper.Parsing
                     client = new XboxClient();
                     clients.Add(header.Client, client);
                 }
-                client.HandleMessage(header, commandData);
+                var clientResult = client.HandleMessage(header, commandData);
+                switch (clientResult)
+                {
+                    case XboxResult.Success:
+                    case XboxResult.Pending:
+                        break;
+                    default:
+                        if (data.Length < 1)
+                            return clientResult;
+                        break;
+                }
 
                 // Progress to next message
                 data = data.Slice(messageData.Length);
             }
+
+            return XboxResult.Success;
         }
 
         /// <summary>

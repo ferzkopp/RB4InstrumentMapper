@@ -19,31 +19,31 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Handles an incoming packet.
         /// </summary>
-        protected override void OnPacketReceived(CommandId command, ReadOnlySpan<byte> data)
+        protected override XboxResult OnPacketReceived(CommandId command, ReadOnlySpan<byte> data)
         {
             switch (command)
             {
                 case CommandId.Input:
-                    ParseInput(data);
-                    break;
+                    return ParseInput(data);
 
                 default:
-                    break;
+                    return XboxResult.Success;
             }
         }
 
         /// <summary>
         /// Parses an input report.
         /// </summary>
-        public unsafe void ParseInput(ReadOnlySpan<byte> data)
+        public unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
             if (data.Length < sizeof(GamepadInput) || !MemoryMarshal.TryRead(data, out GamepadInput gamepadReport))
-                return;
+                return XboxResult.InvalidMessage;
 
             HandleReport(ref state, gamepadReport);
 
             // Send data
             VjoyClient.UpdateDevice(deviceId, ref state);
+            return XboxResult.Success;
         }
 
         /// <summary>
