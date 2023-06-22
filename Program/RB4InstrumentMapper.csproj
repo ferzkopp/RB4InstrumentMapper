@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -130,6 +130,7 @@
     <Compile Include="PacketParsing\DeviceGuids.cs" />
     <Compile Include="PacketParsing\DeviceCreationException.cs" />
     <Compile Include="PacketParsing\ParsingUtils.cs" />
+    <Compile Include="PacketParsing\XboxClient.cs" />
     <Compile Include="PacketParsing\XboxDevice.cs" />
     <Compile Include="MainWindow\ParsingHelpers.cs" />
     <Compile Include="MainWindow\PcapDeviceExtensions.cs" />

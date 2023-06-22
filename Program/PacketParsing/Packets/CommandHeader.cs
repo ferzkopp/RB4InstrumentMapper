@@ -35,6 +35,7 @@ namespace RB4InstrumentMapper.Parsing
     {
         public CommandId CommandId;
         public CommandFlags Flags;
+        public int Client;
         public byte SequenceCount;
         public int DataLength;
 
@@ -55,7 +56,8 @@ namespace RB4InstrumentMapper.Parsing
             header = new CommandHeader()
             {
                 CommandId = (CommandId)data[0],
-                Flags = (CommandFlags)data[1],
+                Flags = (CommandFlags)(data[1] & 0xF0),
+                Client = data[1] & 0x0F,
                 SequenceCount = data[2],
                 DataLength = dataLength
             };
