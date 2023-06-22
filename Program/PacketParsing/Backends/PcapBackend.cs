@@ -117,6 +117,15 @@ namespace RB4InstrumentMapper.Parsing
                 return;
             }
 
+            // Debugging (if enabled)
+            if (LogPackets)
+            {
+                string packetLogString = $"{packet.Header.Timeval.Date:yyyy-MM-dd hh:mm:ss.fff} [{packet.Data.Length}] " +
+                    $"{BitConverter.ToString(headerData.ToArray())} | {BitConverter.ToString(packetData.ToArray())}";
+                Console.WriteLine(packetLogString);
+                Logging.Packet_WriteLine(packetLogString);
+            }
+
             // Check if device ID has been encountered yet
             ulong deviceId = header.DeviceId;
             if (!devices.TryGetValue(deviceId, out var device))
@@ -144,15 +153,6 @@ namespace RB4InstrumentMapper.Parsing
                 StopCapture();
                 OnCaptureStop?.Invoke();
                 return;
-            }
-
-            // Debugging (if enabled)
-            if (LogPackets)
-            {
-                string packetLogString = $"{packet.Header.Timeval.Date:yyyy-MM-dd hh:mm:ss.fff} [{packet.Data.Length}] " +
-                    $"{BitConverter.ToString(headerData.ToArray())} | {BitConverter.ToString(packetData.ToArray())}";
-                Console.WriteLine(packetLogString);
-                Logging.Packet_WriteLine(packetLogString);
             }
         }
     }
