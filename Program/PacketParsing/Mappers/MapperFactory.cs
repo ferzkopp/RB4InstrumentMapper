@@ -62,11 +62,18 @@ namespace RB4InstrumentMapper.Parsing
                 return GetFallbackMapper(mode);
             }
 
-            return func(mode);
+            try
+            {
+                return func(mode);
+            }
+            catch (Exception ex)
+            {
+                throw new DeviceCreationException("Failed to create mapper for device!", ex);
+            }
         }
 
 #if DEBUG
-        public static IDeviceMapper GetGamepadMapper(MappingMode mode)
+        private static IDeviceMapper GetGamepadMapper(MappingMode mode)
         {
             Console.WriteLine($"Ganepad found, creating new {mode} mapper...");
             switch (mode)
@@ -78,7 +85,7 @@ namespace RB4InstrumentMapper.Parsing
         }
 #endif
 
-        public static IDeviceMapper GetGuitarMapper(MappingMode mode)
+        private static IDeviceMapper GetGuitarMapper(MappingMode mode)
         {
             Console.WriteLine($"Guitar found, creating new {mode} mapper...");
             switch (mode)
@@ -89,7 +96,7 @@ namespace RB4InstrumentMapper.Parsing
             }
         }
 
-        public static IDeviceMapper GetDrumsMapper(MappingMode mode)
+        private static IDeviceMapper GetDrumsMapper(MappingMode mode)
         {
             Console.WriteLine($"Drumkit found, creating new {mode} mapper...");
             switch (mode)
@@ -102,12 +109,19 @@ namespace RB4InstrumentMapper.Parsing
 
         public static IDeviceMapper GetFallbackMapper(MappingMode mode)
         {
-            Console.WriteLine($"Creating new fallback {mode} mapper...");
-            switch (mode)
+            try
             {
-                case MappingMode.ViGEmBus: return new FallbackVigemMapper();
-                case MappingMode.vJoy: return new FallbackVjoyMapper();
-                default: throw new Exception("Unhandled mapping mode!");
+                Console.WriteLine($"Creating new fallback {mode} mapper...");
+                switch (mode)
+                {
+                    case MappingMode.ViGEmBus: return new FallbackVigemMapper();
+                    case MappingMode.vJoy: return new FallbackVjoyMapper();
+                    default: throw new Exception("Unhandled mapping mode!");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new DeviceCreationException("Failed to create fallback mapper for device!", ex);
             }
         }
     }

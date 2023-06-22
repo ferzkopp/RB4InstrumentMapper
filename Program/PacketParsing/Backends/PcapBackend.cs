@@ -127,18 +127,7 @@ namespace RB4InstrumentMapper.Parsing
                     return;
                 }
 
-                try
-                {
-                    device = new XboxDevice();
-                }
-                catch (Exception ex)
-                {
-                    canHandleNewDevices = false;
-                    Console.WriteLine("Device limit reached, or an error occured when creating virtual device. No more devices will be registered.");
-                    Console.WriteLine($"Exception: {ex.GetFirstLine()}");
-                    return;
-                }
-
+                device = new XboxDevice();
                 devices.Add(deviceId, device);
                 Console.WriteLine($"Encountered new device with ID {deviceId.ToString("X12")}");
             }
@@ -151,6 +140,12 @@ namespace RB4InstrumentMapper.Parsing
             {
                 // Don't log thread aborts, just return
                 return;
+            }
+            catch (DeviceCreationException ex)
+            {
+                canHandleNewDevices = false;
+                Console.WriteLine("Virtual device limit reached, or an error occured when creating one. No more devices will be registered.");
+                Console.WriteLine($"Exception: {ex.GetFirstLine()}");
             }
             catch (Exception ex)
             {
