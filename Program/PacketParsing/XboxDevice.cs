@@ -82,6 +82,8 @@ namespace RB4InstrumentMapper.Parsing
                     case XboxResult.Success:
                     case XboxResult.Pending:
                         break;
+                    case XboxResult.Disconnected:
+                        return clientResult;
                     default:
                         if (data.Length < 1)
                             return clientResult;

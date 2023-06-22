@@ -78,6 +78,9 @@ namespace RB4InstrumentMapper.Parsing
                 case CommandId.Arrival:
                     return HandleArrival(commandData);
 
+                case CommandId.Status:
+                    return HandleStatus(commandData);
+
                 case CommandId.Descriptor:
                     return HandleDescriptor(commandData);
 
@@ -92,7 +95,7 @@ namespace RB4InstrumentMapper.Parsing
                         }
 
                         Console.WriteLine("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
-                        Console.WriteLine("Consider hitting Start before connecting it to ensure correct behavior.");
+                        Console.WriteLine("Reconnect it (or hit Start before connecting it) to ensure correct behavior.");
                     }
 
                     // Hand off unrecognized commands to the mapper
@@ -189,6 +192,20 @@ namespace RB4InstrumentMapper.Parsing
 
             VendorId = arrival.VendorId;
             ProductId = arrival.ProductId;
+            return XboxResult.Success;
+        }
+
+        /// <summary>
+        /// Handles the arrival message of the device.
+        /// </summary>
+        private unsafe XboxResult HandleStatus(ReadOnlySpan<byte> data)
+        {
+            if (data.Length < sizeof(DeviceStatus) || !MemoryMarshal.TryRead(data, out DeviceStatus status))
+                return XboxResult.InvalidMessage;
+
+            if (!status.Connected)
+                return XboxResult.Disconnected;
+
             return XboxResult.Success;
         }
 

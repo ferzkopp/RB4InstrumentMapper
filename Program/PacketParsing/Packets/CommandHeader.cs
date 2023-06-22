@@ -10,6 +10,7 @@ namespace RB4InstrumentMapper.Parsing
     {
         Acknowledgement = 0x01,
         Arrival = 0x02,
+        Status = 0x03,
         Descriptor = 0x04,
         Authentication = 0x06,
         Keystroke = 0x07,

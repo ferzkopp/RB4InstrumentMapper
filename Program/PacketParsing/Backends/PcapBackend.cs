@@ -132,7 +132,7 @@ namespace RB4InstrumentMapper.Parsing
             {
                 device = new XboxDevice();
                 devices.Add(deviceId, device);
-                Console.WriteLine($"Encountered new device with ID {deviceId:X12}");
+                Console.WriteLine($"Device with ID {deviceId:X12} was connected");
             }
 
             try
@@ -140,6 +140,11 @@ namespace RB4InstrumentMapper.Parsing
                 var result = device.HandlePacket(packetData);
                 switch (result)
                 {
+                    case XboxResult.Disconnected:
+                        device.Dispose();
+                        devices.Remove(deviceId);
+                        Console.WriteLine($"Device with ID {deviceId:X12} was disconnected");
+                        break;
                     case XboxResult.InvalidMessage:
                         if (LogPackets)
                         {
