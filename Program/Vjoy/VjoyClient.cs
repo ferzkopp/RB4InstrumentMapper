@@ -15,6 +15,8 @@ namespace RB4InstrumentMapper.Vjoy
         public static string Product => client.GetvJoyProductString();
         public static string SerialNumber => client.GetvJoySerialNumberString();
 
+        public static bool AreDevicesAvailable => Enabled && GetNextAvailableID() > 0;
+
         public static bool DriverMatch(out uint libraryVersion, out uint driverVersion)
         {
             libraryVersion = 0;

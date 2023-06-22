@@ -76,9 +76,14 @@ namespace RB4InstrumentMapper.Parsing
                 default:
                     if (deviceMapper == null)
                     {
+                        deviceMapper = MapperFactory.GetFallbackMapper(XboxDevice.MapperMode);
+                        if (deviceMapper == null)
+                        {
+                            return;
+                        }
+
                         Console.WriteLine("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
                         Console.WriteLine("Consider hitting Start before connecting it to ensure correct behavior.");
-                        deviceMapper = MapperFactory.GetFallbackMapper(XboxDevice.MapperMode);
                     }
 
                     // Hand off unrecognized commands to the mapper

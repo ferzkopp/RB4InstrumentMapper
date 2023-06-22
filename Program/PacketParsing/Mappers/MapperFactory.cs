@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using RB4InstrumentMapper.Vigem;
+using RB4InstrumentMapper.Vjoy;
 
 namespace RB4InstrumentMapper.Parsing
 {
@@ -62,66 +64,52 @@ namespace RB4InstrumentMapper.Parsing
                 return GetFallbackMapper(mode);
             }
 
-            try
-            {
-                return func(mode);
-            }
-            catch (Exception ex)
-            {
-                throw new DeviceCreationException("Failed to create mapper for device!", ex);
-            }
+            return func(mode);
         }
 
 #if DEBUG
         private static IDeviceMapper GetGamepadMapper(MappingMode mode)
-        {
-            Console.WriteLine($"Ganepad found, creating new {mode} mapper...");
-            switch (mode)
-            {
-                case MappingMode.ViGEmBus: return new GamepadVigemMapper();
-                case MappingMode.vJoy: return new GamepadVjoyMapper();
-                default: throw new Exception("Unhandled mapping mode!");
-            }
-        }
+            => GetMapper<GamepadVigemMapper, GamepadVjoyMapper>(mode, $"Created new {mode} gamepad mapper");
 #endif
 
         private static IDeviceMapper GetGuitarMapper(MappingMode mode)
-        {
-            Console.WriteLine($"Guitar found, creating new {mode} mapper...");
-            switch (mode)
-            {
-                case MappingMode.ViGEmBus: return new GuitarVigemMapper();
-                case MappingMode.vJoy: return new GuitarVjoyMapper();
-                default: throw new Exception("Unhandled mapping mode!");
-            }
-        }
+            => GetMapper<GuitarVigemMapper, GuitarVjoyMapper>(mode, $"Created new {mode} guitar mapper");
 
         private static IDeviceMapper GetDrumsMapper(MappingMode mode)
-        {
-            Console.WriteLine($"Drumkit found, creating new {mode} mapper...");
-            switch (mode)
-            {
-                case MappingMode.ViGEmBus: return new DrumsVigemMapper();
-                case MappingMode.vJoy: return new DrumsVjoyMapper();
-                default: throw new Exception("Unhandled mapping mode!");
-            }
-        }
+            => GetMapper<DrumsVigemMapper, DrumsVjoyMapper>(mode, $"Created new {mode} drumkit mapper");
 
         public static IDeviceMapper GetFallbackMapper(MappingMode mode)
+            => GetMapper<FallbackVigemMapper, FallbackVjoyMapper>(mode, $"Created new fallback {mode} mapper");
+
+        private static IDeviceMapper GetMapper<TVigem, TVjoy>(MappingMode mode, string creationMessage)
+            where TVigem : class, IDeviceMapper, new()
+            where TVjoy : class, IDeviceMapper, new()
         {
             try
             {
-                Console.WriteLine($"Creating new fallback {mode} mapper...");
+                IDeviceMapper mapper;
                 switch (mode)
                 {
-                    case MappingMode.ViGEmBus: return new FallbackVigemMapper();
-                    case MappingMode.vJoy: return new FallbackVjoyMapper();
-                    default: throw new Exception("Unhandled mapping mode!");
+                    case MappingMode.ViGEmBus:
+                        mapper = VigemClient.AreDevicesAvailable ? new TVigem() : null;
+                        break;
+                    case MappingMode.vJoy:
+                        mapper = VjoyClient.AreDevicesAvailable ? new TVjoy() : null;
+                        // Check if all devices have been used
+                        if (mapper != null && !VjoyClient.AreDevicesAvailable)
+                            Console.WriteLine("vJoy device limit reached, no new devices will be handled.");
+                        break;
+                    default: throw new NotImplementedException($"Unhandled mapping mode {mode}!");
                 }
+
+                if (mapper != null)
+                    Console.WriteLine(creationMessage);
+                return mapper;
             }
             catch (Exception ex)
             {
-                throw new DeviceCreationException("Failed to create fallback mapper for device!", ex);
+                Console.WriteLine($"Failed to create mapper for device: {ex.GetFirstLine()}");
+                return null;
             }
         }
     }

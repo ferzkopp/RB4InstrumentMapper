@@ -47,7 +47,6 @@ namespace RB4InstrumentMapper.Parsing
 
         private static ILiveDevice captureDevice = null;
         private static readonly Dictionary<ulong, XboxDevice> devices = new Dictionary<ulong, XboxDevice>();
-        private static bool canHandleNewDevices = true;
 
         public static event Action OnCaptureStop;
 
@@ -122,14 +121,9 @@ namespace RB4InstrumentMapper.Parsing
             ulong deviceId = header.DeviceId;
             if (!devices.TryGetValue(deviceId, out var device))
             {
-                if (!canHandleNewDevices)
-                {
-                    return;
-                }
-
                 device = new XboxDevice();
                 devices.Add(deviceId, device);
-                Console.WriteLine($"Encountered new device with ID {deviceId.ToString("X12")}");
+                Console.WriteLine($"Encountered new device with ID {deviceId:X12}");
             }
 
             try
@@ -140,12 +134,6 @@ namespace RB4InstrumentMapper.Parsing
             {
                 // Don't log thread aborts, just return
                 return;
-            }
-            catch (DeviceCreationException ex)
-            {
-                canHandleNewDevices = false;
-                Console.WriteLine("Virtual device limit reached, or an error occured when creating one. No more devices will be registered.");
-                Console.WriteLine($"Exception: {ex.GetFirstLine()}");
             }
             catch (Exception ex)
             {

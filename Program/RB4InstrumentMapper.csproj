@@ -128,7 +128,6 @@
     <Compile Include="PacketParsing\Packets\Keystroke.cs" />
     <Compile Include="PacketParsing\Packets\XboxDescriptor.cs" />
     <Compile Include="PacketParsing\DeviceGuids.cs" />
-    <Compile Include="PacketParsing\DeviceCreationException.cs" />
     <Compile Include="PacketParsing\ParsingUtils.cs" />
     <Compile Include="PacketParsing\XboxClient.cs" />
     <Compile Include="PacketParsing\XboxDevice.cs" />

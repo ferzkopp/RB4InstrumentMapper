@@ -19,6 +19,12 @@ namespace RB4InstrumentMapper.Vigem
         /// </summary>
         public static bool Initialized => client != null;
 
+        /// <summary>
+        /// Whether or not new devices can be created.
+        /// </summary>
+        public static bool AreDevicesAvailable => Initialized && canCreateDevices;
+        private static bool canCreateDevices;
+
         public static bool TryInitialize()
         {
             if (client != null)
@@ -44,7 +50,15 @@ namespace RB4InstrumentMapper.Vigem
             if (!Initialized)
                 throw new ObjectDisposedException(nameof(client), "ViGEmBus client is disposed or not initialized yet!");
 
-            return client.CreateXbox360Controller(0x1BAD, 0x0719);
+            try
+            {
+                return client.CreateXbox360Controller(0x1BAD, 0x0719);
+            }
+            catch
+            {
+                canCreateDevices = false;
+                throw;
+            }
         }
         // Rock Band Guitar: USB\VID_1BAD&PID_0719&IG_00  XUSB\TYPE_00\SUB_86\VEN_1BAD\REV_0002
         // Rock Band Drums:  USB\VID_1BAD&PID_0719&IG_02  XUSB\TYPE_00\SUB_88\VEN_1BAD\REV_0002
