@@ -68,10 +68,12 @@ namespace RB4InstrumentMapper.Parsing
             {
                 // Commands to ignore
                 case CommandId.Acknowledgement:
-                case CommandId.Arrival:
                 case CommandId.Authentication:
                 case CommandId.SerialNumber:
                     break;
+
+                case CommandId.Arrival:
+                    return HandleArrival(commandData);
 
                 case CommandId.Status:
                     return HandleStatus(commandData);
@@ -160,6 +162,18 @@ namespace RB4InstrumentMapper.Parsing
             // Copy data to buffer
             chunkData.CopyTo(chunkBuffer.AsSpan(bufferIndex, chunkData.Length));
             return XboxResult.Pending;
+        }
+
+        /// <summary>
+        /// Handles the arrival message of the device.
+        /// </summary>
+        private unsafe XboxResult HandleArrival(ReadOnlySpan<byte> data)
+        {
+            if (data.Length < sizeof(DeviceArrival) || MemoryMarshal.TryRead(data, out DeviceArrival arrival))
+                return XboxResult.InvalidMessage;
+
+            Console.WriteLine($"New client connected with ID {arrival.SerialNumber:X12}");
+            return XboxResult.Success;
         }
 
         /// <summary>

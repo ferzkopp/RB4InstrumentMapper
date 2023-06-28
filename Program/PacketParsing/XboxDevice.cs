@@ -24,17 +24,10 @@ namespace RB4InstrumentMapper.Parsing
     {
         public static MappingMode MapperMode;
 
-        public ulong DeviceId { get; }
-
         /// <summary>
         /// The clients currently on the device.
         /// </summary>
         private readonly Dictionary<int, XboxClient> clients = new Dictionary<int, XboxClient>();
-
-        public XboxDevice(ulong deviceId)
-        {
-            DeviceId = deviceId;
-        }
 
         ~XboxDevice()
         {
@@ -71,7 +64,6 @@ namespace RB4InstrumentMapper.Parsing
                 {
                     client = new XboxClient();
                     clients.Add(header.Client, client);
-                    Console.WriteLine($"Client {header.Client} connected on device with ID {DeviceId:X12}");
                 }
                 var clientResult = client.HandleMessage(header, commandData);
                 switch (clientResult)
