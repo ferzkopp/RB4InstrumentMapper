@@ -128,7 +128,7 @@ namespace RB4InstrumentMapper.Parsing
             if (LogPackets)
             {
                 string packetLogString = $"{packet.Header.Timeval.Date:yyyy-MM-dd hh:mm:ss.fff} [{packet.Data.Length}] " +
-                    $"{BitConverter.ToString(headerData.ToArray())} | {BitConverter.ToString(packetData.ToArray())}";
+                    $"{ParsingUtils.ToString(headerData)} | {ParsingUtils.ToString(packetData)}";
                 Console.WriteLine(packetLogString);
                 Logging.Packet_WriteLine(packetLogString);
             }

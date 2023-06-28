@@ -33,13 +33,35 @@ namespace RB4InstrumentMapper.Parsing
             // Detect length sequences longer than 4 bytes
             if ((value & 0x80) != 0)
             {
-                Debug.WriteLine($"Variable-length value is greater than 4 bytes! Buffer: {BitConverter.ToString(data.ToArray())}");
+                Debug.WriteLine($"Variable-length value is greater than 4 bytes! Buffer: {ToString(data)}");
                 byteLength = 0;
                 result = 0;
                 return false;
             }
 
             return true;
+        }
+
+        public static string ToString(ReadOnlySpan<byte> buffer)
+        {
+            const string characters = "0123456789ABCDEF";
+
+            if (buffer.IsEmpty)
+                return "";
+
+            Span<char> stringBuffer = stackalloc char[buffer.Length * 3];
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                byte value = buffer[i];
+                int stringIndex = i * 3;
+                stringBuffer[stringIndex] = characters[(value & 0xF0) >> 4];
+                stringBuffer[stringIndex + 1] = characters[value & 0x0F];
+                stringBuffer[stringIndex + 2] = '-';
+            }
+            // Exclude last '-'
+            stringBuffer = stringBuffer.Slice(0, stringBuffer.Length - 1);
+
+            return stringBuffer.ToString();
         }
 
         /// <summary>
