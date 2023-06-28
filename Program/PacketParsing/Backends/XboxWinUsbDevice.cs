@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading;
 using Nefarius.Drivers.WinUSB;
 using Nefarius.Utilities.DeviceManagement.PnP;
 
@@ -16,7 +17,8 @@ namespace RB4InstrumentMapper.Parsing
         private USBDevice usbDevice;
         private USBInterface mainInterface;
 
-        public int InputSize => mainInterface.InPipe.MaximumPacketSize;
+        private Thread readThread;
+        private volatile bool readPackets = false;
 
         private XboxWinUsbDevice(USBDevice usb, USBInterface @interface)
         {
@@ -50,7 +52,60 @@ namespace RB4InstrumentMapper.Parsing
             return new XboxWinUsbDevice(usbDevice, mainInterface);
         }
 
-        public int ReadPacket(Span<byte> readBuffer)
+        public void StartReading()
+        {
+            if (readPackets)
+                return;
+
+            readPackets = true;
+            readThread = new Thread(ReadThread);
+            readThread.Start();
+        }
+
+        public void StopReading()
+        {
+            if (!readPackets)
+                return;
+
+            readPackets = false;
+            mainInterface.InPipe.Abort();
+            readThread.Join();
+            readThread = null;
+        }
+
+        private void ReadThread()
+        {
+            Span<byte> readBuffer = stackalloc byte[mainInterface.InPipe.MaximumPacketSize];
+
+            // Number of errors after which reading will stop
+            const int errorThreshold = 3;
+            int errorCount = 0;
+            while (readPackets)
+            {
+                // Read packet data
+                int bytesRead = ReadPacket(readBuffer);
+                if (bytesRead < 0)
+                {
+                    if (errorCount > errorThreshold)
+                        break;
+
+                    errorCount++;
+                    continue;
+                }
+
+                // Process packet data
+                Debug.WriteLine(ParsingUtils.ToString(readBuffer));
+                var result = HandlePacket(readBuffer.Slice(0, bytesRead));
+                switch (result)
+                {
+                    case XboxResult.InvalidMessage:
+                        Debug.WriteLine($"Invalid packet received!");
+                        break;
+                }
+            }
+        }
+
+        private int ReadPacket(Span<byte> readBuffer)
         {
             try
             {
@@ -100,6 +155,7 @@ namespace RB4InstrumentMapper.Parsing
         {
             base.ReleaseManagedResources();
 
+            StopReading();
             usbDevice?.Dispose();
             usbDevice = null;
             mainInterface = null;
