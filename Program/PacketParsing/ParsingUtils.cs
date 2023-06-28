@@ -8,40 +8,6 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal static class ParsingUtils
     {
-        // https://en.wikipedia.org/wiki/LEB128
-        public static bool DecodeLEB128(ReadOnlySpan<byte> data, out int result, out int byteLength)
-        {
-            byteLength = 0;
-            result = 0;
-
-            if (data == null || data.Length < 1)
-            {
-                return false;
-            }
-
-            // Decode variable-length length value
-            // Sequence length is limited to 4 bytes
-            byte value;
-            do
-            {
-                value = data[byteLength];
-                result |= (value & 0x7F) << (byteLength * 7);
-                byteLength++;
-            }
-            while ((value & 0x80) != 0 && byteLength < sizeof(int));
-
-            // Detect length sequences longer than 4 bytes
-            if ((value & 0x80) != 0)
-            {
-                Debug.WriteLine($"Variable-length value is greater than 4 bytes! Buffer: {ToString(data)}");
-                byteLength = 0;
-                result = 0;
-                return false;
-            }
-
-            return true;
-        }
-
         public static string ToString(ReadOnlySpan<byte> buffer)
         {
             const string characters = "0123456789ABCDEF";

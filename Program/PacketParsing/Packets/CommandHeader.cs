@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace RB4InstrumentMapper.Parsing
@@ -64,7 +65,7 @@ namespace RB4InstrumentMapper.Parsing
             bytesRead += 3;
 
             // Message length
-            if (!ParsingUtils.DecodeLEB128(data.Slice(bytesRead), out int dataLength, out int byteLength))
+            if (!DecodeLEB128(data.Slice(bytesRead), out int dataLength, out int byteLength))
             {
                 return false;
             }
@@ -74,13 +75,47 @@ namespace RB4InstrumentMapper.Parsing
             // Chunk index/length
             if ((header.Flags & CommandFlags.ChunkPacket) != 0)
             {
-                if (!ParsingUtils.DecodeLEB128(data.Slice(bytesRead), out int chunkIndex, out byteLength))
+                if (!DecodeLEB128(data.Slice(bytesRead), out int chunkIndex, out byteLength))
                 {
                     return false;
                 }
 
                 header.ChunkIndex = chunkIndex;
                 bytesRead += byteLength;
+            }
+
+            return true;
+        }
+
+        // https://en.wikipedia.org/wiki/LEB128
+        private static bool DecodeLEB128(ReadOnlySpan<byte> data, out int result, out int byteLength)
+        {
+            byteLength = 0;
+            result = 0;
+
+            if (data == null || data.Length < 1)
+            {
+                return false;
+            }
+
+            // Decode variable-length length value
+            // Sequence length is limited to 4 bytes
+            byte value;
+            do
+            {
+                value = data[byteLength];
+                result |= (value & 0x7F) << (byteLength * 7);
+                byteLength++;
+            }
+            while ((value & 0x80) != 0 && byteLength < sizeof(int));
+
+            // Detect length sequences longer than 4 bytes
+            if ((value & 0x80) != 0)
+            {
+                Debug.WriteLine($"Variable-length value is greater than 4 bytes! Buffer: {ParsingUtils.ToString(data)}");
+                byteLength = 0;
+                result = 0;
+                return false;
             }
 
             return true;
