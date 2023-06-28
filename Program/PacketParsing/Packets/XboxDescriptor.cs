@@ -47,7 +47,7 @@ namespace RB4InstrumentMapper.Parsing
 
         private unsafe bool Parse(ReadOnlySpan<byte> data)
         {
-            if (data == null)
+            if (data.IsEmpty)
                 throw new ArgumentNullException(nameof(data));
 
             // Descriptor header size

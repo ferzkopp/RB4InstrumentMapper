@@ -49,7 +49,7 @@ namespace RB4InstrumentMapper.Parsing
         {
             header = default;
             bytesRead = 0;
-            if (data == null || data.Length < 4)
+            if (data.Length < 4)
             {
                 return false;
             }
@@ -93,7 +93,7 @@ namespace RB4InstrumentMapper.Parsing
             byteLength = 0;
             result = 0;
 
-            if (data == null || data.Length < 1)
+            if (data.IsEmpty)
             {
                 return false;
             }
