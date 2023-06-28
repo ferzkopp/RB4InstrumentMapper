@@ -27,7 +27,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// The clients currently on the device.
         /// </summary>
-        private readonly Dictionary<int, XboxClient> clients = new Dictionary<int, XboxClient>();
+        private readonly Dictionary<byte, XboxClient> clients = new Dictionary<byte, XboxClient>();
 
         ~XboxDevice()
         {

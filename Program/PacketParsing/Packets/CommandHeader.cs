@@ -40,7 +40,7 @@ namespace RB4InstrumentMapper.Parsing
     {
         public CommandId CommandId;
         public CommandFlags Flags;
-        public int Client;
+        public byte Client;
         public byte SequenceCount;
         public int DataLength;
         public int ChunkIndex;
@@ -59,7 +59,7 @@ namespace RB4InstrumentMapper.Parsing
             {
                 CommandId = (CommandId)data[0],
                 Flags = (CommandFlags)(data[1] & 0xF0),
-                Client = data[1] & 0x0F,
+                Client = (byte)(data[1] & 0x0F),
                 SequenceCount = data[2],
             };
             bytesRead += 3;
