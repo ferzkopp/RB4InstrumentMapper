@@ -99,10 +99,15 @@ namespace RB4InstrumentMapper.Parsing
         {
             if (disposing)
             {
-                foreach (var client in clients.Values)
-                {
-                    client.Dispose();
-                }
+                ReleaseManagedResources();
+            }
+        }
+
+        protected virtual void ReleaseManagedResources()
+        {
+            foreach (var client in clients.Values)
+            {
+                client.Dispose();
             }
         }
     }
