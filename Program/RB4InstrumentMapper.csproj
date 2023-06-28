@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -57,6 +57,12 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Nefarius.Drivers.WinUSB, Version=4.3.83.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>packages\Nefarius.Drivers.WinUSB.4.3.83\lib\net472\Nefarius.Drivers.WinUSB.dll</HintPath>
+    </Reference>
+    <Reference Include="Nefarius.Utilities.DeviceManagement, Version=3.14.305.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>packages\Nefarius.Utilities.DeviceManagement.3.14.305\lib\netstandard2.0\Nefarius.Utilities.DeviceManagement.dll</HintPath>
+    </Reference>
     <Reference Include="Nefarius.ViGEm.Client, Version=1.21.256.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Nefarius.ViGEm.Client.1.21.256\lib\netstandard2.0\Nefarius.ViGEm.Client.dll</HintPath>
     </Reference>
