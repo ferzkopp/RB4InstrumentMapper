@@ -27,8 +27,11 @@ namespace RB4InstrumentMapper.Parsing
 
         private IDeviceMapper deviceMapper;
 
-        private byte[] chunkBuffer;
         private readonly Dictionary<CommandId, byte> previousSequenceIds = new Dictionary<CommandId, byte>();
+        private readonly Dictionary<CommandId, ChunkBuffer> chunkBuffers = new Dictionary<CommandId, ChunkBuffer>()
+        {
+            { CommandId.Descriptor, new ChunkBuffer() },
+        };
 
         public XboxClient(XboxDevice parent, byte clientId)
         {
@@ -56,7 +59,13 @@ namespace RB4InstrumentMapper.Parsing
             // Chunked packets
             if ((header.Flags & CommandFlags.ChunkPacket) != 0)
             {
-                var chunkResult = ProcessPacketChunk(ref header, ref commandData);
+                if (!chunkBuffers.TryGetValue(header.CommandId, out var chunkBuffer))
+                {
+                    chunkBuffer = new ChunkBuffer();
+                    chunkBuffers.Add(header.CommandId, chunkBuffer);
+                }
+
+                var chunkResult = chunkBuffer.ProcessChunk(ref header, ref commandData);
                 switch (chunkResult)
                 {
                     case XboxResult.Success:
@@ -113,72 +122,6 @@ namespace RB4InstrumentMapper.Parsing
             }
 
             return XboxResult.Success;
-        }
-
-        private unsafe XboxResult ProcessPacketChunk(ref CommandHeader header, ref ReadOnlySpan<byte> chunkData)
-        {
-            int bufferIndex = header.ChunkIndex;
-
-            // Do nothing with chunks of length 0
-            if (bufferIndex <= 0)
-            {
-                // Chunked packets with a length of 0 are valid and have been observed with Elite controllers
-                bool emptySequence = bufferIndex == 0;
-                Debug.Assert(emptySequence, $"Negative buffer index {bufferIndex}!");
-                return emptySequence ? XboxResult.Success : XboxResult.InvalidMessage;
-            }
-
-            // Start of the chunk sequence
-            if (chunkBuffer == null || (header.Flags & CommandFlags.ChunkStart) != 0)
-            {
-                // Safety check
-                if ((header.Flags & CommandFlags.ChunkStart) == 0)
-                {
-                    // NOTE: Older Xbox One gamepads trigger this condition during authentication
-                    // Not really an issue since we don't handle that anyways, noting for posterity
-                    Debug.Fail("Invalid chunk sequence start! No chunk buffer exists, expected a chunk start packet");
-                    return XboxResult.InvalidMessage;
-                }
-
-                // Buffer index is the total size of the buffer on the starting packet
-                chunkBuffer = new byte[bufferIndex];
-                bufferIndex = 0;
-            }
-
-            // Buffer index equalling buffer length signals the end of the sequence
-            if (bufferIndex >= chunkBuffer.Length)
-            {
-                // Safety checks
-                if (bufferIndex > chunkBuffer.Length)
-                {
-                    Debug.Fail("Invalid chunk sequence end! Buffer index is beyond the end of the chunk buffer");
-                    return XboxResult.InvalidMessage;
-                }
-
-                if (chunkData.Length != 0)
-                {
-                    Debug.Fail("Invalid chunk sequence end! Data was provided beyond the end of the buffer");
-                    return XboxResult.InvalidMessage;
-                }
-
-                // Send off finished chunk buffer
-                chunkData = chunkBuffer;
-                chunkBuffer = null;
-                header.DataLength = chunkData.Length;
-                header.Flags &= ~(CommandFlags.ChunkPacket | CommandFlags.ChunkStart);
-                return XboxResult.Success;
-            }
-
-            // Verify chunk data bounds
-            if ((bufferIndex + chunkData.Length) > chunkBuffer.Length)
-            {
-                Debug.Fail($"Invalid chunk sequence! Data was provided beyond the end of the buffer");
-                return XboxResult.InvalidMessage;
-            }
-
-            // Copy data to buffer
-            chunkData.CopyTo(chunkBuffer.AsSpan(bufferIndex, chunkData.Length));
-            return XboxResult.Pending;
         }
 
         /// <summary>
