@@ -11,14 +11,30 @@ namespace RB4InstrumentMapper.Parsing
     internal class XboxClient : IDisposable
     {
         /// <summary>
+        /// The parent device of the client.
+        /// </summary>
+        public XboxDevice Parent { get; }
+
+        /// <summary>
         /// The descriptor of the client.
         /// </summary>
         public XboxDescriptor Descriptor { get; private set; }
+
+        /// <summary>
+        /// The ID of the client.
+        /// </summary>
+        public byte ClientId { get; }
 
         private IDeviceMapper deviceMapper;
 
         private byte[] chunkBuffer;
         private readonly Dictionary<CommandId, byte> previousSequenceIds = new Dictionary<CommandId, byte>();
+
+        public XboxClient(XboxDevice parent, byte clientId)
+        {
+            Parent = parent;
+            ClientId = clientId;
+        }
 
         ~XboxClient()
         {

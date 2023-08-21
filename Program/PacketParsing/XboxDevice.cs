@@ -62,7 +62,7 @@ namespace RB4InstrumentMapper.Parsing
 
                 if (!clients.TryGetValue(header.Client, out var client))
                 {
-                    client = new XboxClient();
+                    client = new XboxClient(this, header.Client);
                     clients.Add(header.Client, client);
                 }
                 var clientResult = client.HandleMessage(header, commandData);
