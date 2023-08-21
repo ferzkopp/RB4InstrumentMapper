@@ -56,7 +56,7 @@ namespace RB4InstrumentMapper.Parsing
             // Chunked packets
             if ((header.Flags & CommandFlags.ChunkPacket) != 0)
             {
-                var chunkResult = ProcessPacketChunk(header, ref commandData);
+                var chunkResult = ProcessPacketChunk(ref header, ref commandData);
                 switch (chunkResult)
                 {
                     case XboxResult.Success:
@@ -65,9 +65,6 @@ namespace RB4InstrumentMapper.Parsing
                     default: // Error handling the chunk
                         return chunkResult;
                 }
-
-                header.DataLength = commandData.Length;
-                header.Flags &= ~(CommandFlags.ChunkPacket | CommandFlags.ChunkStart);
             }
 
             // Don't handle the same packet twice
@@ -118,7 +115,7 @@ namespace RB4InstrumentMapper.Parsing
             return XboxResult.Success;
         }
 
-        private unsafe XboxResult ProcessPacketChunk(CommandHeader header, ref ReadOnlySpan<byte> chunkData)
+        private unsafe XboxResult ProcessPacketChunk(ref CommandHeader header, ref ReadOnlySpan<byte> chunkData)
         {
             int bufferIndex = header.ChunkIndex;
 
@@ -137,6 +134,8 @@ namespace RB4InstrumentMapper.Parsing
                 // Safety check
                 if ((header.Flags & CommandFlags.ChunkStart) == 0)
                 {
+                    // NOTE: Older Xbox One gamepads trigger this condition during authentication
+                    // Not really an issue since we don't handle that anyways, noting for posterity
                     Debug.Fail("Invalid chunk sequence start! No chunk buffer exists, expected a chunk start packet");
                     return XboxResult.InvalidMessage;
                 }
@@ -165,6 +164,8 @@ namespace RB4InstrumentMapper.Parsing
                 // Send off finished chunk buffer
                 chunkData = chunkBuffer;
                 chunkBuffer = null;
+                header.DataLength = chunkData.Length;
+                header.Flags &= ~(CommandFlags.ChunkPacket | CommandFlags.ChunkStart);
                 return XboxResult.Success;
             }
 
