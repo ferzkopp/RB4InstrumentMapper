@@ -2,6 +2,9 @@ using System.Runtime.InteropServices;
 
 namespace RB4InstrumentMapper.Parsing
 {
+    /// <summary>
+    /// Indicates that a new device has connected and is awaiting initialization.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal readonly struct DeviceArrival
     {

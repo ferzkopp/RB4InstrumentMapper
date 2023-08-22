@@ -3,14 +3,20 @@ using System.Runtime.InteropServices;
 
 namespace RB4InstrumentMapper.Parsing
 {
+    /// <summary>
+    /// Acknowledges a prior command and provides info about current buffer allocations.
+    /// </summary>
+    /// <remarks>
+    /// Used for communication reliability and error detection.
+    /// </remarks>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct Acknowledgement
     {
-        public byte unk1;
+        private byte unk1;
         public CommandId InnerCommand;
         public byte InnerFlags_Client;
         public ushort BytesReceived;
-        public ushort unk2;
+        private ushort unk2;
         public ushort RemainingBuffer;
 
         public CommandFlags InnerFlags

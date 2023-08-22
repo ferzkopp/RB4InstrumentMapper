@@ -7,16 +7,18 @@ namespace RB4InstrumentMapper.Parsing
 {
     /// <summary>
     /// The descriptor data of an Xbox One device.
-    /// A large amount of the descriptor data is ignored, only data necessary for identifying device types is read.
     /// </summary>
+    /// <remarks>
+    /// A large amount of the descriptor data is ignored, only data necessary for identifying device types is read.
+    /// </remarks>
     public class XboxDescriptor
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         private struct Header
         {
             public ushort HeaderLength;
-            public int unk1;
-            public ulong unk2;
+            private int unk1;
+            private ulong unk2;
             public ushort DataLength;
         }
 
@@ -31,9 +33,9 @@ namespace RB4InstrumentMapper.Parsing
             public ushort ClassNames;
             public ushort InterfaceGuids;
             public ushort HidDescriptor;
-            public ushort unk1;
-            public ushort unk2;
-            public ushort unk3;
+            private ushort unk1;
+            private ushort unk2;
+            private ushort unk3;
         }
 
         public IReadOnlyList<string> ClassNames { get; private set; }

@@ -10,7 +10,7 @@ namespace RB4InstrumentMapper.Parsing
     internal enum GamepadButton : ushort
     {
         Sync = 0x0001,
-        Unused = 0x0002,
+        // Unused = 0x0002,
         Menu = 0x0004,
         Options = 0x0008,
         A = 0x0010,
@@ -30,7 +30,7 @@ namespace RB4InstrumentMapper.Parsing
 #if DEBUG
 
     /// <summary>
-    /// An input report from a drumkit.
+    /// An input report from a gamepad.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct GamepadInput

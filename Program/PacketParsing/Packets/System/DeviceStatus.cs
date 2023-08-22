@@ -2,6 +2,9 @@ using System.Runtime.InteropServices;
 
 namespace RB4InstrumentMapper.Parsing
 {
+    /// <summary>
+    /// Available types of batteries that can be used on a controller.
+    /// </summary>
     internal enum BatteryType : byte
     {
         Wired = 0,
@@ -9,6 +12,9 @@ namespace RB4InstrumentMapper.Parsing
         ChargeKit = 2,
     }
 
+    /// <summary>
+    /// The amount of battery remaining on the controller.
+    /// </summary>
     internal enum BatteryLevel : byte
     {
         Low = 0,
@@ -19,6 +25,9 @@ namespace RB4InstrumentMapper.Parsing
         Wired = Low,
     }
 
+    /// <summary>
+    /// Provides information about a device's current status, such as battery type and level.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal readonly struct DeviceStatus
     {
