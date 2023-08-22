@@ -28,8 +28,8 @@ namespace RB4InstrumentMapper.Parsing
             public ushort CustomCommands;
             public ushort FirmwareVersions;
             public ushort AudioFormats;
-            public ushort OutputCommands;
             public ushort InputCommands;
+            public ushort OutputCommands;
             public ushort ClassNames;
             public ushort InterfaceGuids;
             public ushort HidDescriptor;
@@ -40,9 +40,8 @@ namespace RB4InstrumentMapper.Parsing
 
         public const byte CommandId = 0x04;
 
-
-        public IReadOnlyList<string> ClassNames { get; private set; }
-        public IReadOnlyList<Guid> InterfaceGuids { get; private set; }
+        public HashSet<string> ClassNames { get; private set; }
+        public HashSet<Guid> InterfaceGuids { get; private set; }
 
         public static bool Parse(ReadOnlySpan<byte> data, out XboxDescriptor descriptor)
         {
@@ -98,7 +97,7 @@ namespace RB4InstrumentMapper.Parsing
 
             // Data elements
             ClassNames = ParseStrings(data, offsets.ClassNames, nameof(ClassNames));
-            InterfaceGuids = ParseElements<Guid>(data, offsets.InterfaceGuids, nameof(InterfaceGuids));
+            InterfaceGuids = ParseUnique<Guid>(data, offsets.InterfaceGuids, nameof(InterfaceGuids));
 
             return true;
         }
@@ -149,7 +148,7 @@ namespace RB4InstrumentMapper.Parsing
             return true;
         }
 
-        private static unsafe T[] ParseElements<T>(ReadOnlySpan<byte> buffer, ushort offset, string elementName, Func<T, bool> customCheck = null)
+        private static unsafe HashSet<T> ParseUnique<T>(ReadOnlySpan<byte> buffer, ushort offset, string elementName)
             where T : unmanaged
         {
             if (!VerifyOffset(buffer, offset, sizeof(T), out byte count, elementName) || count == 0)
@@ -159,54 +158,33 @@ namespace RB4InstrumentMapper.Parsing
 
             // Get data bounds
             buffer = buffer.Slice(offset + sizeof(byte), count * sizeof(T));
+
             // Get element data
-            if (customCheck == null)
+            var set = new HashSet<T>(count);
+            var elements = MemoryMarshal.Cast<byte, T>(buffer);
+            foreach (var element in elements)
             {
-                // No checks, get everything at once
-                return MemoryMarshal.Cast<byte, T>(buffer).ToArray();
+                set.Add(element);
             }
 
-            // Checks required, go through elements individually
-            var elements = new T[count];
-            for (byte index = 0; index < count; index++)
-            {
-                if (!MemoryMarshal.TryRead(buffer, out T element))
-                {
-                    Debug.Fail($"Failed to read element from buffer!  Buffer size: {buffer.Length}, element size: {sizeof(T)}");
-                    TruncateArray(ref elements, index);
-                    break;
-                }
-
-                if (!customCheck(element))
-                {
-                    Debug.Fail($"Check for {elementName} failed!");
-                    TruncateArray(ref elements, index);
-                    break;
-                }
-
-                elements[index] = element;
-                buffer = buffer.Slice(sizeof(T));
-            }
-
-            return elements;
+            return set;
         }
 
-        private static unsafe string[] ParseStrings(ReadOnlySpan<byte> buffer, ushort offset, string elementName)
+        private static unsafe HashSet<string> ParseStrings(ReadOnlySpan<byte> buffer, ushort offset, string elementName)
         {
             if (!VerifyOffset(buffer, offset, 0, out byte count, elementName) || count == 0)
             {
                 return null;
             }
 
-            var elements = new string[count];
+            var set = new HashSet<string>(count);
             buffer = buffer.Slice(offset + 1);
-            for (byte index = 0; index < elements.Length; index++)
+            for (byte index = 0; index < count; index++)
             {
                 // Get length
                 if (!MemoryMarshal.TryRead(buffer, out ushort length))
                 {
-                    // Resize array to exclude null elements
-                    TruncateArray(ref elements, index);
+                    set.TrimExcess();
                     break;
                 }
                 buffer = buffer.Slice(sizeof(ushort));
@@ -215,8 +193,7 @@ namespace RB4InstrumentMapper.Parsing
                 if (buffer.Length < length)
                 {
                     Debug.Fail($"Descriptor string length is greater than buffer size!  Index: {index}; String length: {length}; Buffer size: {buffer.Length}");
-                    // Resize array to exclude null elements
-                    TruncateArray(ref elements, index);
+                    set.TrimExcess();
                     break;
                 }
 
@@ -225,20 +202,13 @@ namespace RB4InstrumentMapper.Parsing
                 fixed (byte* ptr = buffer)
                 {
                     sbyte* sPtr = (sbyte*)ptr;
-                    elements[index] = new string(sPtr, 0, length);
+                    var str = new string(sPtr, 0, length);
+                    set.Add(str);
                 }
                 buffer = buffer.Slice(length);
             }
 
-            return elements;
-        }
-
-        private static void TruncateArray<T>(ref T[] array, int length)
-        {
-            if (length == 0)
-                array = null;
-            else
-                array = array.AsSpan().Slice(0, length).ToArray();
+            return set;
         }
     }
 }

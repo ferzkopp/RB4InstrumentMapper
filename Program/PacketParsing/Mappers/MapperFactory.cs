@@ -22,7 +22,7 @@ namespace RB4InstrumentMapper.Parsing
 #endif
         };
 
-        public static IDeviceMapper GetMapper(IReadOnlyList<Guid> interfaceGuids, MappingMode mode)
+        public static IDeviceMapper GetMapper(IEnumerable<Guid> interfaceGuids, MappingMode mode)
         {
             // Get unique interface GUID
             Guid interfaceGuid = default;
