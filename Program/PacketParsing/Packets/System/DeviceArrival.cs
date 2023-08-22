@@ -8,6 +8,8 @@ namespace RB4InstrumentMapper.Parsing
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal readonly struct DeviceArrival
     {
+        public const byte CommandId = 0x02;
+
         public readonly ulong SerialNumber;
         public readonly ushort VendorId;
         public readonly ushort ProductId;

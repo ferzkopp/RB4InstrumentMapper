@@ -38,6 +38,9 @@ namespace RB4InstrumentMapper.Parsing
             private ushort unk3;
         }
 
+        public const byte CommandId = 0x04;
+
+
         public IReadOnlyList<string> ClassNames { get; private set; }
         public IReadOnlyList<Guid> InterfaceGuids { get; private set; }
 

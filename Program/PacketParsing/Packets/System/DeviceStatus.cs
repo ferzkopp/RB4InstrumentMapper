@@ -31,6 +31,8 @@ namespace RB4InstrumentMapper.Parsing
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal readonly struct DeviceStatus
     {
+        public const byte CommandId = 0x03;
+
         private readonly byte status;
         private readonly byte unk1;
         private readonly byte unk2;

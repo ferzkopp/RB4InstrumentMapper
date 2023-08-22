@@ -27,6 +27,8 @@ namespace RB4InstrumentMapper.Parsing
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct Keystroke
     {
+        public const byte CommandId = 0x07;
+
         public KeystrokeFlags Flags;
         public KeyCode Keycode;
 

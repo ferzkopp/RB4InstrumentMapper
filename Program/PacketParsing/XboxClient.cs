@@ -27,11 +27,11 @@ namespace RB4InstrumentMapper.Parsing
 
         private IDeviceMapper deviceMapper;
 
-        private readonly Dictionary<CommandId, byte> previousReceiveSequence = new Dictionary<CommandId, byte>();
-        private readonly Dictionary<CommandId, byte> previousSendSequence = new Dictionary<CommandId, byte>();
-        private readonly Dictionary<CommandId, ChunkBuffer> chunkBuffers = new Dictionary<CommandId, ChunkBuffer>()
+        private readonly Dictionary<byte, byte> previousReceiveSequence = new Dictionary<byte, byte>();
+        private readonly Dictionary<byte, byte> previousSendSequence = new Dictionary<byte, byte>();
+        private readonly Dictionary<byte, ChunkBuffer> chunkBuffers = new Dictionary<byte, ChunkBuffer>()
         {
-            { CommandId.Descriptor, new ChunkBuffer() },
+            { XboxDescriptor.CommandId, new ChunkBuffer() },
         };
 
         public XboxClient(XboxDevice parent, byte clientId)
@@ -123,21 +123,20 @@ namespace RB4InstrumentMapper.Parsing
             return deviceMapper.HandlePacket(header.CommandId, commandData);
         }
 
-        private XboxResult HandleSystemCommand(CommandId commandId, ReadOnlySpan<byte> commandData)
+        private XboxResult HandleSystemCommand(byte commandId, ReadOnlySpan<byte> commandData)
         {
             switch (commandId)
             {
-                case CommandId.Arrival:
+                case DeviceArrival.CommandId:
                     return HandleArrival(commandData);
 
-                case CommandId.Status:
+                case DeviceStatus.CommandId:
                     return HandleStatus(commandData);
 
-                case CommandId.Descriptor:
+                case XboxDescriptor.CommandId:
                     return HandleDescriptor(commandData);
 
-                // Keystrokes are handled by the mapper
-                case CommandId.Keystroke:
+                case Keystroke.CommandId:
                     return HandleKeystroke(commandData);
             }
 

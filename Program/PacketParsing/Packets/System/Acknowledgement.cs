@@ -12,8 +12,10 @@ namespace RB4InstrumentMapper.Parsing
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct Acknowledgement
     {
+        public const byte CommandId = 0x01;
+
         private byte unk1;
-        public CommandId InnerCommand;
+        public byte InnerCommand;
         public byte InnerFlags_Client;
         public ushort BytesReceived;
         private ushort unk2;
@@ -48,7 +50,7 @@ namespace RB4InstrumentMapper.Parsing
             };
 
             // Set remaining header data (length is set when sending)
-            header.CommandId = CommandId.Acknowledgement;
+            header.CommandId = CommandId;
 
             return (header, acknowledge);
         }

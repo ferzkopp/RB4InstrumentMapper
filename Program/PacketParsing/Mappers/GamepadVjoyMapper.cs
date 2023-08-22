@@ -19,11 +19,11 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Handles an incoming packet.
         /// </summary>
-        protected override XboxResult OnPacketReceived(CommandId command, ReadOnlySpan<byte> data)
+        protected override XboxResult OnPacketReceived(byte command, ReadOnlySpan<byte> data)
         {
             switch (command)
             {
-                case CommandId.Input:
+                case GamepadInput.CommandId:
                     return ParseInput(data);
 
                 default:

@@ -35,6 +35,8 @@ namespace RB4InstrumentMapper.Parsing
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct GamepadInput
     {
+        public const byte CommandId = 0x20;
+
         public const ushort TriggerMax = 0x03FF;
 
         public bool A => (Buttons & (ushort)GamepadButton.A) != 0;

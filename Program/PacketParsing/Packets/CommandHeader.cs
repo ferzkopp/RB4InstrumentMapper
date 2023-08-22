@@ -42,7 +42,7 @@ namespace RB4InstrumentMapper.Parsing
     {
         public const int MinimumByteLength = 4;
 
-        public CommandId CommandId;
+        public byte CommandId;
         public byte Flags_Client;
         public byte SequenceCount;
         public int DataLength;
@@ -72,7 +72,7 @@ namespace RB4InstrumentMapper.Parsing
             // Command info
             header = new CommandHeader()
             {
-                CommandId = (CommandId)data[0],
+                CommandId = data[0],
                 Flags_Client = data[1],
                 SequenceCount = data[2],
             };
@@ -108,7 +108,7 @@ namespace RB4InstrumentMapper.Parsing
                 return false;
 
             // Command info
-            buffer[0] = (byte)CommandId;
+            buffer[0] = CommandId;
             buffer[1] = Flags_Client;
             buffer[2] = SequenceCount;
             bytesWritten += MinimumByteLength - 1;

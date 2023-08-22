@@ -22,6 +22,8 @@ namespace RB4InstrumentMapper.Parsing
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct DrumInput
     {
+        public const byte CommandId = 0x20;
+
         public ushort Buttons;
         private readonly ushort pads;
         private readonly ushort cymbals;

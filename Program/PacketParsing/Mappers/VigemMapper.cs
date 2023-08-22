@@ -57,7 +57,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Handles an incoming packet.
         /// </summary>
-        public XboxResult HandlePacket(CommandId command, ReadOnlySpan<byte> data)
+        public XboxResult HandlePacket(byte command, ReadOnlySpan<byte> data)
         {
             if (device == null)
                 throw new ObjectDisposedException(nameof(device));
@@ -68,7 +68,7 @@ namespace RB4InstrumentMapper.Parsing
             return OnPacketReceived(command, data);
         }
 
-        protected abstract XboxResult OnPacketReceived(CommandId command, ReadOnlySpan<byte> data);
+        protected abstract XboxResult OnPacketReceived(byte command, ReadOnlySpan<byte> data);
 
         public XboxResult HandleKeystroke(Keystroke key)
         {
