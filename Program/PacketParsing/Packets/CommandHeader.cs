@@ -2,6 +2,8 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
+// TODO: Chunk headers need a minimum length of 6 bytes
+
 namespace RB4InstrumentMapper.Parsing
 {
     /// <summary>
@@ -131,9 +133,12 @@ namespace RB4InstrumentMapper.Parsing
             size += length;
 
             // Chunk index
-            success = EncodeLEB128(encodeBuffer, ChunkIndex, out length);
-            Debug.Assert(success, "Failed to get byte length for chunk index!");
-            size += length;
+            if ((Flags & CommandFlags.ChunkPacket) != 0)
+            {
+                success = EncodeLEB128(encodeBuffer, ChunkIndex, out length);
+                Debug.Assert(success, "Failed to get byte length for chunk index!");
+                size += length;
+            }
 
             return size;
         }
