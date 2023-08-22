@@ -99,6 +99,11 @@ namespace RB4InstrumentMapper.Parsing
             return XboxResult.Success;
         }
 
+        internal unsafe XboxResult SendMessage(CommandHeader header)
+        {
+            return SendMessage(header, Span<byte>.Empty);
+        }
+
         internal unsafe XboxResult SendMessage<T>(CommandHeader header, ref T data)
             where T : unmanaged
         {

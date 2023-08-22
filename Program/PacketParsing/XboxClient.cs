@@ -27,7 +27,8 @@ namespace RB4InstrumentMapper.Parsing
 
         private IDeviceMapper deviceMapper;
 
-        private readonly Dictionary<CommandId, byte> previousSequenceIds = new Dictionary<CommandId, byte>();
+        private readonly Dictionary<CommandId, byte> previousReceiveSequence = new Dictionary<CommandId, byte>();
+        private readonly Dictionary<CommandId, byte> previousSendSequence = new Dictionary<CommandId, byte>();
         private readonly Dictionary<CommandId, ChunkBuffer> chunkBuffers = new Dictionary<CommandId, ChunkBuffer>()
         {
             { CommandId.Descriptor, new ChunkBuffer() },
@@ -88,18 +89,18 @@ namespace RB4InstrumentMapper.Parsing
                         ? Acknowledgement.FromMessage(header, commandData, chunkBuffer)
                         : Acknowledgement.FromMessage(header, commandData);
 
-                    Parent.SendMessage(sendHeader, ref acknowledge);
+                    SendMessage(sendHeader, ref acknowledge);
                     header.Flags &= ~CommandFlags.NeedsAcknowledgement;
                 }
             }
 
             // Don't handle the same packet twice
-            if (!previousSequenceIds.TryGetValue(header.CommandId, out byte previousSequence))
+            if (!previousReceiveSequence.TryGetValue(header.CommandId, out byte previousSequence))
                 previousSequence = 0;
 
             if (header.SequenceCount == previousSequence)
                 return XboxResult.Success;
-            previousSequenceIds[header.CommandId] = header.SequenceCount;
+            previousReceiveSequence[header.CommandId] = header.SequenceCount;
 
             // System commands are handled directly
             if ((header.Flags & CommandFlags.SystemCommand) != 0)
@@ -198,6 +199,37 @@ namespace RB4InstrumentMapper.Parsing
             }
 
             return XboxResult.Success;
+        }
+
+        internal unsafe XboxResult SendMessage(CommandHeader header)
+        {
+            SetUpHeader(ref header);
+            return Parent.SendMessage(header);
+        }
+
+        internal unsafe XboxResult SendMessage<T>(CommandHeader header, ref T data)
+            where T : unmanaged
+        {
+            SetUpHeader(ref header);
+            return Parent.SendMessage(header, ref data);
+        }
+
+        internal XboxResult SendMessage(CommandHeader header, Span<byte> data)
+        {
+            SetUpHeader(ref header);
+            return Parent.SendMessage(header, data);
+        }
+
+        private void SetUpHeader(ref CommandHeader header)
+        {
+            header.Client = ClientId;
+
+            if (!previousSendSequence.TryGetValue(header.CommandId, out byte sequence) ||
+                sequence == 0xFF) // Sequence IDs of 0 are not valid
+                sequence = 0;
+
+            header.SequenceCount = ++sequence;
+            previousSendSequence[header.CommandId] = sequence;
         }
 
         public void Dispose()
