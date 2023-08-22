@@ -43,11 +43,22 @@ namespace RB4InstrumentMapper.Parsing
         public const int MinimumByteLength = 4;
 
         public CommandId CommandId;
-        public CommandFlags Flags;
-        public byte Client;
+        public byte Flags_Client;
         public byte SequenceCount;
         public int DataLength;
         public int ChunkIndex;
+
+        public CommandFlags Flags
+        {
+            get => (CommandFlags)(Flags_Client & 0xF0);
+            set => Flags_Client = (byte)((byte)value & 0xF0 | Client);
+        }
+
+        public byte Client
+        {
+            get => (byte)(Flags_Client & 0x0F);
+            set => Flags_Client = (byte)((byte)Flags | value & 0x0F);
+        }
 
         public static bool TryParse(ReadOnlySpan<byte> data, out CommandHeader header, out int bytesRead)
         {
@@ -62,8 +73,7 @@ namespace RB4InstrumentMapper.Parsing
             header = new CommandHeader()
             {
                 CommandId = (CommandId)data[0],
-                Flags = (CommandFlags)(data[1] & 0xF0),
-                Client = (byte)(data[1] & 0x0F),
+                Flags_Client = data[1],
                 SequenceCount = data[2],
             };
             bytesRead += MinimumByteLength - 1;
@@ -99,8 +109,7 @@ namespace RB4InstrumentMapper.Parsing
 
             // Command info
             buffer[0] = (byte)CommandId;
-            buffer[1] = (byte)Flags;
-            buffer[1] |= Client;
+            buffer[1] = Flags_Client;
             buffer[2] = SequenceCount;
             bytesWritten += MinimumByteLength - 1;
 
