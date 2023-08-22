@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace RB4InstrumentMapper.Parsing
 {
-    internal enum KeystrokeFlags
+    internal enum KeystrokeFlags : byte
     {
         Pressed = 0x01,
     }
@@ -15,9 +15,9 @@ namespace RB4InstrumentMapper.Parsing
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct Keystroke
     {
-        public byte Flags;
-        public byte Keycode;
+        public KeystrokeFlags Flags;
+        public KeyCode Keycode;
 
-        public bool Pressed => (Flags & (byte)KeystrokeFlags.Pressed) != 0;
+        public bool Pressed => (Flags & KeystrokeFlags.Pressed) != 0;
     }
 }

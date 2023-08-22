@@ -16,5 +16,7 @@ namespace RB4InstrumentMapper.Parsing
         /// Handles an incoming packet.
         /// </summary>
         XboxResult HandlePacket(CommandId command, ReadOnlySpan<byte> data);
+
+        XboxResult HandleKeystroke(Keystroke key);
     }
 }

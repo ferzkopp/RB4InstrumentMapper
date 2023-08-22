@@ -139,7 +139,7 @@ namespace RB4InstrumentMapper.Parsing
 
                 // Keystrokes are handled by the mapper
                 case CommandId.Keystroke:
-                    return deviceMapper.HandlePacket(commandId, commandData);
+                    return HandleKeystroke(commandData);
             }
 
             return XboxResult.Success;
@@ -184,6 +184,21 @@ namespace RB4InstrumentMapper.Parsing
 
             Descriptor = descriptor;
             deviceMapper = MapperFactory.GetMapper(descriptor.InterfaceGuids, XboxDevice.MapperMode);
+            return XboxResult.Success;
+        }
+
+        private unsafe XboxResult HandleKeystroke(ReadOnlySpan<byte> data)
+        {
+            if (data.Length % sizeof(Keystroke) != 0)
+                return XboxResult.InvalidMessage;
+
+            // Multiple keystrokes can be sent in a single message
+            var keys = MemoryMarshal.Cast<byte, Keystroke>(data);
+            foreach (var key in keys)
+            {
+                deviceMapper.HandleKeystroke(key);
+            }
+
             return XboxResult.Success;
         }
 

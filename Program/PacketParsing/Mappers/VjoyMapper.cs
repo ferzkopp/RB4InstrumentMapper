@@ -48,35 +48,17 @@ namespace RB4InstrumentMapper.Parsing
             if (deviceId == 0)
                 throw new ObjectDisposedException("this");
 
-            switch (command)
-            {
-                case CommandId.Keystroke:
-                    return HandleKeystroke(data);
-
-                default:
-                    return OnPacketReceived(command, data);
-            }
+            return OnPacketReceived(command, data);
         }
 
         protected abstract XboxResult OnPacketReceived(CommandId command, ReadOnlySpan<byte> data);
 
-        private unsafe XboxResult HandleKeystroke(ReadOnlySpan<byte> data)
+        public XboxResult HandleKeystroke(Keystroke key)
         {
-            if (!MapGuideButton)
-                return XboxResult.Success;
-
-            if (data.Length < sizeof(Keystroke))
-                return XboxResult.InvalidMessage;
-
-            // Multiple keystrokes can be sent in a single message
-            var keys = MemoryMarshal.Cast<byte, Keystroke>(data);
-            foreach (var key in keys)
+            if (key.Keycode == KeyCode.LeftWindows && MapGuideButton)
             {
-                if ((KeyCode)key.Keycode == KeyCode.LeftWindows)
-                {
-                    state.SetButton(VjoyButton.Fourteen, key.Pressed);
-                    VjoyClient.UpdateDevice(deviceId, ref state);
-                }
+                state.SetButton(VjoyButton.Fourteen, key.Pressed);
+                VjoyClient.UpdateDevice(deviceId, ref state);
             }
 
             return XboxResult.Success;
