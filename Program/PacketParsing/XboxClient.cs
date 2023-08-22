@@ -103,14 +103,31 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.Success;
             }
 
-            switch (header.CommandId)
-            {
-                // Commands to ignore
-                case CommandId.Acknowledgement:
-                case CommandId.Authentication:
-                case CommandId.SerialNumber:
-                    break;
+            // System commands are handled directly
+            if ((header.Flags & CommandFlags.SystemCommand) != 0)
+                return HandleSystemCommand(header.CommandId, commandData);
 
+            // Non-system commands are handled by the mapper
+            if (deviceMapper == null)
+            {
+                deviceMapper = MapperFactory.GetFallbackMapper(XboxDevice.MapperMode);
+                if (deviceMapper == null)
+                {
+                    // No more devices available, do nothing
+                    return XboxResult.Success;
+                }
+
+                Console.WriteLine("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
+                Console.WriteLine("Reconnect it (or hit Start before connecting it) to ensure correct behavior.");
+            }
+
+            return deviceMapper.HandlePacket(header.CommandId, commandData);
+        }
+
+        private XboxResult HandleSystemCommand(CommandId commandId, ReadOnlySpan<byte> commandData)
+        {
+            switch (commandId)
+            {
                 case CommandId.Arrival:
                     return HandleArrival(commandData);
 
@@ -120,22 +137,9 @@ namespace RB4InstrumentMapper.Parsing
                 case CommandId.Descriptor:
                     return HandleDescriptor(commandData);
 
-                default:
-                    if (deviceMapper == null)
-                    {
-                        deviceMapper = MapperFactory.GetFallbackMapper(XboxDevice.MapperMode);
-                        if (deviceMapper == null)
-                        {
-                            // No more devices available, do nothing
-                            return XboxResult.Success;
-                        }
-
-                        Console.WriteLine("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
-                        Console.WriteLine("Reconnect it (or hit Start before connecting it) to ensure correct behavior.");
-                    }
-
-                    // Hand off unrecognized commands to the mapper
-                    return deviceMapper.HandlePacket(header.CommandId, commandData);
+                // Keystrokes are handled by the mapper
+                case CommandId.Keystroke:
+                    return deviceMapper.HandlePacket(commandId, commandData);
             }
 
             return XboxResult.Success;
