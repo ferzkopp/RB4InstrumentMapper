@@ -95,13 +95,11 @@ namespace RB4InstrumentMapper.Parsing
 
             // Don't handle the same packet twice
             if (!previousSequenceIds.TryGetValue(header.CommandId, out byte previousSequence))
-            {
-                previousSequenceIds.Add(header.CommandId, header.SequenceCount);
-            }
-            else if (header.SequenceCount == previousSequence)
-            {
+                previousSequence = 0;
+
+            if (header.SequenceCount == previousSequence)
                 return XboxResult.Success;
-            }
+            previousSequenceIds[header.CommandId] = header.SequenceCount;
 
             // System commands are handled directly
             if ((header.Flags & CommandFlags.SystemCommand) != 0)
