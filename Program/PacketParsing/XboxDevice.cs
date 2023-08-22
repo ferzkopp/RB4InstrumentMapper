@@ -152,7 +152,17 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
             }
 
-            return SendPacket(packetBuffer);
+            // Attempt a few times
+            const int retryThreshold = 3;
+            int retryCount = 0;
+            XboxResult result;
+            do
+            {
+                result = SendPacket(packetBuffer);
+            }
+            while (++retryCount < retryThreshold && result != XboxResult.Success);
+
+            return result;
         }
 
         protected virtual XboxResult SendPacket(Span<byte> data)
