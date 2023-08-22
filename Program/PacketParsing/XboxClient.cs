@@ -10,6 +10,45 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class XboxClient : IDisposable
     {
+        #region Message definitions
+        private static readonly XboxMessage GetDescriptor = new XboxMessage()
+        {
+            Header = new CommandHeader()
+            {
+                CommandId = XboxDescriptor.CommandId,
+                Flags = CommandFlags.SystemCommand,
+            },
+            // Header only, no data
+        };
+
+        private static readonly XboxMessage<DeviceConfiguration> PowerOnDevice = new XboxMessage<DeviceConfiguration>()
+        {
+            Header = new CommandHeader()
+            {
+                CommandId = DeviceConfiguration.CommandId,
+                Flags = CommandFlags.SystemCommand,
+            },
+            Data = new DeviceConfiguration()
+            {
+                SubCommand = ConfigurationCommand.PowerOn,
+            }
+        };
+
+        private static readonly XboxMessage<LedControl> EnableLed = new XboxMessage<LedControl>()
+        {
+            Header = new CommandHeader()
+            {
+                CommandId = LedControl.CommandId,
+                Flags = CommandFlags.SystemCommand,
+            },
+            Data = new LedControl()
+            {
+                Mode = LedMode.On,
+                Brightness = 0x14
+            }
+        };
+        #endregion
+
         /// <summary>
         /// The parent device of the client.
         /// </summary>
@@ -152,7 +191,9 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
 
             Console.WriteLine($"New client connected with ID {arrival.SerialNumber:X12}");
-            return XboxResult.Success;
+
+            // Kick off descriptor request
+            return SendMessage(GetDescriptor);
         }
 
         /// <summary>
@@ -182,6 +223,21 @@ namespace RB4InstrumentMapper.Parsing
 
             Descriptor = descriptor;
             deviceMapper = MapperFactory.GetMapper(descriptor.InterfaceGuids, XboxDevice.MapperMode);
+
+            // Send final set of initialization messages
+            var result = SendMessage(PowerOnDevice);
+            if (result != XboxResult.Success)
+                return result;
+
+            result = SendMessage(EnableLed);
+            if (result != XboxResult.Success)
+                return result;
+
+            // Authentication is not and will not be implemented, we just automatically pass all devices
+            result = SendMessage(Authentication.SuccessMessage);
+            if (result != XboxResult.Success)
+                return result;
+
             return XboxResult.Success;
         }
 

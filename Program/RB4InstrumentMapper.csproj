@@ -133,9 +133,12 @@
     <Compile Include="PacketParsing\Packets\Gamepad\GamepadInput.cs" />
     <Compile Include="PacketParsing\Packets\Guitar\GuitarInput.cs" />
     <Compile Include="PacketParsing\Packets\System\Acknowledgement.cs" />
+    <Compile Include="PacketParsing\Packets\System\Authentication.cs" />
     <Compile Include="PacketParsing\Packets\System\DeviceArrival.cs" />
+    <Compile Include="PacketParsing\Packets\System\DeviceConfiguration.cs" />
     <Compile Include="PacketParsing\Packets\System\DeviceStatus.cs" />
     <Compile Include="PacketParsing\Packets\System\Keystroke.cs" />
+    <Compile Include="PacketParsing\Packets\System\LedControl.cs" />
     <Compile Include="PacketParsing\Packets\System\XboxDescriptor.cs" />
     <Compile Include="PacketParsing\Packets\ChunkBuffer.cs" />
     <Compile Include="PacketParsing\Packets\CommandHeader.cs" />
