@@ -56,23 +56,40 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
             }
 
-            // Chunked packets
-            if ((header.Flags & CommandFlags.ChunkPacket) != 0)
+            // Ensure acknowledgement happens regardless of pending/failure
+            try
             {
-                if (!chunkBuffers.TryGetValue(header.CommandId, out var chunkBuffer))
+                // Chunked packets
+                if ((header.Flags & CommandFlags.ChunkPacket) != 0)
                 {
-                    chunkBuffer = new ChunkBuffer();
-                    chunkBuffers.Add(header.CommandId, chunkBuffer);
-                }
+                    if (!chunkBuffers.TryGetValue(header.CommandId, out var chunkBuffer))
+                    {
+                        chunkBuffer = new ChunkBuffer();
+                        chunkBuffers.Add(header.CommandId, chunkBuffer);
+                    }
 
-                var chunkResult = chunkBuffer.ProcessChunk(ref header, ref commandData);
-                switch (chunkResult)
+                    var chunkResult = chunkBuffer.ProcessChunk(ref header, ref commandData);
+                    switch (chunkResult)
+                    {
+                        case XboxResult.Success:
+                            break;
+                        case XboxResult.Pending: // Chunk is unfinished
+                        default: // Error handling the chunk
+                            return chunkResult;
+                    }
+                }
+            }
+            finally
+            {
+                // Acknowledgement
+                if ((header.Flags & CommandFlags.NeedsAcknowledgement) != 0)
                 {
-                    case XboxResult.Success:
-                        break;
-                    case XboxResult.Pending: // Chunk is unfinished
-                    default: // Error handling the chunk
-                        return chunkResult;
+                    var (sendHeader, acknowledge) = chunkBuffers.TryGetValue(header.CommandId, out var chunkBuffer)
+                        ? Acknowledgement.FromMessage(header, commandData, chunkBuffer)
+                        : Acknowledgement.FromMessage(header, commandData);
+
+                    Parent.SendMessage(sendHeader, ref acknowledge);
+                    header.Flags &= ~CommandFlags.NeedsAcknowledgement;
                 }
             }
 

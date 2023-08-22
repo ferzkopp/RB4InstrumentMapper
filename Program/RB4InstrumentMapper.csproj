@@ -129,6 +129,7 @@
     <Compile Include="PacketParsing\Mappers\MapperFactory.cs" />
     <Compile Include="PacketParsing\Mappers\VigemMapper.cs" />
     <Compile Include="PacketParsing\Mappers\VjoyMapper.cs" />
+    <Compile Include="PacketParsing\Packets\Acknowledgement.cs" />
     <Compile Include="PacketParsing\Packets\ChunkBuffer.cs" />
     <Compile Include="PacketParsing\Packets\CommandHeader.cs" />
     <Compile Include="PacketParsing\Packets\DeviceArrival.cs" />

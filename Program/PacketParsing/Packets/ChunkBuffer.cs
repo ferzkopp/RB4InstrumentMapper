@@ -7,6 +7,7 @@ namespace RB4InstrumentMapper.Parsing
     {
         public byte[] Buffer { get; private set; }
         public int BytesUsed { get; private set; }
+        public int BytesRemaining => Buffer != null ? Buffer.Length - BytesUsed : 0;
 
         public XboxResult ProcessChunk(ref CommandHeader header, ref ReadOnlySpan<byte> chunkData)
         {
