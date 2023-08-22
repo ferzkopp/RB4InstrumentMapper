@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace RB4InstrumentMapper.Parsing
 {
@@ -28,6 +30,17 @@ namespace RB4InstrumentMapper.Parsing
         /// The clients currently on the device.
         /// </summary>
         private readonly Dictionary<byte, XboxClient> clients = new Dictionary<byte, XboxClient>();
+
+        private readonly int maxPacketSize;
+
+        public XboxDevice() : this(maxPacketSize: 0)
+        {
+        }
+
+        protected XboxDevice(int maxPacketSize)
+        {
+            this.maxPacketSize = maxPacketSize;
+        }
 
         ~XboxDevice()
         {
@@ -83,6 +96,52 @@ namespace RB4InstrumentMapper.Parsing
                 data = data.Slice(messageData.Length);
             }
 
+            return XboxResult.Success;
+        }
+
+        internal unsafe XboxResult SendMessage<T>(CommandHeader header, ref T data)
+            where T : unmanaged
+        {
+            // Create a byte buffer for the given data
+            var writeBuffer = new Span<byte>(Unsafe.AsPointer(ref data), sizeof(T));
+            return SendMessage(header, writeBuffer);
+        }
+
+        // TODO: Span instead of ReadOnlySpan since the WinUSB lib doesn't use ReadOnlySpan for writing atm
+        internal XboxResult SendMessage(CommandHeader header, Span<byte> data)
+        {
+            // For devices handled by Pcap and not over USB
+            if (maxPacketSize < CommandHeader.MinimumByteLength)
+                return XboxResult.Success;
+
+            // Initialize lengths
+            header.DataLength = data.Length;
+            header.ChunkIndex = 0;
+            int packetLength = header.GetByteLength() + data.Length;
+
+            // Chunked messages
+            if (packetLength > maxPacketSize)
+            {
+                // Sending chunked messages isn't supported currently, as we never need to send one
+                Debug.Fail($"Message is too long! Max packet length: {maxPacketSize}, message size: {packetLength}");
+                return XboxResult.InvalidMessage;
+            }
+
+            // Create buffer and send it
+            Span<byte> packetBuffer = stackalloc byte[packetLength];
+            if (!header.TryWriteToBuffer(packetBuffer, out int bytesWritten) ||
+                !data.TryCopyTo(packetBuffer.Slice(bytesWritten)))
+            {
+                Debug.Fail("Failed to create packet buffer!");
+                return XboxResult.InvalidMessage;
+            }
+
+            return SendPacket(packetBuffer);
+        }
+
+        protected virtual XboxResult SendPacket(Span<byte> data)
+        {
+            // No-op by default, for Pcap
             return XboxResult.Success;
         }
 

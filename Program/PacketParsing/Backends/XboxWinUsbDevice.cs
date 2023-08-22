@@ -21,6 +21,7 @@ namespace RB4InstrumentMapper.Parsing
         private volatile bool readPackets = false;
 
         private XboxWinUsbDevice(USBDevice usb, USBInterface @interface)
+            : base(@interface.OutPipe.MaximumPacketSize)
         {
             usbDevice = usb;
             mainInterface = @interface;
@@ -115,6 +116,20 @@ namespace RB4InstrumentMapper.Parsing
             {
                 Debug.WriteLine($"Error while reading packet: {ex}");
                 return -1;
+            }
+        }
+
+        protected override XboxResult SendPacket(Span<byte> data)
+        {
+            try
+            {
+                mainInterface.InPipe.Write(data);
+                return XboxResult.Success;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error while sending packet: {ex}");
+                return XboxResult.InvalidMessage;
             }
         }
 
