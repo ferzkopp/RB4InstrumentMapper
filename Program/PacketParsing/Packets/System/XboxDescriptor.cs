@@ -40,6 +40,8 @@ namespace RB4InstrumentMapper.Parsing
 
         public const byte CommandId = 0x04;
 
+        public HashSet<byte> InputCommands { get; private set; }
+        public HashSet<byte> OutputCommands { get; private set; }
         public HashSet<string> ClassNames { get; private set; }
         public HashSet<Guid> InterfaceGuids { get; private set; }
 
@@ -96,6 +98,8 @@ namespace RB4InstrumentMapper.Parsing
             // No slice, offsets are relative to the start of the offsets block
 
             // Data elements
+            InputCommands = ParseUnique<byte>(data, offsets.InputCommands, nameof(InputCommands));
+            OutputCommands = ParseUnique<byte>(data, offsets.OutputCommands, nameof(OutputCommands));
             ClassNames = ParseStrings(data, offsets.ClassNames, nameof(ClassNames));
             InterfaceGuids = ParseUnique<Guid>(data, offsets.InterfaceGuids, nameof(InterfaceGuids));
 

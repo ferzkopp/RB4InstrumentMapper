@@ -225,18 +225,25 @@ namespace RB4InstrumentMapper.Parsing
             deviceMapper = MapperFactory.GetMapper(descriptor.InterfaceGuids, XboxDevice.MapperMode);
 
             // Send final set of initialization messages
+            Debug.Assert(Descriptor.OutputCommands.Contains(DeviceConfiguration.CommandId));
             var result = SendMessage(PowerOnDevice);
             if (result != XboxResult.Success)
                 return result;
 
-            result = SendMessage(EnableLed);
-            if (result != XboxResult.Success)
-                return result;
+            if (Descriptor.OutputCommands.Contains(LedControl.CommandId))
+            {
+                result = SendMessage(EnableLed);
+                if (result != XboxResult.Success)
+                    return result;
+            }
 
-            // Authentication is not and will not be implemented, we just automatically pass all devices
-            result = SendMessage(Authentication.SuccessMessage);
-            if (result != XboxResult.Success)
-                return result;
+            if (Descriptor.OutputCommands.Contains(Authentication.CommandId))
+            {
+                // Authentication is not and will not be implemented, we just automatically pass all devices
+                result = SendMessage(Authentication.SuccessMessage);
+                if (result != XboxResult.Success)
+                    return result;
+            }
 
             return XboxResult.Success;
         }
