@@ -122,11 +122,13 @@
     <Compile Include="PacketParsing\Mappers\ViGEm\FallbackVigemMapper.cs" />
     <Compile Include="PacketParsing\Mappers\ViGEm\GamepadVigemMapper.cs" />
     <Compile Include="PacketParsing\Mappers\ViGEm\GuitarVigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\ViGEm\GHLGuitarVigemMapper.cs" />
     <Compile Include="PacketParsing\Mappers\ViGEm\VigemMapper.cs" />
     <Compile Include="PacketParsing\Mappers\vJoy\DrumsVjoyMapper.cs" />
     <Compile Include="PacketParsing\Mappers\vJoy\FallbackVjoyMapper.cs" />
     <Compile Include="PacketParsing\Mappers\vJoy\GamepadVjoyMapper.cs" />
     <Compile Include="PacketParsing\Mappers\vJoy\GuitarVjoyMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\vJoy\GHLGuitarVjoyMapper.cs" />
     <Compile Include="PacketParsing\Mappers\vJoy\VjoyMapper.cs" />
     <Compile Include="PacketParsing\Mappers\DeviceMapper.cs" />
     <Compile Include="PacketParsing\Mappers\MapperFactory.cs" />
@@ -134,6 +136,8 @@
     <Compile Include="PacketParsing\Packets\Drums\XboxDrumInput.cs" />
     <Compile Include="PacketParsing\Packets\Gamepad\XboxGamepadInput.cs" />
     <Compile Include="PacketParsing\Packets\Guitar\XboxGuitarInput.cs" />
+    <Compile Include="PacketParsing\Packets\GHLGuitar\XboxGHLGuitarInput.cs" />
+    <Compile Include="PacketParsing\Packets\GHLGuitar\XboxGHLGuitarOutput.cs" />
     <Compile Include="PacketParsing\Packets\System\XboxAcknowledgement.cs" />
     <Compile Include="PacketParsing\Packets\System\XboxArrival.cs" />
     <Compile Include="PacketParsing\Packets\System\XboxAuthentication.cs" />

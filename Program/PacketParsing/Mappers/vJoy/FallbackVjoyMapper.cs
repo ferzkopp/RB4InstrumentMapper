@@ -14,7 +14,7 @@ namespace RB4InstrumentMapper.Parsing
         {
         }
 
-        protected override XboxResult OnMessageReceived(byte command, ReadOnlySpan<byte> data)
+        protected override unsafe XboxResult OnMessageReceived(byte command, ReadOnlySpan<byte> data)
         {
             switch (command)
             {
@@ -25,6 +25,13 @@ namespace RB4InstrumentMapper.Parsing
                 // case GamepadInput.CommandId:
                 // #endif
                     return ParseInput(data);
+
+                case XboxGHLGuitarInput.CommandId:
+                    if (data.Length != sizeof(XboxGHLGuitarInput) || !MemoryMarshal.TryRead(data, out XboxGHLGuitarInput guitarReport))
+                        return XboxResult.InvalidMessage;
+
+                    GHLGuitarVjoyMapper.HandleReport(ref state, guitarReport);
+                    return XboxResult.Success;
 
                 default:
                     return XboxResult.Success;

@@ -20,6 +20,11 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         protected bool deviceConnected = false;
 
+        /// <summary>
+        /// The LED number for the emulated Xbox 360 controller.
+        /// </summary>
+        protected byte userIndex;
+
         public VigemMapper(XboxClient client, bool mapGuide)
             : base(client, mapGuide)
         {
@@ -36,7 +41,8 @@ namespace RB4InstrumentMapper.Parsing
             deviceConnected = true;
 
             // Log the user index
-            PacketLogging.PrintMessage($"Created new ViGEmBus device with user index {args.LedNumber}");
+            userIndex = args.LedNumber;
+            PacketLogging.PrintMessage($"Created new ViGEmBus device with user index {userIndex}");
 
             // Unregister the event handler
             (sender as IXbox360Controller).FeedbackReceived -= DeviceConnected;

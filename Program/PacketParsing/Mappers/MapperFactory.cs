@@ -18,8 +18,11 @@ namespace RB4InstrumentMapper.Parsing
         {
             { XboxDeviceGuids.MadCatzGuitar,  GetGuitarMapper },
             { XboxDeviceGuids.PdpGuitar,      GetGuitarMapper },
+
             { XboxDeviceGuids.MadCatzDrumkit, GetDrumsMapper },
             { XboxDeviceGuids.PdpDrumkit,     GetDrumsMapper },
+    
+            { XboxDeviceGuids.ActivisionGuitarHeroLive, GetGHLGuitarMapper },
 
             { XboxDeviceGuids.MadCatzLegacyWireless, GetWirelessLegacyMapper },
 
@@ -134,6 +137,15 @@ namespace RB4InstrumentMapper.Parsing
 
         private static DeviceMapper VjoyDrumsMapper(XboxClient client, bool mapGuide)
             => new DrumsVigemMapper(client, mapGuide);
+
+        public static DeviceMapper GetGHLGuitarMapper(MappingMode mode, XboxClient client, bool mapGuide)
+            => GetMapper(mode, client, mapGuide, VigemGHLGuitarMapper, VjoyGHLGuitarMapper);
+
+        private static DeviceMapper VigemGHLGuitarMapper(XboxClient client, bool mapGuide)
+            => new GHLGuitarVigemMapper(client, mapGuide);
+
+        private static DeviceMapper VjoyGHLGuitarMapper(XboxClient client, bool mapGuide)
+            => new GHLGuitarVigemMapper(client, mapGuide);
 
         public static DeviceMapper GetWirelessLegacyMapper(MappingMode mode, XboxClient client, bool mapGuide)
         {

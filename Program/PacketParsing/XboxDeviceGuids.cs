@@ -17,5 +17,7 @@ namespace RB4InstrumentMapper.Parsing
 
         public static readonly Guid PdpGuitar = Guid.Parse("1A266AF6-3A46-45E3-B9B6-0F2C0B2C1EBE");
         public static readonly Guid PdpDrumkit = Guid.Parse("A503F9B0-955E-47C4-A2ED-B1336FA7703E");
+
+        public static readonly Guid ActivisionGuitarHeroLive = Guid.Parse("FD12FDD9-8E73-47C7-A231-96268C38009A");
     }
 }
