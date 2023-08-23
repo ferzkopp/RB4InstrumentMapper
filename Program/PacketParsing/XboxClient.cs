@@ -187,7 +187,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private unsafe XboxResult HandleArrival(ReadOnlySpan<byte> data)
         {
-            if (data.Length < sizeof(XboxArrival) || MemoryMarshal.TryRead(data, out XboxArrival arrival))
+            if (data.Length < sizeof(XboxArrival) || !MemoryMarshal.TryRead(data, out XboxArrival arrival))
                 return XboxResult.InvalidMessage;
 
             Console.WriteLine($"New client connected with ID {arrival.SerialNumber:X12}");
