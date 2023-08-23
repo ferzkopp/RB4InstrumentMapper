@@ -69,7 +69,6 @@ namespace RB4InstrumentMapper.Parsing
                 return;
 
             readPackets = false;
-            mainInterface.InPipe.Abort();
             readThread.Join();
             readThread = null;
         }
@@ -104,6 +103,8 @@ namespace RB4InstrumentMapper.Parsing
                         break;
                 }
             }
+
+            readPackets = false;
         }
 
         private int ReadPacket(Span<byte> readBuffer)
