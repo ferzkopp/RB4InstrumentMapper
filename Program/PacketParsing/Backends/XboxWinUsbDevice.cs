@@ -168,7 +168,9 @@ namespace RB4InstrumentMapper.Parsing
         {
             base.ReleaseManagedResources();
 
-            StopReading();
+            if (readThread != null)
+                StopReading();
+
             usbDevice?.Dispose();
             usbDevice = null;
             mainInterface = null;
