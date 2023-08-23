@@ -16,6 +16,11 @@ namespace RB4InstrumentMapper.Parsing
         public XboxDevice Parent { get; }
 
         /// <summary>
+        /// The arrival info of the client.
+        /// </summary>
+        public XboxArrival Arrival { get; private set; }
+
+        /// <summary>
         /// The descriptor of the client.
         /// </summary>
         public XboxDescriptor Descriptor { get; private set; }
@@ -26,8 +31,6 @@ namespace RB4InstrumentMapper.Parsing
         public byte ClientId { get; }
 
         private DeviceMapper deviceMapper;
-
-        private bool arrivalReceived = false;
 
         private readonly Dictionary<byte, byte> previousReceiveSequence = new Dictionary<byte, byte>();
         private readonly Dictionary<byte, byte> previousSendSequence = new Dictionary<byte, byte>();
@@ -118,8 +121,8 @@ namespace RB4InstrumentMapper.Parsing
                     return XboxResult.Success;
                 }
 
-                Console.WriteLine("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
-                Console.WriteLine("Reconnect it (or hit Start before connecting it) to ensure correct behavior.");
+                PacketLogging.PrintMessage("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
+                PacketLogging.PrintMessage("Reconnect it (or hit Start before connecting it) to ensure correct behavior.");
             }
 
             return deviceMapper.HandleMessage(header.CommandId, commandData);
@@ -150,14 +153,14 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private unsafe XboxResult HandleArrival(ReadOnlySpan<byte> data)
         {
-            if (arrivalReceived)
+            if (Arrival.SerialNumber != 0)
                 return XboxResult.Success;
 
             if (data.Length < sizeof(XboxArrival) || !MemoryMarshal.TryRead(data, out XboxArrival arrival))
                 return XboxResult.InvalidMessage;
 
-            Console.WriteLine($"New client connected with ID {arrival.SerialNumber:X12}");
-            arrivalReceived = true;
+            PacketLogging.PrintMessage($"New client connected with ID {arrival.SerialNumber:X12}");
+            Arrival = arrival;
 
             // Kick off descriptor request
             return SendMessage(XboxDescriptor.GetDescriptor);

@@ -36,7 +36,7 @@ namespace RB4InstrumentMapper.Parsing
             deviceConnected = true;
 
             // Log the user index
-            Console.WriteLine($"Created new ViGEmBus device with user index {args.LedNumber}");
+            PacketLogging.PrintMessage($"Created new ViGEmBus device with user index {args.LedNumber}");
 
             // Unregister the event handler
             (sender as IXbox360Controller).FeedbackReceived -= DeviceConnected;

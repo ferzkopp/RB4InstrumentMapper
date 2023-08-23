@@ -149,7 +149,9 @@
     <Compile Include="PacketParsing\Packets\XboxChunkBuffer.cs" />
     <Compile Include="PacketParsing\Packets\XboxCommandHeader.cs" />
     <Compile Include="PacketParsing\Packets\XboxMessage.cs" />
+    <Compile Include="PacketParsing\Packets\XboxPacket.cs" />
     <Compile Include="PacketParsing\ParsingUtils.cs" />
+    <Compile Include="PacketParsing\PacketLogging.cs" />
     <Compile Include="PacketParsing\XboxClient.cs" />
     <Compile Include="PacketParsing\XboxDevice.cs" />
     <Compile Include="PacketParsing\XboxDeviceGuids.cs" />

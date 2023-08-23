@@ -156,7 +156,7 @@ namespace RB4InstrumentMapper
                 Application.Current.Shutdown();
 
                 // Log exception
-                Logging.Main_WriteException(ex);
+                Logging.Main_WriteException(ex, "Failed to load Pcap interface!");
 
                 return;
             }
@@ -290,6 +290,7 @@ namespace RB4InstrumentMapper
                 if (!Logging.CreatePacketLog())
                 {
                     packetDebugLog = false;
+                    // Remaining context for this message is inside of the log creation
                     Console.WriteLine("Disabled packet logging for this capture session.");
                 }
             }
@@ -736,7 +737,7 @@ namespace RB4InstrumentMapper
                 Logging.Main_WriteLine("-------------------");
                 Logging.Main_WriteLine("UNHANDLED EXCEPTION");
                 Logging.Main_WriteLine("-------------------");
-                Logging.Main_WriteException(unhandledException);
+                Logging.Main_WriteException(unhandledException, "Unhandled exception!");
 
                 // Complete the message buffer
                 message.AppendLine("A log of the error has been created, do you want to open it?");

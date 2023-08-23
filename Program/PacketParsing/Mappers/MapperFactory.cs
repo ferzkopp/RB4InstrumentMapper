@@ -40,11 +40,11 @@ namespace RB4InstrumentMapper.Parsing
 
                 if (interfaceGuid != default)
                 {
-                    Console.WriteLine($"More than one unique interface GUID found! Cannot get specific mapper, using fallback mapper instead.");
-                    Console.WriteLine($"Consider filing a GitHub issue with the GUIDs below so that this can be addressed:");
+                    PacketLogging.PrintMessage($"More than one unique interface GUID found! Cannot get specific mapper, using fallback mapper instead.");
+                    PacketLogging.PrintMessage($"Consider filing a GitHub issue with the GUIDs below so that this can be addressed:");
                     foreach (var guid2 in interfaceGuids)
                     {
-                        Console.WriteLine($"- {guid2}");
+                        PacketLogging.PrintMessage($"- {guid2}");
                     }
                     return GetFallbackMapper(mode, client, mapGuide);
                 }
@@ -54,11 +54,11 @@ namespace RB4InstrumentMapper.Parsing
 
             if (interfaceGuid == default)
             {
-                Console.WriteLine($"Could not find interface GUID for device! Using fallback mapper instead.");
-                Console.WriteLine($"Consider filing a GitHub issue with the GUIDs below so that this can be addressed:");
+                PacketLogging.PrintMessage($"Could not find interface GUID for device! Using fallback mapper instead.");
+                PacketLogging.PrintMessage($"Consider filing a GitHub issue with the GUIDs below so that this can be addressed:");
                 foreach (var guid2 in interfaceGuids)
                 {
-                    Console.WriteLine($"- {guid2}");
+                    PacketLogging.PrintMessage($"- {guid2}");
                 }
                 return GetFallbackMapper(mode, client, mapGuide);
             }
@@ -66,8 +66,8 @@ namespace RB4InstrumentMapper.Parsing
             // Get mapper creation delegate for interface GUID
             if (!guidToMapper.TryGetValue(interfaceGuid, out var func))
             {
-                Console.WriteLine($"Could not get a specific mapper for interface GUID {interfaceGuid}! Using fallback mapper instead.");
-                Console.WriteLine($"Consider filing a GitHub issue with the GUID above so that it can be assigned the correct mapper.");
+                PacketLogging.PrintMessage($"Could not get a specific mapper for interface GUID {interfaceGuid}! Using fallback mapper instead.");
+                PacketLogging.PrintMessage($"Consider filing a GitHub issue with the GUID above so that it can be assigned the correct mapper.");
                 return GetFallbackMapper(mode, client, mapGuide);
             }
 
@@ -89,19 +89,19 @@ namespace RB4InstrumentMapper.Parsing
                         mapper = VjoyClient.AreDevicesAvailable ? createVjoy(client, mapGuide) : null;
                         // Check if all devices have been used
                         if (mapper != null && !VjoyClient.AreDevicesAvailable)
-                            Console.WriteLine("vJoy device limit reached, no new devices will be handled.");
+                            PacketLogging.PrintMessage("vJoy device limit reached, no new devices will be handled.");
                         break;
                     default:
                         throw new NotImplementedException($"Unhandled mapping mode {mode}!");
                 }
 
                 if (mapper != null)
-                    Console.WriteLine($"Created new {mapper.GetType()} mapper");
+                    PacketLogging.PrintMessage($"Created new {mapper.GetType().Name}");
                 return mapper;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to create mapper for device: {ex.GetFirstLine()}");
+                PacketLogging.PrintMessage($"Failed to create mapper for device: {ex.GetFirstLine()}");
                 return null;
             }
         }
@@ -140,12 +140,12 @@ namespace RB4InstrumentMapper.Parsing
             try
             {
                 var mapper = new WirelessLegacyMapper(mode, client, mapGuide);
-                Console.WriteLine($"Created new {nameof(WirelessLegacyMapper)} mapper");
+                PacketLogging.PrintMessage($"Created new {nameof(WirelessLegacyMapper)} mapper");
                 return mapper;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to create mapper for device: {ex.GetFirstLine()}");
+                PacketLogging.PrintMessage($"Failed to create mapper for device: {ex.GetFirstLine()}");
                 return null;
             }
         }

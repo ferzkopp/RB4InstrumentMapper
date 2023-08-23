@@ -96,9 +96,9 @@ namespace RB4InstrumentMapper.Parsing
                 }
 
                 // Process packet data
-                var packet = readBuffer.Slice(0, bytesRead);
-                Debug.WriteLine($"-> {ParsingUtils.ToString(packet)}");
-                HandlePacket(packet);
+                var packetData = readBuffer.Slice(0, bytesRead);
+                var xboxPacket = new XboxPacket(packetData, directionIn: true);
+                HandlePacket(xboxPacket);
             }
 
             readPackets = false;
@@ -112,7 +112,7 @@ namespace RB4InstrumentMapper.Parsing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error while reading packet: {ex}");
+                PacketLogging.PrintVerboseException("Error while reading packet!", ex);
                 return -1;
             }
         }
@@ -126,7 +126,7 @@ namespace RB4InstrumentMapper.Parsing
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error while sending packet: {ex}");
+                PacketLogging.PrintVerboseException("Error while sending packet!", ex);
                 return XboxResult.InvalidMessage;
             }
         }

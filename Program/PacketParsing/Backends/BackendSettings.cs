@@ -22,6 +22,11 @@ namespace RB4InstrumentMapper.Parsing
         public static bool LogPackets { get; set; } = false;
 
         /// <summary>
+        /// Whether or not verbose errors should be logged to the console.
+        /// </summary>
+        public static bool PrintVerboseErrors { get; set; } = false;
+
+        /// <summary>
         /// Whether or not the guide button is mapped.
         /// </summary>
         public static bool MapGuideButton { get; set; } = false;

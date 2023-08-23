@@ -164,7 +164,7 @@ namespace RB4InstrumentMapper.Parsing
             // Detect length sequences longer than 4 bytes
             if ((value & 0x80) != 0)
             {
-                Debug.WriteLine($"Variable-length value is greater than 4 bytes! Buffer: {ParsingUtils.ToString(data)}");
+                Debug.Fail($"Variable-length value is greater than 4 bytes! Buffer: {ParsingUtils.ToString(data)}");
                 byteLength = 0;
                 result = 0;
                 return false;
@@ -199,7 +199,7 @@ namespace RB4InstrumentMapper.Parsing
             // Detect values too large to encode
             if (value > 0x7F)
             {
-                Debug.WriteLine($"Value to encode ({value}) is greater than allowed!");
+                Debug.Fail($"Value to encode ({value}) is greater than allowed!");
                 return false;
             }
 

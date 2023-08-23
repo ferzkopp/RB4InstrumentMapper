@@ -50,7 +50,7 @@ namespace RB4InstrumentMapper.Parsing
             byte userIndex = header.UserIndex;
             if (!mappers.TryGetValue(userIndex, out var mapper))
             {
-                Debug.WriteLine($"Missing mapper for user index {userIndex}!");
+                PacketLogging.PrintVerboseError($"Missing mapper for wireless legacy user index {userIndex}!");
                 return XboxResult.InvalidMessage;
             }
 
@@ -67,7 +67,7 @@ namespace RB4InstrumentMapper.Parsing
             byte userIndex = connect.UserIndex;
             if (mappers.TryGetValue(userIndex, out var mapper))
             {
-                Debug.WriteLine($"Mapper already exists for user index {userIndex}! Overwriting.");
+                PacketLogging.PrintVerboseError($"Mapper already exists for legacy adapter user index {userIndex}! Overwriting.");
                 mapper?.Dispose();
             }
 
@@ -85,7 +85,7 @@ namespace RB4InstrumentMapper.Parsing
             byte userIndex = disconnect.UserIndex;
             if (!mappers.TryGetValue(userIndex, out var mapper))
             {
-                Debug.WriteLine($"Missing mapper for user index {userIndex}!");
+                PacketLogging.PrintVerboseError($"Missing mapper for legacy adapter user index {userIndex}!");
                 return XboxResult.InvalidMessage;
             }
 
@@ -128,9 +128,8 @@ namespace RB4InstrumentMapper.Parsing
                     return MapperFactory.GetGuitarMapper(mappingMode, client, mapGuideButton);
 
                 default:
-                    Debug.WriteLine($"Unsupported XInput subtype {subtype} on user index {connect.UserIndex}!");
-                    Console.WriteLine($"The Xbox 360 controller on user index {connect.UserIndex + 1} of the legacy adapter has an unsupported subtype ({subtype})!");
-                    Console.WriteLine("If you think it should be supported, restart capture with packet logging to a file enabled, and create a GitHub issue with the log file attached.");
+                    PacketLogging.PrintMessage($"User index {connect.UserIndex + 1} on the legacy adapter has an unsupported subtype ({subtype})!");
+                    PacketLogging.PrintMessage("If you think it should be supported, restart capture with packet logging to a file enabled, go through all of the inputs, and create a GitHub issue with the log file attached.");
                     return null;
             }
         }

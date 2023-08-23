@@ -95,7 +95,7 @@ namespace RB4InstrumentMapper.Parsing
                 Debug.Fail($"Buffer size is smaller than size listed in header!  Buffer size: {data.Length}, listed size: {header.DataLength}");
                 return false;
             }
-            Debug.WriteLineIf(data.Length != header.DataLength, $"Buffer size is not the same as size listed in header!  Buffer size: {data.Length}, listed size: {header.DataLength}");
+            Debug.Assert(data.Length == header.DataLength, $"Buffer size is not the same as size listed in header!  Buffer size: {data.Length}, listed size: {header.DataLength}");
             data = data.Slice(header.HeaderLength);
 
             // Data offsets

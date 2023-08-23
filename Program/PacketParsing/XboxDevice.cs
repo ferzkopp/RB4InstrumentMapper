@@ -47,11 +47,15 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Handles an incoming packet for this device.
         /// </summary>
-        public unsafe XboxResult HandlePacket(ReadOnlySpan<byte> data)
+        public unsafe XboxResult HandlePacket(XboxPacket packet)
         {
+            // Debugging (if enabled)
+            PacketLogging.LogPacket(packet);
+
             // Some devices may send multiple messages in a single packet, placing them back-to-back
             // The header length is very important in these scenarios, as it determines which bytes are part of the message
             // and where the next message's header begins.
+            var data = packet.Data;
             while (data.Length > 0)
             {
                 // Command header
@@ -84,10 +88,10 @@ namespace RB4InstrumentMapper.Parsing
                     case XboxResult.Disconnected:
                         client.Dispose();
                         clients.Remove(header.Client);
-                        Debug.WriteLine($"Client {header.Client} disconnected");
+                        PacketLogging.PrintMessage($"Client {client.Arrival.SerialNumber} disconnected");
                         break;
                     default:
-                        Debug.WriteLine($"Error handling message: {clientResult}");
+                        PacketLogging.PrintVerboseError($"Error handling message: {clientResult}");
                         break;
                 }
 
@@ -151,7 +155,8 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
             }
 
-            Debug.WriteLine($"<- {ParsingUtils.ToString(packetBuffer)}");
+            var xboxPacket = new XboxPacket(packetBuffer, directionIn: false);
+            PacketLogging.LogPacket(xboxPacket);
 
             // Attempt a few times
             const int retryThreshold = 3;

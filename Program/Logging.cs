@@ -18,10 +18,7 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// Gets whether or not the main log exists.
         /// </summary>
-        public static bool MainLogExists
-        {
-            get => mainLog != null;
-        }
+        public static bool MainLogExists => mainLog != null;
 
         private static bool allowMainLogCreation = true;
 
@@ -33,10 +30,7 @@ namespace RB4InstrumentMapper
         /// <summary>
         /// Gets whether or not a packet log exists.
         /// </summary>
-        public static bool PacketLogExists
-        {
-            get => packetLog != null;
-        }
+        public static bool PacketLogExists => packetLog != null;
 
         /// <summary>
         /// The path to the folder to write logs to.
@@ -45,8 +39,9 @@ namespace RB4InstrumentMapper
         /// Currently %USERPROFILE%\Documents\RB4InstrumentMapper\Logs
         /// </remarks>
         public static readonly string LogFolderPath = Path.Combine(
-            System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            "RB4InstrumentMapper\\Logs"
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            "RB4InstrumentMapper",
+            "Logs"
         );
 
         /// <summary>
@@ -56,8 +51,9 @@ namespace RB4InstrumentMapper
         /// Currently %USERPROFILE%\Documents\RB4InstrumentMapper\PacketLogs
         /// </remarks>
         public static readonly string PacketLogFolderPath = Path.Combine(
-            System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            "RB4InstrumentMapper\\PacketLogs"
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            "RB4InstrumentMapper",
+            "PacketLogs"
         );
 
         /// <summary>
@@ -95,25 +91,19 @@ namespace RB4InstrumentMapper
         /// </summary>
         public static bool CreateMainLog()
         {
-            if (allowMainLogCreation && mainLog == null)
+            if (!allowMainLogCreation || mainLog != null)
+                return true;
+
+            mainLog = CreateFileStream(LogFolderPath);
+            if (mainLog == null)
             {
-                mainLog = CreateFileStream(LogFolderPath);
-                if (mainLog != null)
-                {
-                    Console.WriteLine("Created main log file.");
-                    return true;
-                }
-                else
-                {
-                    // Log could not be created, don't allow creating it again to prevent console spam
-                    allowMainLogCreation = false;
-                    return false;
-                }
-            }
-            else
-            {
+                // Log could not be created, don't allow creating it again to prevent console spam
+                allowMainLogCreation = false;
                 return false;
             }
+
+            Console.WriteLine("Created main log file.");
+            return true;
         }
 
         /// <summary>
@@ -121,23 +111,15 @@ namespace RB4InstrumentMapper
         /// </summary>
         public static bool CreatePacketLog()
         {
+            if (packetLog != null)
+                return true;
+
+            packetLog = CreateFileStream(PacketLogFolderPath);
             if (packetLog == null)
-            {
-                packetLog = CreateFileStream(PacketLogFolderPath);
-                if (packetLog != null)
-                {
-                    Console.WriteLine("Created packet log file.");
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
                 return false;
-            }
+
+            Console.WriteLine("Created packet log file.");
+            return true;
         }
 
         /// <summary>
@@ -148,32 +130,25 @@ namespace RB4InstrumentMapper
             // Create log file if it hasn't been made yet
             CreateMainLog();
 
-            mainLog?.WriteLine(text);
+            mainLog?.WriteLine(GetMessageHeader(text));
         }
 
         /// <summary>
-        /// Writes an exception, and any additonal info, to the log.
+        /// Writes an exception, and any context, to the log.
         /// </summary>
-        public static void Main_WriteException(Exception ex, string addtlInfo = null)
+        public static void Main_WriteException(Exception ex, string context = null)
         {
             // Create log file if it hasn't been made yet
             CreateMainLog();
 
-            mainLog?.WriteException(ex, addtlInfo);
+            mainLog?.WriteException(ex, context);
         }
 
         public static void Packet_WriteLine(string text)
         {
             // Don't create log file if it hasn't been made yet
             // Packet log should be created manually
-            packetLog?.WriteLine(text);
-        }
-
-        public static void Packet_Write(string text)
-        {
-            // Don't create log file if it hasn't been made yet
-            // Packet log should be created manually
-            packetLog?.Write(text);
+            packetLog?.WriteLine(GetMessageHeader(text));
         }
 
         /// <summary>
@@ -213,7 +188,7 @@ namespace RB4InstrumentMapper
         /// </param>
         public static string GetFirstLine(this Exception ex)
         {
-            return ex?.ToString().Split('\n')[0];
+            return ex.ToString().Split('\n')[0];
         }
 
         // Extension method for logging exceptions to streams in a customized manner
@@ -226,24 +201,24 @@ namespace RB4InstrumentMapper
         /// <param name="ex">
         /// The exception to log.
         /// </param>
-        /// <param name="addtlInfo">
-        /// Additional info to log after the stack trace.
+        /// <param name="context">
+        /// Additional context for the exception.
         /// </param>
-        public static void WriteException(this StreamWriter stream, Exception ex, string addtlInfo = null)
+        public static void WriteException(this StreamWriter stream, Exception ex, string context = null)
         {
-            // Current date and time, formatted in Year/Month/Date Hour:Minute:Second with the invariant culture
-            string timestamp = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture);
-
-            // Log
-            stream.WriteLine($"[{timestamp}] EXCEPTION:");
+            stream.WriteLine(GetMessageHeader("EXCEPTION"));
             stream.WriteLine("------------------------------");
+            // Prevent writing an empty line if context is not provided
+            if (context != null)
+                stream.WriteLine(context);
             stream.WriteLine(ex.ToString());
-            // Prevent writing an empty line if additional info is not provided
-            if (addtlInfo != null)
-            {
-                stream.WriteLine(addtlInfo);
-            }
             stream.WriteLine("------------------------------");
+        }
+
+        private static string GetMessageHeader(string message)
+        {
+            string timestamp = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture);
+            return $"[{timestamp}] {message}";
         }
     }
 }

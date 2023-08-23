@@ -119,42 +119,31 @@ namespace RB4InstrumentMapper.Parsing
                 return;
             }
 
-            // Debugging (if enabled)
-            if (BackendSettings.LogPackets)
-            {
-                string packetLogString = $"{packet.Header.Timeval.Date:yyyy-MM-dd hh:mm:ss.fff} [{packet.Data.Length}] " +
-                    $"{ParsingUtils.ToString(headerData)} | {ParsingUtils.ToString(packetData)}";
-                Console.WriteLine(packetLogString);
-                Logging.Packet_WriteLine(packetLogString);
-            }
-
             // Check if device ID has been encountered yet
             ulong deviceId = header.DeviceId;
             if (!devices.TryGetValue(deviceId, out var device))
             {
                 device = new XboxDevice(BackendSettings.MapperMode, BackendSettings.MapGuideButton);
                 devices.Add(deviceId, device);
-                Console.WriteLine($"Device with ID {deviceId:X12} was connected");
+                PacketLogging.PrintMessage($"Device with ID {deviceId:X12} was connected");
             }
+
+            var xboxPacket = new XboxPacket()
+            {
+                DirectionIn = true,
+                Time = packet.Header.Timeval.Date,
+                Header = headerData,
+                Data = packetData,
+            };
 
             try
             {
-                var result = device.HandlePacket(packetData);
-                switch (result)
+                var result = device.HandlePacket(xboxPacket);
+                if (result == XboxResult.Disconnected)
                 {
-                    case XboxResult.Disconnected:
-                        device.Dispose();
-                        devices.Remove(deviceId);
-                        Console.WriteLine($"Device with ID {deviceId:X12} was disconnected");
-                        break;
-                    case XboxResult.InvalidMessage:
-                        if (BackendSettings.LogPackets)
-                        {
-                            string invalidMessage = $"Invalid packet received!";
-                            Console.WriteLine(invalidMessage);
-                            Logging.Packet_WriteLine(invalidMessage);
-                        }
-                        break;
+                    device.Dispose();
+                    devices.Remove(deviceId);
+                    PacketLogging.PrintMessage($"Device with ID {deviceId:X12} was disconnected");
                 }
             }
             catch (ThreadAbortException)
@@ -164,8 +153,7 @@ namespace RB4InstrumentMapper.Parsing
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error while handling packet: {ex.GetFirstLine()}");
-                Logging.Main_WriteException(ex, "Context: Unhandled error during packet handling");
+                PacketLogging.PrintException("Error while handling packet!", ex);
 
                 // Stop capture
                 StopCapture();
