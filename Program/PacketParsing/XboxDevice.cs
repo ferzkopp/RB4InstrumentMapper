@@ -87,8 +87,7 @@ namespace RB4InstrumentMapper.Parsing
                     case XboxResult.Disconnected:
                         return clientResult;
                     default:
-                        if (data.Length < 1)
-                            return clientResult;
+                        Debug.WriteLine($"Error handling message: {clientResult}");
                         break;
                 }
 

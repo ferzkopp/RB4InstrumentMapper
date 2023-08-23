@@ -97,11 +97,10 @@ namespace RB4InstrumentMapper.Parsing
                 var packet = readBuffer.Slice(0, bytesRead);
                 Debug.WriteLine($"-> {ParsingUtils.ToString(packet)}");
                 var result = HandlePacket(packet);
-                switch (result)
+                if (result == XboxResult.Disconnected)
                 {
-                    case XboxResult.InvalidMessage:
-                        Debug.WriteLine($"Invalid packet received!");
-                        break;
+                    Debug.WriteLine("Disconnection message received, stopping device read");
+                    break;
                 }
             }
 
