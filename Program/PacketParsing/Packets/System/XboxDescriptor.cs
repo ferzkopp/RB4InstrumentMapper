@@ -11,7 +11,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <remarks>
     /// A large amount of the descriptor data is ignored, only data necessary for identifying device types is read.
     /// </remarks>
-    public class XboxDescriptor
+    internal class XboxDescriptor
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         private struct Header
@@ -37,6 +37,16 @@ namespace RB4InstrumentMapper.Parsing
             private ushort unk2;
             private ushort unk3;
         }
+
+        public static readonly XboxMessage GetDescriptor = new XboxMessage()
+        {
+            Header = new XboxCommandHeader()
+            {
+                CommandId = CommandId,
+                Flags = XboxCommandFlags.SystemCommand,
+            },
+            // Header only, no data
+        };
 
         public const byte CommandId = 0x04;
 

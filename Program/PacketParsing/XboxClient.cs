@@ -10,45 +10,6 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class XboxClient : IDisposable
     {
-        #region Message definitions
-        private static readonly XboxMessage GetDescriptor = new XboxMessage()
-        {
-            Header = new XboxCommandHeader()
-            {
-                CommandId = XboxDescriptor.CommandId,
-                Flags = XboxCommandFlags.SystemCommand,
-            },
-            // Header only, no data
-        };
-
-        private static readonly XboxMessage<XboxConfiguration> PowerOnDevice = new XboxMessage<XboxConfiguration>()
-        {
-            Header = new XboxCommandHeader()
-            {
-                CommandId = XboxConfiguration.CommandId,
-                Flags = XboxCommandFlags.SystemCommand,
-            },
-            Data = new XboxConfiguration()
-            {
-                SubCommand = XboxConfigurationCommand.PowerOn,
-            }
-        };
-
-        private static readonly XboxMessage<XboxLedControl> EnableLed = new XboxMessage<XboxLedControl>()
-        {
-            Header = new XboxCommandHeader()
-            {
-                CommandId = XboxLedControl.CommandId,
-                Flags = XboxCommandFlags.SystemCommand,
-            },
-            Data = new XboxLedControl()
-            {
-                Mode = XboxLedMode.On,
-                Brightness = 0x14
-            }
-        };
-        #endregion
-
         /// <summary>
         /// The parent device of the client.
         /// </summary>
@@ -193,7 +154,7 @@ namespace RB4InstrumentMapper.Parsing
             Console.WriteLine($"New client connected with ID {arrival.SerialNumber:X12}");
 
             // Kick off descriptor request
-            return SendMessage(GetDescriptor);
+            return SendMessage(XboxDescriptor.GetDescriptor);
         }
 
         /// <summary>
@@ -226,13 +187,13 @@ namespace RB4InstrumentMapper.Parsing
 
             // Send final set of initialization messages
             Debug.Assert(Descriptor.OutputCommands.Contains(XboxConfiguration.CommandId));
-            var result = SendMessage(PowerOnDevice);
+            var result = SendMessage(XboxConfiguration.PowerOnDevice);
             if (result != XboxResult.Success)
                 return result;
 
             if (Descriptor.OutputCommands.Contains(XboxLedControl.CommandId))
             {
-                result = SendMessage(EnableLed);
+                result = SendMessage(XboxLedControl.EnableLed);
                 if (result != XboxResult.Success)
                     return result;
             }

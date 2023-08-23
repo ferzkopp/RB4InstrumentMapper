@@ -16,6 +16,19 @@ namespace RB4InstrumentMapper.Parsing
     {
         public const byte CommandId = 0x05;
 
+        public static readonly XboxMessage<XboxConfiguration> PowerOnDevice = new XboxMessage<XboxConfiguration>()
+        {
+            Header = new XboxCommandHeader()
+            {
+                CommandId = CommandId,
+                Flags = XboxCommandFlags.SystemCommand,
+            },
+            Data = new XboxConfiguration()
+            {
+                SubCommand = XboxConfigurationCommand.PowerOn,
+            }
+        };
+
         public XboxConfigurationCommand SubCommand;
     }
 
