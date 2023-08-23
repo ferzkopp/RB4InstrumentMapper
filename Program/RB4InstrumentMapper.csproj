@@ -114,6 +114,7 @@
     </ApplicationDefinition>
     <Compile Include="MainWindow\PcapDeviceExtensions.cs" />
     <Compile Include="MainWindow\TextBoxWriter.cs" />
+    <Compile Include="PacketParsing\Backends\BackendSettings.cs" />
     <Compile Include="PacketParsing\Backends\PcapBackend.cs" />
     <Compile Include="PacketParsing\Backends\WinUsbBackend.cs" />
     <Compile Include="PacketParsing\Backends\XboxWinUsbDevice.cs" />

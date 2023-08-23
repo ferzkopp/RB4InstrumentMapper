@@ -20,8 +20,8 @@ namespace RB4InstrumentMapper.Parsing
         private Thread readThread;
         private volatile bool readPackets = false;
 
-        private XboxWinUsbDevice(USBDevice usb, USBInterface @interface)
-            : base(@interface.OutPipe.MaximumPacketSize)
+        private XboxWinUsbDevice(USBDevice usb, USBInterface @interface, MappingMode mode, bool mapGuide)
+            : base(mode, mapGuide, @interface.OutPipe.MaximumPacketSize)
         {
             usbDevice = usb;
             mainInterface = @interface;
@@ -50,7 +50,7 @@ namespace RB4InstrumentMapper.Parsing
                 return null;
             }
 
-            return new XboxWinUsbDevice(usbDevice, mainInterface);
+            return new XboxWinUsbDevice(usbDevice, mainInterface, BackendSettings.MapperMode, BackendSettings.MapGuideButton);
         }
 
         public void StartReading()

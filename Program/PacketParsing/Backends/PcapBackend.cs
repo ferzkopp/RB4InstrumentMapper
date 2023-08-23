@@ -45,11 +45,6 @@ namespace RB4InstrumentMapper.Parsing
     public static class PcapBackend
     {
         /// <summary>
-        /// Whether or not packets should be logged to the console.
-        /// </summary>
-        public static bool LogPackets { get; set; } = false;
-
-        /// <summary>
         /// Event fired when packet capture stops automatically.
         /// </summary>
         public static event Action OnCaptureStop;
@@ -125,7 +120,7 @@ namespace RB4InstrumentMapper.Parsing
             }
 
             // Debugging (if enabled)
-            if (LogPackets)
+            if (BackendSettings.LogPackets)
             {
                 string packetLogString = $"{packet.Header.Timeval.Date:yyyy-MM-dd hh:mm:ss.fff} [{packet.Data.Length}] " +
                     $"{ParsingUtils.ToString(headerData)} | {ParsingUtils.ToString(packetData)}";
@@ -137,7 +132,7 @@ namespace RB4InstrumentMapper.Parsing
             ulong deviceId = header.DeviceId;
             if (!devices.TryGetValue(deviceId, out var device))
             {
-                device = new XboxDevice();
+                device = new XboxDevice(BackendSettings.MapperMode, BackendSettings.MapGuideButton);
                 devices.Add(deviceId, device);
                 Console.WriteLine($"Device with ID {deviceId:X12} was connected");
             }
@@ -153,7 +148,7 @@ namespace RB4InstrumentMapper.Parsing
                         Console.WriteLine($"Device with ID {deviceId:X12} was disconnected");
                         break;
                     case XboxResult.InvalidMessage:
-                        if (LogPackets)
+                        if (BackendSettings.LogPackets)
                         {
                             string invalidMessage = $"Invalid packet received!";
                             Console.WriteLine(invalidMessage);

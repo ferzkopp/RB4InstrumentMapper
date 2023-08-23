@@ -5,12 +5,6 @@ using System.Runtime.CompilerServices;
 
 namespace RB4InstrumentMapper.Parsing
 {
-    internal enum MappingMode
-    {
-        ViGEmBus = 1,
-        vJoy = 2
-    }
-
     internal enum XboxResult
     {
         Success,
@@ -24,8 +18,6 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class XboxDevice : IDisposable
     {
-        public static MappingMode MapperMode;
-
         /// <summary>
         /// The clients currently on the device.
         /// </summary>
@@ -33,13 +25,18 @@ namespace RB4InstrumentMapper.Parsing
 
         private readonly int maxPacketSize;
 
-        public XboxDevice() : this(maxPacketSize: 0)
+        public MappingMode MappingMode { get; }
+        public bool MapGuideButton { get; }
+
+        public XboxDevice(MappingMode mode, bool mapGuide) : this(mode, mapGuide, 0)
         {
         }
 
-        protected XboxDevice(int maxPacketSize)
+        protected XboxDevice(MappingMode mode, bool mapGuide, int maxPacket)
         {
-            this.maxPacketSize = maxPacketSize;
+            MappingMode = mode;
+            MapGuideButton = mapGuide;
+            maxPacketSize = maxPacket;
         }
 
         ~XboxDevice()

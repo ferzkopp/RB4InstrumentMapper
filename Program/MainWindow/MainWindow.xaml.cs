@@ -376,7 +376,7 @@ namespace RB4InstrumentMapper
             }
 
             // Start capture
-            PcapBackend.LogPackets = packetDebug;
+            BackendSettings.LogPackets = packetDebug;
             PcapBackend.OnCaptureStop += OnCaptureStopped;
             PcapBackend.StartCapture(pcapSelectedDevice);
             Console.WriteLine($"Listening on {pcapSelectedDevice.GetDisplayName()}...");
@@ -534,7 +534,7 @@ namespace RB4InstrumentMapper
                 case 0:
                     if (VjoyClient.GetAvailableDeviceCount() > 0)
                     {
-                        XboxDevice.MapperMode = MappingMode.vJoy;
+                        BackendSettings.MapperMode = MappingMode.vJoy;
                         Settings.Default.controllerDeviceType = (int)ControllerType.vJoy;
                     }
                     else
@@ -548,12 +548,12 @@ namespace RB4InstrumentMapper
 
                 // ViGEmBus
                 case 1:
-                    XboxDevice.MapperMode = MappingMode.ViGEmBus;
+                    BackendSettings.MapperMode = MappingMode.ViGEmBus;
                     Settings.Default.controllerDeviceType = (int)ControllerType.VigemBus;
                     break;
 
                 default:
-                    XboxDevice.MapperMode = 0;
+                    BackendSettings.MapperMode = 0;
                     Settings.Default.controllerDeviceType = (int)ControllerType.None;
                     break;
             }
