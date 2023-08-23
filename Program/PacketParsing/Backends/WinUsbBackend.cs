@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Nefarius.Drivers.WinUSB;
 using Nefarius.Utilities.DeviceManagement.PnP;
 
@@ -79,23 +80,31 @@ namespace RB4InstrumentMapper.Parsing
 
         private static void AddDevice(string devicePath)
         {
+            // Paths are case-insensitive
+            devicePath = devicePath.ToLowerInvariant();
             var device = XboxWinUsbDevice.TryCreate(devicePath);
             if (device == null)
                 return;
 
             devices.Add(devicePath, device);
+            if (started)
+                device.StartReading();
 
+            Debug.WriteLine($"Added device {devicePath}");
             DeviceAddedOrRemoved?.Invoke();
         }
 
         private static void RemoveDevice(string devicePath)
         {
+            // Paths are case-insensitive
+            devicePath = devicePath.ToLowerInvariant();
             if (!devices.TryGetValue(devicePath, out var device))
                 return;
 
             devices.Remove(devicePath);
             device.Dispose();
 
+            Debug.WriteLine($"Removed device {devicePath}");
             DeviceAddedOrRemoved?.Invoke();
         }
     }
