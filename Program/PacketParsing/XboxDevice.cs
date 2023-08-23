@@ -152,6 +152,8 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
             }
 
+            Debug.WriteLine($"<- {ParsingUtils.ToString(packetBuffer)}");
+
             // Attempt a few times
             const int retryThreshold = 3;
             int retryCount = 0;

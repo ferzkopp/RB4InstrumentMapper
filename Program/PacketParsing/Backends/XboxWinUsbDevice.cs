@@ -94,8 +94,9 @@ namespace RB4InstrumentMapper.Parsing
                 }
 
                 // Process packet data
-                Debug.WriteLine(ParsingUtils.ToString(readBuffer));
-                var result = HandlePacket(readBuffer.Slice(0, bytesRead));
+                var packet = readBuffer.Slice(0, bytesRead);
+                Debug.WriteLine($"-> {ParsingUtils.ToString(packet)}");
+                var result = HandlePacket(packet);
                 switch (result)
                 {
                     case XboxResult.InvalidMessage:
