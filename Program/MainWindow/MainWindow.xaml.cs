@@ -248,6 +248,7 @@ namespace RB4InstrumentMapper
         {
             startButton.IsEnabled =
                 WinUsbBackend.DeviceCount > 0 ||
+                packetCaptureActive ||
                 (controllerDeviceTypeCombo.SelectedIndex != (int)ControllerType.None &&
                 pcapDeviceCombo.SelectedIndex != -1);
         }
