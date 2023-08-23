@@ -25,6 +25,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public byte ClientId { get; }
 
+        private bool arrivalReceived = false;
         private IDeviceMapper deviceMapper;
 
         private readonly Dictionary<byte, byte> previousReceiveSequence = new Dictionary<byte, byte>();
@@ -148,10 +149,14 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private unsafe XboxResult HandleArrival(ReadOnlySpan<byte> data)
         {
+            if (arrivalReceived)
+                return XboxResult.Success;
+
             if (data.Length < sizeof(XboxArrival) || !MemoryMarshal.TryRead(data, out XboxArrival arrival))
                 return XboxResult.InvalidMessage;
 
             Console.WriteLine($"New client connected with ID {arrival.SerialNumber:X12}");
+            arrivalReceived = true;
 
             // Kick off descriptor request
             return SendMessage(XboxDescriptor.GetDescriptor);

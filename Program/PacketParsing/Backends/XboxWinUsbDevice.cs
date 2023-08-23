@@ -65,6 +65,8 @@ namespace RB4InstrumentMapper.Parsing
 
         public void StopReading()
         {
+            // Always reset device
+            SendMessage(XboxConfiguration.ResetDevice);
             if (!readPackets)
                 return;
 

@@ -29,6 +29,19 @@ namespace RB4InstrumentMapper.Parsing
             }
         };
 
+        public static readonly XboxMessage<XboxConfiguration> ResetDevice = new XboxMessage<XboxConfiguration>()
+        {
+            Header = new XboxCommandHeader()
+            {
+                CommandId = CommandId,
+                Flags = XboxCommandFlags.SystemCommand,
+            },
+            Data = new XboxConfiguration()
+            {
+                SubCommand = XboxConfigurationCommand.Reset,
+            }
+        };
+
         public XboxConfigurationCommand SubCommand;
     }
 
