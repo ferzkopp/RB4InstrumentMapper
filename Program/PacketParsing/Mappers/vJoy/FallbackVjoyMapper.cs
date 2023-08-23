@@ -9,14 +9,12 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class FallbackVjoyMapper : VjoyMapper
     {
-        public FallbackVjoyMapper() : base()
+        public FallbackVjoyMapper(XboxClient client, bool mapGuide)
+            : base(client, mapGuide)
         {
         }
 
-        /// <summary>
-        /// Handles an incoming packet.
-        /// </summary>
-        protected override XboxResult OnPacketReceived(byte command, ReadOnlySpan<byte> data)
+        protected override XboxResult OnMessageReceived(byte command, ReadOnlySpan<byte> data)
         {
             switch (command)
             {
@@ -33,10 +31,7 @@ namespace RB4InstrumentMapper.Parsing
             }
         }
 
-        /// <summary>
-        /// Parses an input report.
-        /// </summary>
-        public unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
+        private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
             if (data.Length == sizeof(XboxGuitarInput) && MemoryMarshal.TryRead(data, out XboxGuitarInput guitarReport))
             {

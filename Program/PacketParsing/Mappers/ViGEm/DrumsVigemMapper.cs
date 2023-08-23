@@ -10,14 +10,12 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class DrumsVigemMapper : VigemMapper
     {
-        public DrumsVigemMapper() : base()
+        public DrumsVigemMapper(XboxClient client, bool mapGuide)
+            : base(client, mapGuide)
         {
         }
 
-        /// <summary>
-        /// Handles an incoming packet.
-        /// </summary>
-        protected override XboxResult OnPacketReceived(byte command, ReadOnlySpan<byte> data)
+        protected override XboxResult OnMessageReceived(byte command, ReadOnlySpan<byte> data)
         {
             switch (command)
             {
@@ -38,9 +36,6 @@ namespace RB4InstrumentMapper.Parsing
         // The current state of the d-pad mask from the hit yellow/blue cymbals
         private int dpadMask;
 
-        /// <summary>
-        /// Parses an input report.
-        /// </summary>
         private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
             if (data.Length != sizeof(XboxDrumInput) || !MemoryMarshal.TryRead(data, out XboxDrumInput drumReport))
@@ -152,34 +147,26 @@ namespace RB4InstrumentMapper.Parsing
                 Xbox360Axis.RightThumbY,
                 ByteToVelocityNegative((byte)(greenPad | greenCym))
             );
+        }
 
-            /// <summary>
-            /// Scales a byte to a drums velocity value.
-            /// </summary>
-            short ByteToVelocity(byte value)
-            {
-                // Scale the value to fill the byte
-                value = (byte)(value * 0x11);
+        private static short ByteToVelocity(byte value)
+        {
+            // Scale the value to fill the byte
+            value = (byte)(value * 0x11);
 
-                return (short)(
-                    // Bitwise invert to flip the value, then shift down one to exclude the sign bit
-                    (~value.ScaleToUInt16()) >> 1
-                );
-            }
+            // Bitwise invert to flip the value, then shift down one to exclude the sign bit
+            int scaled = ~value.ScaleToUInt16();
+            return (short)(scaled >> 1);
+        }
 
-            /// <summary>
-            /// Scales a byte to a negative drums velocity value.
-            /// </summary>
-            short ByteToVelocityNegative(byte value)
-            {
-                // Scale the value to fill the byte
-                value = (byte)(value * 0x11);
+        private static short ByteToVelocityNegative(byte value)
+        {
+            // Scale the value to fill the byte
+            value = (byte)(value * 0x11);
 
-                return (short)(
-                    // Bitwise invert to flip the value, then shift down one to exclude the sign bit, then add our own
-                    ((~value.ScaleToUInt16()) >> 1) | 0x8000
-                );
-            }
+            // Bitwise invert to flip the value, then shift down one to exclude the sign bit, then add our own
+            int scaled = ~value.ScaleToUInt16();
+            return (short)((scaled >> 1) | 0x8000);
         }
     }
 }

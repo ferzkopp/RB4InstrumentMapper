@@ -6,23 +6,27 @@ using RB4InstrumentMapper.Vjoy;
 namespace RB4InstrumentMapper.Parsing
 {
     /// <summary>
-    /// Factory for device mappers.
+    /// Creates a device mapper for a client.
     /// </summary>
     internal static class MapperFactory
     {
+        private delegate DeviceMapper CreateMapperForMode(MappingMode mode, XboxClient client, bool mapGuide);
+        private delegate DeviceMapper CreateMapper(XboxClient client, bool mapGuide);
+
         // Device interface GUIDs to check when getting the device mapper
-        private static readonly Dictionary<Guid, Func<MappingMode, IDeviceMapper>> guidToMapper = new Dictionary<Guid, Func<MappingMode, IDeviceMapper>>()
+        private static readonly Dictionary<Guid, CreateMapperForMode> guidToMapper = new Dictionary<Guid, CreateMapperForMode>()
         {
-            { XboxDeviceGuids.MadCatzGuitar, GetGuitarMapper },
-            { XboxDeviceGuids.PdpGuitar, GetGuitarMapper },
+            { XboxDeviceGuids.MadCatzGuitar,  GetGuitarMapper },
+            { XboxDeviceGuids.PdpGuitar,      GetGuitarMapper },
             { XboxDeviceGuids.MadCatzDrumkit, GetDrumsMapper },
-            { XboxDeviceGuids.PdpDrumkit, GetDrumsMapper },
+            { XboxDeviceGuids.PdpDrumkit,     GetDrumsMapper },
 #if DEBUG
-            { XboxDeviceGuids.XboxGamepad, GetGamepadMapper },
+            { XboxDeviceGuids.XboxGamepad,    GetGamepadMapper },
 #endif
         };
 
-        public static IDeviceMapper GetMapper(IEnumerable<Guid> interfaceGuids, MappingMode mode)
+        public static DeviceMapper GetMapper(IEnumerable<Guid> interfaceGuids, MappingMode mode,
+            XboxClient client, bool mapGuide)
         {
             // Get unique interface GUID
             Guid interfaceGuid = default;
@@ -39,7 +43,7 @@ namespace RB4InstrumentMapper.Parsing
                     {
                         Console.WriteLine($"- {guid2}");
                     }
-                    return GetFallbackMapper(mode);
+                    return GetFallbackMapper(mode, client, mapGuide);
                 }
 
                 interfaceGuid = guid;
@@ -53,7 +57,7 @@ namespace RB4InstrumentMapper.Parsing
                 {
                     Console.WriteLine($"- {guid2}");
                 }
-                return GetFallbackMapper(mode);
+                return GetFallbackMapper(mode, client, mapGuide);
             }
 
             // Get mapper creation delegate for interface GUID
@@ -61,49 +65,35 @@ namespace RB4InstrumentMapper.Parsing
             {
                 Console.WriteLine($"Could not get a specific mapper for interface GUID {interfaceGuid}! Using fallback mapper instead.");
                 Console.WriteLine($"Consider filing a GitHub issue with the GUID above so that it can be assigned the correct mapper.");
-                return GetFallbackMapper(mode);
+                return GetFallbackMapper(mode, client, mapGuide);
             }
 
-            return func(mode);
+            return func(mode, client, mapGuide);
         }
 
-#if DEBUG
-        private static IDeviceMapper GetGamepadMapper(MappingMode mode)
-            => GetMapper<GamepadVigemMapper, GamepadVjoyMapper>(mode, $"Created new {mode} gamepad mapper");
-#endif
-
-        private static IDeviceMapper GetGuitarMapper(MappingMode mode)
-            => GetMapper<GuitarVigemMapper, GuitarVjoyMapper>(mode, $"Created new {mode} guitar mapper");
-
-        private static IDeviceMapper GetDrumsMapper(MappingMode mode)
-            => GetMapper<DrumsVigemMapper, DrumsVjoyMapper>(mode, $"Created new {mode} drumkit mapper");
-
-        public static IDeviceMapper GetFallbackMapper(MappingMode mode)
-            => GetMapper<FallbackVigemMapper, FallbackVjoyMapper>(mode, $"Created new fallback {mode} mapper");
-
-        private static IDeviceMapper GetMapper<TVigem, TVjoy>(MappingMode mode, string creationMessage)
-            where TVigem : class, IDeviceMapper, new()
-            where TVjoy : class, IDeviceMapper, new()
+        private static DeviceMapper GetMapper(MappingMode mode, XboxClient client, bool mapGuide,
+            CreateMapper createVigem, CreateMapper createVjoy)
         {
             try
             {
-                IDeviceMapper mapper;
+                DeviceMapper mapper;
                 switch (mode)
                 {
                     case MappingMode.ViGEmBus:
-                        mapper = VigemClient.AreDevicesAvailable ? new TVigem() : null;
+                        mapper = VigemClient.AreDevicesAvailable ? createVigem(client, mapGuide) : null;
                         break;
                     case MappingMode.vJoy:
-                        mapper = VjoyClient.AreDevicesAvailable ? new TVjoy() : null;
+                        mapper = VjoyClient.AreDevicesAvailable ? createVjoy(client, mapGuide) : null;
                         // Check if all devices have been used
                         if (mapper != null && !VjoyClient.AreDevicesAvailable)
                             Console.WriteLine("vJoy device limit reached, no new devices will be handled.");
                         break;
-                    default: throw new NotImplementedException($"Unhandled mapping mode {mode}!");
+                    default:
+                        throw new NotImplementedException($"Unhandled mapping mode {mode}!");
                 }
 
                 if (mapper != null)
-                    Console.WriteLine(creationMessage);
+                    Console.WriteLine($"Created new {mapper.GetType()} mapper");
                 return mapper;
             }
             catch (Exception ex)
@@ -112,5 +102,43 @@ namespace RB4InstrumentMapper.Parsing
                 return null;
             }
         }
+
+#if DEBUG
+        public static DeviceMapper GetGamepadMapper(MappingMode mode, XboxClient client, bool mapGuide)
+            => GetMapper(mode, client, mapGuide, VigemGamepadMapper, VjoyGamepadMapper);
+
+        private static DeviceMapper VigemGamepadMapper(XboxClient client, bool mapGuide)
+            => new GamepadVigemMapper(client, mapGuide);
+
+        private static DeviceMapper VjoyGamepadMapper(XboxClient client, bool mapGuide)
+            => new GamepadVigemMapper(client, mapGuide);
+#endif
+
+        public static DeviceMapper GetGuitarMapper(MappingMode mode, XboxClient client, bool mapGuide)
+            => GetMapper(mode, client, mapGuide, VigemGuitarMapper, VjoyGuitarMapper);
+
+        private static DeviceMapper VigemGuitarMapper(XboxClient client, bool mapGuide)
+            => new GuitarVigemMapper(client, mapGuide);
+
+        private static DeviceMapper VjoyGuitarMapper(XboxClient client, bool mapGuide)
+            => new GuitarVigemMapper(client, mapGuide);
+
+        public static DeviceMapper GetDrumsMapper(MappingMode mode, XboxClient client, bool mapGuide)
+            => GetMapper(mode, client, mapGuide, VigemDrumsMapper, VjoyDrumsMapper);
+
+        private static DeviceMapper VigemDrumsMapper(XboxClient client, bool mapGuide)
+            => new DrumsVigemMapper(client, mapGuide);
+
+        private static DeviceMapper VjoyDrumsMapper(XboxClient client, bool mapGuide)
+            => new DrumsVigemMapper(client, mapGuide);
+
+        public static DeviceMapper GetFallbackMapper(MappingMode mode, XboxClient client, bool mapGuide)
+            => GetMapper(mode, client, mapGuide, VigemFallbackMapper, VjoyFallbackMapper);
+
+        private static DeviceMapper VigemFallbackMapper(XboxClient client, bool mapGuide)
+            => new FallbackVigemMapper(client, mapGuide);
+
+        private static DeviceMapper VjoyFallbackMapper(XboxClient client, bool mapGuide)
+            => new FallbackVigemMapper(client, mapGuide);
     }
 }

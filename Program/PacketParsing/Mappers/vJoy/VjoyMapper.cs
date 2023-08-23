@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using RB4InstrumentMapper.Vjoy;
 using vJoyInterfaceWrap;
 
@@ -8,14 +7,13 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// A mapper that maps to a vJoy device.
     /// </summary>
-    internal abstract class VjoyMapper : IDeviceMapper
+    internal abstract class VjoyMapper : DeviceMapper
     {
-        public bool MapGuideButton { get; set; } = false;
-
         protected vJoy.JoystickState state = new vJoy.JoystickState();
         protected uint deviceId = 0;
 
-        public VjoyMapper()
+        public VjoyMapper(XboxClient client, bool mapGuide)
+            : base(client, mapGuide)
         {
             deviceId = VjoyClient.GetNextAvailableID();
             if (deviceId == 0)
@@ -32,36 +30,10 @@ namespace RB4InstrumentMapper.Parsing
             Console.WriteLine($"Acquired vJoy device with ID of {deviceId}");
         }
 
-        /// <summary>
-        /// Performs cleanup on object finalization.
-        /// </summary>
-        ~VjoyMapper()
+        protected override void MapGuideButton(bool pressed)
         {
-            Dispose(false);
-        }
-
-        /// <summary>
-        /// Handles an incoming packet.
-        /// </summary>
-        public XboxResult HandlePacket(byte command, ReadOnlySpan<byte> data)
-        {
-            if (deviceId == 0)
-                throw new ObjectDisposedException("this");
-
-            return OnPacketReceived(command, data);
-        }
-
-        protected abstract XboxResult OnPacketReceived(byte command, ReadOnlySpan<byte> data);
-
-        public XboxResult HandleKeystroke(XboxKeystroke key)
-        {
-            if (key.Keycode == XboxKeyCode.LeftWindows && MapGuideButton)
-            {
-                state.SetButton(VjoyButton.Fourteen, key.Pressed);
-                VjoyClient.UpdateDevice(deviceId, ref state);
-            }
-
-            return XboxResult.Success;
+            state.SetButton(VjoyButton.Fourteen, pressed);
+            VjoyClient.UpdateDevice(deviceId, ref state);
         }
 
         // vJoy axes range from 0x0000 to 0x8000, but are exposed as full ints for some reason
@@ -135,16 +107,7 @@ namespace RB4InstrumentMapper.Parsing
             state.bHats = (uint)direction;
         }
 
-        /// <summary>
-        /// Performs cleanup for the vJoy mapper.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        private void Dispose(bool disposing)
+        protected override void DisposeUnmanagedResources()
         {
             // Reset report
             state.Reset();

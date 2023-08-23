@@ -12,14 +12,12 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class GamepadVjoyMapper : VjoyMapper
     {
-        public GamepadVjoyMapper() : base()
+        public GamepadVjoyMapper(XboxClient client, bool mapGuide)
+            : base(client, mapGuide)
         {
         }
 
-        /// <summary>
-        /// Handles an incoming packet.
-        /// </summary>
-        protected override XboxResult OnPacketReceived(byte command, ReadOnlySpan<byte> data)
+        protected override XboxResult OnMessageReceived(byte command, ReadOnlySpan<byte> data)
         {
             switch (command)
             {
@@ -31,10 +29,7 @@ namespace RB4InstrumentMapper.Parsing
             }
         }
 
-        /// <summary>
-        /// Parses an input report.
-        /// </summary>
-        public unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
+        private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
             if (data.Length < sizeof(XboxGamepadInput) || !MemoryMarshal.TryRead(data, out XboxGamepadInput gamepadReport))
                 return XboxResult.InvalidMessage;

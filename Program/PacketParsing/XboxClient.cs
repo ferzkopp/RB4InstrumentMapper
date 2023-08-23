@@ -25,8 +25,10 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public byte ClientId { get; }
 
+        private DeviceMapper deviceMapper;
+        private readonly bool mapGuideButton;
+
         private bool arrivalReceived = false;
-        private IDeviceMapper deviceMapper;
 
         private readonly Dictionary<byte, byte> previousReceiveSequence = new Dictionary<byte, byte>();
         private readonly Dictionary<byte, byte> previousSendSequence = new Dictionary<byte, byte>();
@@ -35,10 +37,12 @@ namespace RB4InstrumentMapper.Parsing
             { XboxDescriptor.CommandId, new XboxChunkBuffer() },
         };
 
-        public XboxClient(XboxDevice parent, byte clientId)
+        public XboxClient(XboxDevice parent, byte clientId, bool mapGuide = false)
         {
             Parent = parent;
             ClientId = clientId;
+
+            mapGuideButton = mapGuide;
         }
 
         ~XboxClient()
@@ -110,7 +114,7 @@ namespace RB4InstrumentMapper.Parsing
             // Non-system commands are handled by the mapper
             if (deviceMapper == null)
             {
-                deviceMapper = MapperFactory.GetFallbackMapper(XboxDevice.MapperMode);
+                deviceMapper = MapperFactory.GetFallbackMapper(XboxDevice.MapperMode, this, mapGuideButton);
                 if (deviceMapper == null)
                 {
                     // No more devices available, do nothing
@@ -121,7 +125,7 @@ namespace RB4InstrumentMapper.Parsing
                 Console.WriteLine("Reconnect it (or hit Start before connecting it) to ensure correct behavior.");
             }
 
-            return deviceMapper.HandlePacket(header.CommandId, commandData);
+            return deviceMapper.HandleMessage(header.CommandId, commandData);
         }
 
         private XboxResult HandleSystemCommand(byte commandId, ReadOnlySpan<byte> commandData)
@@ -188,7 +192,7 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
 
             Descriptor = descriptor;
-            deviceMapper = MapperFactory.GetMapper(descriptor.InterfaceGuids, XboxDevice.MapperMode);
+            deviceMapper = MapperFactory.GetMapper(descriptor.InterfaceGuids, XboxDevice.MapperMode, this, mapGuideButton);
 
             // Send final set of initialization messages
             Debug.Assert(Descriptor.OutputCommands.Contains(XboxConfiguration.CommandId));

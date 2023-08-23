@@ -10,14 +10,12 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class GuitarVigemMapper : VigemMapper
     {
-        public GuitarVigemMapper() : base()
+        public GuitarVigemMapper(XboxClient client, bool mapGuide)
+            : base(client, mapGuide)
         {
         }
 
-        /// <summary>
-        /// Handles an incoming packet.
-        /// </summary>
-        protected override XboxResult OnPacketReceived(byte command, ReadOnlySpan<byte> data)
+        protected override XboxResult OnMessageReceived(byte command, ReadOnlySpan<byte> data)
         {
             switch (command)
             {
@@ -29,9 +27,6 @@ namespace RB4InstrumentMapper.Parsing
             }
         }
 
-        /// <summary>
-        /// Parses an input report.
-        /// </summary>
         private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
             if (data.Length != sizeof(XboxGuitarInput) || !MemoryMarshal.TryRead(data, out XboxGuitarInput guitarReport))
