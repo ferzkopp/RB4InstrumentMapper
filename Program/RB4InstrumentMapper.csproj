@@ -129,6 +129,7 @@
     <Compile Include="PacketParsing\Mappers\vJoy\VjoyMapper.cs" />
     <Compile Include="PacketParsing\Mappers\DeviceMapper.cs" />
     <Compile Include="PacketParsing\Mappers\MapperFactory.cs" />
+    <Compile Include="PacketParsing\Mappers\WirelessLegacyMapper.cs" />
     <Compile Include="PacketParsing\Packets\Drums\XboxDrumInput.cs" />
     <Compile Include="PacketParsing\Packets\Gamepad\XboxGamepadInput.cs" />
     <Compile Include="PacketParsing\Packets\Guitar\XboxGuitarInput.cs" />
@@ -140,6 +141,10 @@
     <Compile Include="PacketParsing\Packets\System\XboxKeystroke.cs" />
     <Compile Include="PacketParsing\Packets\System\XboxLedControl.cs" />
     <Compile Include="PacketParsing\Packets\System\XboxStatus.cs" />
+    <Compile Include="PacketParsing\Packets\WirelessLegacy\XboxWirelessLegacyDeviceConnect.cs" />
+    <Compile Include="PacketParsing\Packets\WirelessLegacy\XboxWirelessLegacyDeviceDisconnect.cs" />
+    <Compile Include="PacketParsing\Packets\WirelessLegacy\XboxWirelessLegacyInput.cs" />
+    <Compile Include="PacketParsing\Packets\WirelessLegacy\XboxWirelessLegacyRequestDevices.cs" />
     <Compile Include="PacketParsing\Packets\XboxChunkBuffer.cs" />
     <Compile Include="PacketParsing\Packets\XboxCommandHeader.cs" />
     <Compile Include="PacketParsing\Packets\XboxMessage.cs" />

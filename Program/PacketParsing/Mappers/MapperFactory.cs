@@ -20,6 +20,9 @@ namespace RB4InstrumentMapper.Parsing
             { XboxDeviceGuids.PdpGuitar,      GetGuitarMapper },
             { XboxDeviceGuids.MadCatzDrumkit, GetDrumsMapper },
             { XboxDeviceGuids.PdpDrumkit,     GetDrumsMapper },
+
+            { XboxDeviceGuids.MadCatzLegacyWireless, GetWirelessLegacyMapper },
+
 #if DEBUG
             { XboxDeviceGuids.XboxGamepad,    GetGamepadMapper },
 #endif
@@ -131,6 +134,21 @@ namespace RB4InstrumentMapper.Parsing
 
         private static DeviceMapper VjoyDrumsMapper(XboxClient client, bool mapGuide)
             => new DrumsVigemMapper(client, mapGuide);
+
+        public static DeviceMapper GetWirelessLegacyMapper(MappingMode mode, XboxClient client, bool mapGuide)
+        {
+            try
+            {
+                var mapper = new WirelessLegacyMapper(mode, client, mapGuide);
+                Console.WriteLine($"Created new {nameof(WirelessLegacyMapper)} mapper");
+                return mapper;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to create mapper for device: {ex.GetFirstLine()}");
+                return null;
+            }
+        }
 
         public static DeviceMapper GetFallbackMapper(MappingMode mode, XboxClient client, bool mapGuide)
             => GetMapper(mode, client, mapGuide, VigemFallbackMapper, VjoyFallbackMapper);
