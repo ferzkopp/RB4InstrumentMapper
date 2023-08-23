@@ -85,7 +85,10 @@ namespace RB4InstrumentMapper.Parsing
                     case XboxResult.Pending:
                         break;
                     case XboxResult.Disconnected:
-                        return clientResult;
+                        client.Dispose();
+                        clients.Remove(header.Client);
+                        Debug.WriteLine($"Client {header.Client} disconnected");
+                        break;
                     default:
                         Debug.WriteLine($"Error handling message: {clientResult}");
                         break;

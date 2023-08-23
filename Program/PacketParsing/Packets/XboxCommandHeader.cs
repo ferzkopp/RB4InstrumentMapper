@@ -27,6 +27,8 @@ namespace RB4InstrumentMapper.Parsing
     {
         public const int MinimumByteLength = 4;
 
+        public const byte PrimaryClient = 0;
+
         public byte CommandId;
         public byte Flags_Client;
         public byte SequenceCount;
