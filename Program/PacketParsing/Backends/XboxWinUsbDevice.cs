@@ -119,7 +119,7 @@ namespace RB4InstrumentMapper.Parsing
         {
             try
             {
-                mainInterface.InPipe.Write(data);
+                mainInterface.OutPipe.Write(data);
                 return XboxResult.Success;
             }
             catch (Exception ex)
