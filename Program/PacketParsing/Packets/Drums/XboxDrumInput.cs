@@ -7,20 +7,20 @@ namespace RB4InstrumentMapper.Parsing
     /// Re-definitions for button flags that have specific meanings.
     /// </summary>
     [Flags]
-    internal enum DrumButton : ushort
+    internal enum XboxDrumButton : ushort
     {
         // Not used as these are for menu navigation purposes
         // RedPad = GamepadButton.B,
         // GreenPad = GamepadButton.A,
-        KickOne = GamepadButton.LeftBumper,
-        KickTwo = GamepadButton.RightBumper
+        KickOne = XboxGamepadButton.LeftBumper,
+        KickTwo = XboxGamepadButton.RightBumper
     }
 
     /// <summary>
     /// An input report from a drumkit.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct DrumInput
+    internal struct XboxDrumInput
     {
         public const byte CommandId = 0x20;
 

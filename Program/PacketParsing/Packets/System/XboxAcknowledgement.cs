@@ -10,7 +10,7 @@ namespace RB4InstrumentMapper.Parsing
     /// Used for communication reliability and error detection.
     /// </remarks>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct Acknowledgement
+    internal struct XboxAcknowledgement
     {
         public const byte CommandId = 0x01;
 
@@ -21,9 +21,9 @@ namespace RB4InstrumentMapper.Parsing
         private ushort unk2;
         public ushort RemainingBuffer;
 
-        public CommandFlags InnerFlags
+        public XboxCommandFlags InnerFlags
         {
-            get => (CommandFlags)(InnerFlags_Client & 0xF0);
+            get => (XboxCommandFlags)(InnerFlags_Client & 0xF0);
             set => InnerFlags_Client = (byte)((byte)value & 0xF0 | InnerClient);
         }
 
@@ -33,14 +33,14 @@ namespace RB4InstrumentMapper.Parsing
             set => InnerFlags_Client = (byte)((byte)InnerFlags | value & 0x0F);
         }
 
-        public static (CommandHeader header, Acknowledgement acknowledge) FromMessage(CommandHeader header,
+        public static (XboxCommandHeader header, XboxAcknowledgement acknowledge) FromMessage(XboxCommandHeader header,
             ReadOnlySpan<byte> messageBuffer)
         {
             // The Xbox One driver seems to always send this for the inner flag
-            header.Flags = CommandFlags.SystemCommand;
+            header.Flags = XboxCommandFlags.SystemCommand;
 
             // Set acknowledgement data
-            var acknowledge = new Acknowledgement()
+            var acknowledge = new XboxAcknowledgement()
             {
                 unk1 = 0,
                 InnerCommand = header.CommandId,
@@ -55,8 +55,8 @@ namespace RB4InstrumentMapper.Parsing
             return (header, acknowledge);
         }
 
-        public static (CommandHeader header, Acknowledgement acknowledge) FromMessage(CommandHeader header,
-            ReadOnlySpan<byte> messageBuffer, ChunkBuffer chunkBuffer)
+        public static (XboxCommandHeader header, XboxAcknowledgement acknowledge) FromMessage(XboxCommandHeader header,
+            ReadOnlySpan<byte> messageBuffer, XboxChunkBuffer chunkBuffer)
         {
             var pair = FromMessage(header, messageBuffer);
 

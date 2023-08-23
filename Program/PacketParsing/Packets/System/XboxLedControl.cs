@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace RB4InstrumentMapper.Parsing
 {
-    internal enum LedMode : byte
+    internal enum XboxLedMode : byte
     {
         Off = 0x00,
         On = 0x01,
@@ -14,13 +14,13 @@ namespace RB4InstrumentMapper.Parsing
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct LedControl
+    internal struct XboxLedControl
     {
         public const byte CommandId = 0x0a;
 
         private byte unknown;
 
-        public LedMode Mode;
+        public XboxLedMode Mode;
         public byte Brightness; 
     }
 }

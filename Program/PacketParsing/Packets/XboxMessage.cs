@@ -2,10 +2,10 @@ namespace RB4InstrumentMapper.Parsing
 {
     internal class XboxMessage
     {
-        private CommandHeader _header;
+        private XboxCommandHeader _header;
         private byte[] _data;
 
-        public CommandHeader Header
+        public XboxCommandHeader Header
         {
             get => _header;
             set
@@ -29,10 +29,10 @@ namespace RB4InstrumentMapper.Parsing
     internal unsafe class XboxMessage<TData>
         where TData : unmanaged
     {
-        private CommandHeader _header;
+        private XboxCommandHeader _header;
         public TData Data;
 
-        public CommandHeader Header
+        public XboxCommandHeader Header
         {
             get => _header;
             set

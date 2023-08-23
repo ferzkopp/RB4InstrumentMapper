@@ -58,7 +58,7 @@ namespace RB4InstrumentMapper.Parsing
             while (data.Length > 0)
             {
                 // Command header
-                if (!CommandHeader.TryParse(data, out var header, out int headerLength))
+                if (!XboxCommandHeader.TryParse(data, out var header, out int headerLength))
                 {
                     return XboxResult.InvalidMessage;
                 }
@@ -110,12 +110,12 @@ namespace RB4InstrumentMapper.Parsing
             return SendMessage(message.Header, ref message.Data);
         }
 
-        internal unsafe XboxResult SendMessage(CommandHeader header)
+        internal unsafe XboxResult SendMessage(XboxCommandHeader header)
         {
             return SendMessage(header, Span<byte>.Empty);
         }
 
-        internal unsafe XboxResult SendMessage<T>(CommandHeader header, ref T data)
+        internal unsafe XboxResult SendMessage<T>(XboxCommandHeader header, ref T data)
             where T : unmanaged
         {
             // Create a byte buffer for the given data
@@ -124,10 +124,10 @@ namespace RB4InstrumentMapper.Parsing
         }
 
         // TODO: Span instead of ReadOnlySpan since the WinUSB lib doesn't use ReadOnlySpan for writing atm
-        internal XboxResult SendMessage(CommandHeader header, Span<byte> data)
+        internal XboxResult SendMessage(XboxCommandHeader header, Span<byte> data)
         {
             // For devices handled by Pcap and not over USB
-            if (maxPacketSize < CommandHeader.MinimumByteLength)
+            if (maxPacketSize < XboxCommandHeader.MinimumByteLength)
                 return XboxResult.Success;
 
             // Initialize lengths

@@ -5,7 +5,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// Available types of batteries that can be used on a controller.
     /// </summary>
-    internal enum BatteryType : byte
+    internal enum XboxBatteryType : byte
     {
         Wired = 0,
         Standard = 1,
@@ -15,7 +15,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// The amount of battery remaining on the controller.
     /// </summary>
-    internal enum BatteryLevel : byte
+    internal enum XboxBatteryLevel : byte
     {
         Low = 0,
         Medium = 1,
@@ -29,7 +29,7 @@ namespace RB4InstrumentMapper.Parsing
     /// Provides information about a device's current status, such as battery type and level.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal readonly struct DeviceStatus
+    internal readonly struct XboxStatus
     {
         public const byte CommandId = 0x03;
 
@@ -39,7 +39,7 @@ namespace RB4InstrumentMapper.Parsing
         private readonly byte unk3;
 
         public bool Connected => (status & 0b1100_0000) != 0;
-        public BatteryType BatteryType => (BatteryType)(status & 0b0000_1100);
-        public BatteryLevel BatteryLevel => (BatteryLevel)(status & 0b0000_0011);
+        public XboxBatteryType BatteryType => (XboxBatteryType)(status & 0b0000_1100);
+        public XboxBatteryLevel BatteryLevel => (XboxBatteryLevel)(status & 0b0000_0011);
     }
 }

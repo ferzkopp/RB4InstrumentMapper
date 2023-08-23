@@ -21,7 +21,7 @@ namespace RB4InstrumentMapper.Parsing
         {
             switch (command)
             {
-                case DrumInput.CommandId:
+                case XboxDrumInput.CommandId:
                     return ParseInput(data);
 
                 default:
@@ -43,7 +43,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
-            if (data.Length != sizeof(DrumInput) || !MemoryMarshal.TryRead(data, out DrumInput drumReport))
+            if (data.Length != sizeof(XboxDrumInput) || !MemoryMarshal.TryRead(data, out XboxDrumInput drumReport))
                 return XboxResult.InvalidMessage;
 
             HandleReport(device, drumReport, ref previousDpadCymbals, ref dpadMask);
@@ -56,18 +56,18 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Maps drumkit input data to an Xbox 360 controller.
         /// </summary>
-        internal static void HandleReport(IXbox360Controller device, in DrumInput report, ref int previousDpadCymbals, ref int dpadMask)
+        internal static void HandleReport(IXbox360Controller device, in XboxDrumInput report, ref int previousDpadCymbals, ref int dpadMask)
         {
             // Menu and Options
-            var buttons = (GamepadButton)report.Buttons;
-            device.SetButtonState(Xbox360Button.Start, (buttons & GamepadButton.Menu) != 0);
-            device.SetButtonState(Xbox360Button.Back, (buttons & GamepadButton.Options) != 0);
+            var buttons = (XboxGamepadButton)report.Buttons;
+            device.SetButtonState(Xbox360Button.Start, (buttons & XboxGamepadButton.Menu) != 0);
+            device.SetButtonState(Xbox360Button.Back, (buttons & XboxGamepadButton.Options) != 0);
 
             // Dpad
-            device.SetButtonState(Xbox360Button.Up, (buttons & GamepadButton.DpadUp) != 0);
-            device.SetButtonState(Xbox360Button.Down, (buttons & GamepadButton.DpadDown) != 0);
-            device.SetButtonState(Xbox360Button.Left, (buttons & GamepadButton.DpadLeft) != 0);
-            device.SetButtonState(Xbox360Button.Right, (buttons & GamepadButton.DpadRight) != 0);
+            device.SetButtonState(Xbox360Button.Up, (buttons & XboxGamepadButton.DpadUp) != 0);
+            device.SetButtonState(Xbox360Button.Down, (buttons & XboxGamepadButton.DpadDown) != 0);
+            device.SetButtonState(Xbox360Button.Left, (buttons & XboxGamepadButton.DpadLeft) != 0);
+            device.SetButtonState(Xbox360Button.Right, (buttons & XboxGamepadButton.DpadRight) != 0);
 
             // Pads and cymbals
             byte redPad    = report.RedPad;
@@ -113,14 +113,14 @@ namespace RB4InstrumentMapper.Parsing
                 previousDpadCymbals = cymbalMask;
             }
 
-            device.SetButtonState(Xbox360Button.Up, ((dpadMask & yellowBit) != 0) || ((buttons & GamepadButton.DpadUp) != 0));
-            device.SetButtonState(Xbox360Button.Down, ((dpadMask & blueBit) != 0) || ((buttons & GamepadButton.DpadDown) != 0));
+            device.SetButtonState(Xbox360Button.Up, ((dpadMask & yellowBit) != 0) || ((buttons & XboxGamepadButton.DpadUp) != 0));
+            device.SetButtonState(Xbox360Button.Down, ((dpadMask & blueBit) != 0) || ((buttons & XboxGamepadButton.DpadDown) != 0));
 
             // Color flags
-            device.SetButtonState(Xbox360Button.B, (redPad != 0) || ((buttons & GamepadButton.B) != 0));
-            device.SetButtonState(Xbox360Button.Y, ((yellowPad | yellowCym) != 0) || ((buttons & GamepadButton.Y) != 0));
-            device.SetButtonState(Xbox360Button.X, ((bluePad | blueCym) != 0) || ((buttons & GamepadButton.X) != 0));
-            device.SetButtonState(Xbox360Button.A, ((greenPad | greenCym) != 0) || ((buttons & GamepadButton.A) != 0));
+            device.SetButtonState(Xbox360Button.B, (redPad != 0) || ((buttons & XboxGamepadButton.B) != 0));
+            device.SetButtonState(Xbox360Button.Y, ((yellowPad | yellowCym) != 0) || ((buttons & XboxGamepadButton.Y) != 0));
+            device.SetButtonState(Xbox360Button.X, ((bluePad | blueCym) != 0) || ((buttons & XboxGamepadButton.X) != 0));
+            device.SetButtonState(Xbox360Button.A, ((greenPad | greenCym) != 0) || ((buttons & XboxGamepadButton.A) != 0));
 
             // Pad flag
             device.SetButtonState(Xbox360Button.RightThumb,
@@ -131,9 +131,9 @@ namespace RB4InstrumentMapper.Parsing
 
             // Pedals
             device.SetButtonState(Xbox360Button.LeftShoulder,
-                (report.Buttons & (ushort)DrumButton.KickOne) != 0);
+                (report.Buttons & (ushort)XboxDrumButton.KickOne) != 0);
             device.SetButtonState(Xbox360Button.LeftThumb,
-                (report.Buttons & (ushort)DrumButton.KickTwo) != 0);
+                (report.Buttons & (ushort)XboxDrumButton.KickTwo) != 0);
 
             // Velocities
             device.SetAxisValue(

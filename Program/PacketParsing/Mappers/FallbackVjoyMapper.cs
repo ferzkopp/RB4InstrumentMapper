@@ -20,7 +20,7 @@ namespace RB4InstrumentMapper.Parsing
         {
             switch (command)
             {
-                case GuitarInput.CommandId:
+                case XboxGuitarInput.CommandId:
                 // These have the same value
                 // case DrumInput.CommandId:
                 // #if DEBUG
@@ -38,16 +38,16 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
-            if (data.Length == sizeof(GuitarInput) && MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
+            if (data.Length == sizeof(XboxGuitarInput) && MemoryMarshal.TryRead(data, out XboxGuitarInput guitarReport))
             {
                 GuitarVjoyMapper.HandleReport(ref state, guitarReport);
             }
-            else if (data.Length == sizeof(DrumInput) && MemoryMarshal.TryRead(data, out DrumInput drumReport))
+            else if (data.Length == sizeof(XboxDrumInput) && MemoryMarshal.TryRead(data, out XboxDrumInput drumReport))
             {
                 DrumsVjoyMapper.HandleReport(ref state, drumReport);
             }
 #if DEBUG
-            else if (data.Length == sizeof(GamepadInput) && MemoryMarshal.TryRead(data, out GamepadInput gamepadReport))
+            else if (data.Length == sizeof(XboxGamepadInput) && MemoryMarshal.TryRead(data, out XboxGamepadInput gamepadReport))
             {
                 GamepadVjoyMapper.HandleReport(ref state, gamepadReport);
             }

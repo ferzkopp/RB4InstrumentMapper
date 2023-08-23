@@ -5,7 +5,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// Flags for keystroke events.
     /// </summary>
-    internal enum KeystrokeFlags : byte
+    internal enum XboxKeystrokeFlags : byte
     {
         Pressed = 0x01,
     }
@@ -16,7 +16,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <remarks>
     /// These mirror those in the Win32 API; for brevity, only the ones used are defined here.
     /// </remarks>
-    public enum KeyCode : byte
+    public enum XboxKeyCode : byte
     {
         LeftWindows = 0x5B, // Used for the guide button
     }
@@ -25,13 +25,13 @@ namespace RB4InstrumentMapper.Parsing
     /// A keystroke event from a controller.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct Keystroke
+    internal struct XboxKeystroke
     {
         public const byte CommandId = 0x07;
 
-        public KeystrokeFlags Flags;
-        public KeyCode Keycode;
+        public XboxKeystrokeFlags Flags;
+        public XboxKeyCode Keycode;
 
-        public bool Pressed => (Flags & KeystrokeFlags.Pressed) != 0;
+        public bool Pressed => (Flags & XboxKeystrokeFlags.Pressed) != 0;
     }
 }

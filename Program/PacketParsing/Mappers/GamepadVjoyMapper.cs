@@ -23,7 +23,7 @@ namespace RB4InstrumentMapper.Parsing
         {
             switch (command)
             {
-                case GamepadInput.CommandId:
+                case XboxGamepadInput.CommandId:
                     return ParseInput(data);
 
                 default:
@@ -36,7 +36,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
-            if (data.Length < sizeof(GamepadInput) || !MemoryMarshal.TryRead(data, out GamepadInput gamepadReport))
+            if (data.Length < sizeof(XboxGamepadInput) || !MemoryMarshal.TryRead(data, out XboxGamepadInput gamepadReport))
                 return XboxResult.InvalidMessage;
 
             HandleReport(ref state, gamepadReport);
@@ -49,7 +49,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Maps gamepad input data to a vJoy device.
         /// </summary>
-        internal static void HandleReport(ref vJoy.JoystickState state, GamepadInput report)
+        internal static void HandleReport(ref vJoy.JoystickState state, XboxGamepadInput report)
         {
             // Buttons and axes are mapped the same way as they display in joy.cpl when used normally
 
@@ -69,7 +69,7 @@ namespace RB4InstrumentMapper.Parsing
             state.SetButton(VjoyButton.Ten, report.RightStickPress);
 
             // D-pad
-            ParseDpad(ref state, (GamepadButton)report.Buttons);
+            ParseDpad(ref state, (XboxGamepadButton)report.Buttons);
 
             // Left stick
             SetAxis(ref state.AxisX, report.LeftStickX);

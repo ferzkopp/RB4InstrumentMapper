@@ -21,7 +21,7 @@ namespace RB4InstrumentMapper.Parsing
         {
             switch (command)
             {
-                case DrumInput.CommandId:
+                case XboxDrumInput.CommandId:
                     return ParseInput(data);
 
                 default:
@@ -34,7 +34,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
-            if (data.Length != sizeof(DrumInput) || !MemoryMarshal.TryRead(data, out DrumInput guitarReport))
+            if (data.Length != sizeof(XboxDrumInput) || !MemoryMarshal.TryRead(data, out XboxDrumInput guitarReport))
                 return XboxResult.InvalidMessage;
 
             HandleReport(ref state, guitarReport);
@@ -47,21 +47,21 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Maps drumkit input data to a vJoy device.
         /// </summary>
-        internal static void HandleReport(ref vJoy.JoystickState state, DrumInput report)
+        internal static void HandleReport(ref vJoy.JoystickState state, XboxDrumInput report)
         {
             // Menu and Options
-            var buttons = (GamepadButton)report.Buttons;
-            state.SetButton(VjoyButton.Fifteen, (buttons & GamepadButton.Menu) != 0);
-            state.SetButton(VjoyButton.Sixteen, (buttons & GamepadButton.Options) != 0);
+            var buttons = (XboxGamepadButton)report.Buttons;
+            state.SetButton(VjoyButton.Fifteen, (buttons & XboxGamepadButton.Menu) != 0);
+            state.SetButton(VjoyButton.Sixteen, (buttons & XboxGamepadButton.Options) != 0);
 
             // D-pad
             ParseDpad(ref state, buttons);
 
             // Face buttons
-            state.SetButton(VjoyButton.Four, (buttons & GamepadButton.A) != 0);
-            state.SetButton(VjoyButton.One, (buttons & GamepadButton.B) != 0);
-            state.SetButton(VjoyButton.Three, (buttons & GamepadButton.X) != 0);
-            state.SetButton(VjoyButton.Two, (buttons & GamepadButton.Y) != 0);
+            state.SetButton(VjoyButton.Four, (buttons & XboxGamepadButton.A) != 0);
+            state.SetButton(VjoyButton.One, (buttons & XboxGamepadButton.B) != 0);
+            state.SetButton(VjoyButton.Three, (buttons & XboxGamepadButton.X) != 0);
+            state.SetButton(VjoyButton.Two, (buttons & XboxGamepadButton.Y) != 0);
 
             // Pads
             state.SetButton(VjoyButton.One, report.RedPad != 0);
@@ -75,8 +75,8 @@ namespace RB4InstrumentMapper.Parsing
             state.SetButton(VjoyButton.Eight, report.GreenCymbal != 0);
 
             // Kick pedals
-            state.SetButton(VjoyButton.Five, (report.Buttons & (ushort)DrumButton.KickOne) != 0);
-            state.SetButton(VjoyButton.Nine, (report.Buttons & (ushort)DrumButton.KickTwo) != 0);
+            state.SetButton(VjoyButton.Five, (report.Buttons & (ushort)XboxDrumButton.KickOne) != 0);
+            state.SetButton(VjoyButton.Nine, (report.Buttons & (ushort)XboxDrumButton.KickTwo) != 0);
         }
     }
 }

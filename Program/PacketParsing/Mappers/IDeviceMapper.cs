@@ -17,6 +17,6 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         XboxResult HandlePacket(byte command, ReadOnlySpan<byte> data);
 
-        XboxResult HandleKeystroke(Keystroke key);
+        XboxResult HandleKeystroke(XboxKeystroke key);
     }
 }

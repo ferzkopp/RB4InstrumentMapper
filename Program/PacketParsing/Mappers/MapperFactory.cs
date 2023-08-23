@@ -13,12 +13,12 @@ namespace RB4InstrumentMapper.Parsing
         // Device interface GUIDs to check when getting the device mapper
         private static readonly Dictionary<Guid, Func<MappingMode, IDeviceMapper>> guidToMapper = new Dictionary<Guid, Func<MappingMode, IDeviceMapper>>()
         {
-            { DeviceGuids.MadCatzGuitar, GetGuitarMapper },
-            { DeviceGuids.PdpGuitar, GetGuitarMapper },
-            { DeviceGuids.MadCatzDrumkit, GetDrumsMapper },
-            { DeviceGuids.PdpDrumkit, GetDrumsMapper },
+            { XboxDeviceGuids.MadCatzGuitar, GetGuitarMapper },
+            { XboxDeviceGuids.PdpGuitar, GetGuitarMapper },
+            { XboxDeviceGuids.MadCatzDrumkit, GetDrumsMapper },
+            { XboxDeviceGuids.PdpDrumkit, GetDrumsMapper },
 #if DEBUG
-            { DeviceGuids.XboxGamepad, GetGamepadMapper },
+            { XboxDeviceGuids.XboxGamepad, GetGamepadMapper },
 #endif
         };
 

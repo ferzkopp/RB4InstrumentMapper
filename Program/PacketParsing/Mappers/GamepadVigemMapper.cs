@@ -23,7 +23,7 @@ namespace RB4InstrumentMapper.Parsing
         {
             switch (command)
             {
-                case GamepadInput.CommandId:
+                case XboxGamepadInput.CommandId:
                     return ParseInput(data);
 
                 default:
@@ -36,7 +36,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
-            if (data.Length < sizeof(GamepadInput) || !MemoryMarshal.TryRead(data, out GamepadInput gamepadReport))
+            if (data.Length < sizeof(XboxGamepadInput) || !MemoryMarshal.TryRead(data, out XboxGamepadInput gamepadReport))
                 return XboxResult.InvalidMessage;
 
             HandleReport(device, gamepadReport);
@@ -49,7 +49,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Maps gamepad input data to an Xbox 360 controller.
         /// </summary>
-        internal static void HandleReport(IXbox360Controller device, in GamepadInput report)
+        internal static void HandleReport(IXbox360Controller device, in XboxGamepadInput report)
         {
             // Face buttons
             device.SetButtonState(Xbox360Button.A, report.A);

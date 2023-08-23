@@ -21,7 +21,7 @@ namespace RB4InstrumentMapper.Parsing
         {
             switch (command)
             {
-                case GuitarInput.CommandId:
+                case XboxGuitarInput.CommandId:
                     return ParseInput(data);
 
                 default:
@@ -34,7 +34,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
-            if (data.Length != sizeof(GuitarInput) || !MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
+            if (data.Length != sizeof(XboxGuitarInput) || !MemoryMarshal.TryRead(data, out XboxGuitarInput guitarReport))
                 return XboxResult.InvalidMessage;
 
             HandleReport(ref state, guitarReport);
@@ -47,12 +47,12 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Maps guitar input data to a vJoy device.
         /// </summary>
-        internal static void HandleReport(ref vJoy.JoystickState state, GuitarInput report)
+        internal static void HandleReport(ref vJoy.JoystickState state, XboxGuitarInput report)
         {
             // Menu and Options
-            var buttons = (GamepadButton)report.Buttons;
-            state.SetButton(VjoyButton.Fifteen, (buttons & GamepadButton.Menu) != 0);
-            state.SetButton(VjoyButton.Sixteen, (buttons & GamepadButton.Options) != 0);
+            var buttons = (XboxGamepadButton)report.Buttons;
+            state.SetButton(VjoyButton.Fifteen, (buttons & XboxGamepadButton.Menu) != 0);
+            state.SetButton(VjoyButton.Sixteen, (buttons & XboxGamepadButton.Options) != 0);
 
             // D-pad
             ParseDpad(ref state, buttons);

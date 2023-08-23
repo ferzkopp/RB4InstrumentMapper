@@ -70,9 +70,9 @@ namespace RB4InstrumentMapper.Parsing
 
         protected abstract XboxResult OnPacketReceived(byte command, ReadOnlySpan<byte> data);
 
-        public XboxResult HandleKeystroke(Keystroke key)
+        public XboxResult HandleKeystroke(XboxKeystroke key)
         {
-            if (key.Keycode == KeyCode.LeftWindows && MapGuideButton)
+            if (key.Keycode == XboxKeyCode.LeftWindows && MapGuideButton)
             {
                 device.SetButtonState(Xbox360Button.Guide, key.Pressed);
                 device.SubmitReport();

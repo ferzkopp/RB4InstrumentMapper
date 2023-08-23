@@ -3,13 +3,13 @@ using System.Diagnostics;
 
 namespace RB4InstrumentMapper.Parsing
 {
-    internal class ChunkBuffer
+    internal class XboxChunkBuffer
     {
         public byte[] Buffer { get; private set; }
         public int BytesUsed { get; private set; }
         public int BytesRemaining => Buffer != null ? Buffer.Length - BytesUsed : 0;
 
-        public XboxResult ProcessChunk(ref CommandHeader header, ref ReadOnlySpan<byte> chunkData)
+        public XboxResult ProcessChunk(ref XboxCommandHeader header, ref ReadOnlySpan<byte> chunkData)
         {
             int bufferIndex = header.ChunkIndex;
 
@@ -23,10 +23,10 @@ namespace RB4InstrumentMapper.Parsing
             }
 
             // Start of the chunk sequence
-            if (Buffer == null || (header.Flags & CommandFlags.ChunkStart) != 0)
+            if (Buffer == null || (header.Flags & XboxCommandFlags.ChunkStart) != 0)
             {
                 // Safety check
-                if ((header.Flags & CommandFlags.ChunkStart) == 0)
+                if ((header.Flags & XboxCommandFlags.ChunkStart) == 0)
                 {
                     // NOTE: Older Xbox One gamepads trigger this condition during authentication
                     // Not really an issue since we don't handle that anyways, noting for posterity
@@ -63,7 +63,7 @@ namespace RB4InstrumentMapper.Parsing
 
                 // Update header
                 header.DataLength = chunkData.Length;
-                header.Flags &= ~(CommandFlags.ChunkPacket | CommandFlags.ChunkStart);
+                header.Flags &= ~(XboxCommandFlags.ChunkPacket | XboxCommandFlags.ChunkStart);
                 return XboxResult.Success;
             }
 

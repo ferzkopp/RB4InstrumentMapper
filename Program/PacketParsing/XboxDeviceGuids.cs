@@ -5,7 +5,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// Xbox device interface GUIDs.
     /// </summary>
-    internal static class DeviceGuids
+    internal static class XboxDeviceGuids
     {
         public static readonly Guid XboxInputDevice = Guid.Parse("9776FF56-9BFD-4581-AD45-B645BBA526D6");
         public static readonly Guid XboxNavigationController = Guid.Parse("B8F31FE7-7386-40E9-A9F8-2F21263ACFB7");

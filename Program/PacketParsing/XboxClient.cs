@@ -13,37 +13,37 @@ namespace RB4InstrumentMapper.Parsing
         #region Message definitions
         private static readonly XboxMessage GetDescriptor = new XboxMessage()
         {
-            Header = new CommandHeader()
+            Header = new XboxCommandHeader()
             {
                 CommandId = XboxDescriptor.CommandId,
-                Flags = CommandFlags.SystemCommand,
+                Flags = XboxCommandFlags.SystemCommand,
             },
             // Header only, no data
         };
 
-        private static readonly XboxMessage<DeviceConfiguration> PowerOnDevice = new XboxMessage<DeviceConfiguration>()
+        private static readonly XboxMessage<XboxConfiguration> PowerOnDevice = new XboxMessage<XboxConfiguration>()
         {
-            Header = new CommandHeader()
+            Header = new XboxCommandHeader()
             {
-                CommandId = DeviceConfiguration.CommandId,
-                Flags = CommandFlags.SystemCommand,
+                CommandId = XboxConfiguration.CommandId,
+                Flags = XboxCommandFlags.SystemCommand,
             },
-            Data = new DeviceConfiguration()
+            Data = new XboxConfiguration()
             {
-                SubCommand = ConfigurationCommand.PowerOn,
+                SubCommand = XboxConfigurationCommand.PowerOn,
             }
         };
 
-        private static readonly XboxMessage<LedControl> EnableLed = new XboxMessage<LedControl>()
+        private static readonly XboxMessage<XboxLedControl> EnableLed = new XboxMessage<XboxLedControl>()
         {
-            Header = new CommandHeader()
+            Header = new XboxCommandHeader()
             {
-                CommandId = LedControl.CommandId,
-                Flags = CommandFlags.SystemCommand,
+                CommandId = XboxLedControl.CommandId,
+                Flags = XboxCommandFlags.SystemCommand,
             },
-            Data = new LedControl()
+            Data = new XboxLedControl()
             {
-                Mode = LedMode.On,
+                Mode = XboxLedMode.On,
                 Brightness = 0x14
             }
         };
@@ -68,9 +68,9 @@ namespace RB4InstrumentMapper.Parsing
 
         private readonly Dictionary<byte, byte> previousReceiveSequence = new Dictionary<byte, byte>();
         private readonly Dictionary<byte, byte> previousSendSequence = new Dictionary<byte, byte>();
-        private readonly Dictionary<byte, ChunkBuffer> chunkBuffers = new Dictionary<byte, ChunkBuffer>()
+        private readonly Dictionary<byte, XboxChunkBuffer> chunkBuffers = new Dictionary<byte, XboxChunkBuffer>()
         {
-            { XboxDescriptor.CommandId, new ChunkBuffer() },
+            { XboxDescriptor.CommandId, new XboxChunkBuffer() },
         };
 
         public XboxClient(XboxDevice parent, byte clientId)
@@ -87,7 +87,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses command data from a packet.
         /// </summary>
-        internal unsafe XboxResult HandleMessage(CommandHeader header, ReadOnlySpan<byte> commandData)
+        internal unsafe XboxResult HandleMessage(XboxCommandHeader header, ReadOnlySpan<byte> commandData)
         {
             // Verify packet length
             if (header.DataLength != commandData.Length)
@@ -100,11 +100,11 @@ namespace RB4InstrumentMapper.Parsing
             try
             {
                 // Chunked packets
-                if ((header.Flags & CommandFlags.ChunkPacket) != 0)
+                if ((header.Flags & XboxCommandFlags.ChunkPacket) != 0)
                 {
                     if (!chunkBuffers.TryGetValue(header.CommandId, out var chunkBuffer))
                     {
-                        chunkBuffer = new ChunkBuffer();
+                        chunkBuffer = new XboxChunkBuffer();
                         chunkBuffers.Add(header.CommandId, chunkBuffer);
                     }
 
@@ -122,14 +122,14 @@ namespace RB4InstrumentMapper.Parsing
             finally
             {
                 // Acknowledgement
-                if ((header.Flags & CommandFlags.NeedsAcknowledgement) != 0)
+                if ((header.Flags & XboxCommandFlags.NeedsAcknowledgement) != 0)
                 {
                     var (sendHeader, acknowledge) = chunkBuffers.TryGetValue(header.CommandId, out var chunkBuffer)
-                        ? Acknowledgement.FromMessage(header, commandData, chunkBuffer)
-                        : Acknowledgement.FromMessage(header, commandData);
+                        ? XboxAcknowledgement.FromMessage(header, commandData, chunkBuffer)
+                        : XboxAcknowledgement.FromMessage(header, commandData);
 
                     SendMessage(sendHeader, ref acknowledge);
-                    header.Flags &= ~CommandFlags.NeedsAcknowledgement;
+                    header.Flags &= ~XboxCommandFlags.NeedsAcknowledgement;
                 }
             }
 
@@ -142,7 +142,7 @@ namespace RB4InstrumentMapper.Parsing
             previousReceiveSequence[header.CommandId] = header.SequenceCount;
 
             // System commands are handled directly
-            if ((header.Flags & CommandFlags.SystemCommand) != 0)
+            if ((header.Flags & XboxCommandFlags.SystemCommand) != 0)
                 return HandleSystemCommand(header.CommandId, commandData);
 
             // Non-system commands are handled by the mapper
@@ -166,16 +166,16 @@ namespace RB4InstrumentMapper.Parsing
         {
             switch (commandId)
             {
-                case DeviceArrival.CommandId:
+                case XboxArrival.CommandId:
                     return HandleArrival(commandData);
 
-                case DeviceStatus.CommandId:
+                case XboxStatus.CommandId:
                     return HandleStatus(commandData);
 
                 case XboxDescriptor.CommandId:
                     return HandleDescriptor(commandData);
 
-                case Keystroke.CommandId:
+                case XboxKeystroke.CommandId:
                     return HandleKeystroke(commandData);
             }
 
@@ -187,7 +187,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private unsafe XboxResult HandleArrival(ReadOnlySpan<byte> data)
         {
-            if (data.Length < sizeof(DeviceArrival) || MemoryMarshal.TryRead(data, out DeviceArrival arrival))
+            if (data.Length < sizeof(XboxArrival) || MemoryMarshal.TryRead(data, out XboxArrival arrival))
                 return XboxResult.InvalidMessage;
 
             Console.WriteLine($"New client connected with ID {arrival.SerialNumber:X12}");
@@ -201,7 +201,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private unsafe XboxResult HandleStatus(ReadOnlySpan<byte> data)
         {
-            if (data.Length < sizeof(DeviceStatus) || !MemoryMarshal.TryRead(data, out DeviceStatus status))
+            if (data.Length < sizeof(XboxStatus) || !MemoryMarshal.TryRead(data, out XboxStatus status))
                 return XboxResult.InvalidMessage;
 
             if (!status.Connected)
@@ -225,22 +225,22 @@ namespace RB4InstrumentMapper.Parsing
             deviceMapper = MapperFactory.GetMapper(descriptor.InterfaceGuids, XboxDevice.MapperMode);
 
             // Send final set of initialization messages
-            Debug.Assert(Descriptor.OutputCommands.Contains(DeviceConfiguration.CommandId));
+            Debug.Assert(Descriptor.OutputCommands.Contains(XboxConfiguration.CommandId));
             var result = SendMessage(PowerOnDevice);
             if (result != XboxResult.Success)
                 return result;
 
-            if (Descriptor.OutputCommands.Contains(LedControl.CommandId))
+            if (Descriptor.OutputCommands.Contains(XboxLedControl.CommandId))
             {
                 result = SendMessage(EnableLed);
                 if (result != XboxResult.Success)
                     return result;
             }
 
-            if (Descriptor.OutputCommands.Contains(Authentication.CommandId))
+            if (Descriptor.OutputCommands.Contains(XboxAuthentication.CommandId))
             {
                 // Authentication is not and will not be implemented, we just automatically pass all devices
-                result = SendMessage(Authentication.SuccessMessage);
+                result = SendMessage(XboxAuthentication.SuccessMessage);
                 if (result != XboxResult.Success)
                     return result;
             }
@@ -250,11 +250,11 @@ namespace RB4InstrumentMapper.Parsing
 
         private unsafe XboxResult HandleKeystroke(ReadOnlySpan<byte> data)
         {
-            if (data.Length % sizeof(Keystroke) != 0)
+            if (data.Length % sizeof(XboxKeystroke) != 0)
                 return XboxResult.InvalidMessage;
 
             // Multiple keystrokes can be sent in a single message
-            var keys = MemoryMarshal.Cast<byte, Keystroke>(data);
+            var keys = MemoryMarshal.Cast<byte, XboxKeystroke>(data);
             foreach (var key in keys)
             {
                 deviceMapper.HandleKeystroke(key);
@@ -274,26 +274,26 @@ namespace RB4InstrumentMapper.Parsing
             return SendMessage(message.Header, ref message.Data);
         }
 
-        internal unsafe XboxResult SendMessage(CommandHeader header)
+        internal unsafe XboxResult SendMessage(XboxCommandHeader header)
         {
             SetUpHeader(ref header);
             return Parent.SendMessage(header);
         }
 
-        internal unsafe XboxResult SendMessage<T>(CommandHeader header, ref T data)
+        internal unsafe XboxResult SendMessage<T>(XboxCommandHeader header, ref T data)
             where T : unmanaged
         {
             SetUpHeader(ref header);
             return Parent.SendMessage(header, ref data);
         }
 
-        internal XboxResult SendMessage(CommandHeader header, Span<byte> data)
+        internal XboxResult SendMessage(XboxCommandHeader header, Span<byte> data)
         {
             SetUpHeader(ref header);
             return Parent.SendMessage(header, data);
         }
 
-        private void SetUpHeader(ref CommandHeader header)
+        private void SetUpHeader(ref XboxCommandHeader header)
         {
             header.Client = ClientId;
 

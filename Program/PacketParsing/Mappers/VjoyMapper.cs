@@ -53,9 +53,9 @@ namespace RB4InstrumentMapper.Parsing
 
         protected abstract XboxResult OnPacketReceived(byte command, ReadOnlySpan<byte> data);
 
-        public XboxResult HandleKeystroke(Keystroke key)
+        public XboxResult HandleKeystroke(XboxKeystroke key)
         {
-            if (key.Keycode == KeyCode.LeftWindows && MapGuideButton)
+            if (key.Keycode == XboxKeyCode.LeftWindows && MapGuideButton)
             {
                 state.SetButton(VjoyButton.Fourteen, key.Pressed);
                 VjoyClient.UpdateDevice(deviceId, ref state);
@@ -83,16 +83,16 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses the state of the d-pad.
         /// </summary>
-        protected static void ParseDpad(ref vJoy.JoystickState state, GamepadButton buttons)
+        protected static void ParseDpad(ref vJoy.JoystickState state, XboxGamepadButton buttons)
         {
             VjoyPoV direction;
-            if ((buttons & GamepadButton.DpadUp) != 0)
+            if ((buttons & XboxGamepadButton.DpadUp) != 0)
             {
-                if ((buttons & GamepadButton.DpadLeft) != 0)
+                if ((buttons & XboxGamepadButton.DpadLeft) != 0)
                 {
                     direction = VjoyPoV.UpLeft;
                 }
-                else if ((buttons & GamepadButton.DpadRight) != 0)
+                else if ((buttons & XboxGamepadButton.DpadRight) != 0)
                 {
                     direction = VjoyPoV.UpRight;
                 }
@@ -101,13 +101,13 @@ namespace RB4InstrumentMapper.Parsing
                     direction = VjoyPoV.Up;
                 }
             }
-            else if ((buttons & GamepadButton.DpadDown) != 0)
+            else if ((buttons & XboxGamepadButton.DpadDown) != 0)
             {
-                if ((buttons & GamepadButton.DpadLeft) != 0)
+                if ((buttons & XboxGamepadButton.DpadLeft) != 0)
                 {
                     direction = VjoyPoV.DownLeft;
                 }
-                else if ((buttons & GamepadButton.DpadRight) != 0)
+                else if ((buttons & XboxGamepadButton.DpadRight) != 0)
                 {
                     direction = VjoyPoV.DownRight;
                 }
@@ -118,11 +118,11 @@ namespace RB4InstrumentMapper.Parsing
             }
             else
             {
-                if ((buttons & GamepadButton.DpadLeft) != 0)
+                if ((buttons & XboxGamepadButton.DpadLeft) != 0)
                 {
                     direction = VjoyPoV.Left;
                 }
-                else if ((buttons & GamepadButton.DpadRight) != 0)
+                else if ((buttons & XboxGamepadButton.DpadRight) != 0)
                 {
                     direction = VjoyPoV.Right;
                 }

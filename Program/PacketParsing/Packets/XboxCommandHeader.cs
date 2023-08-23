@@ -7,25 +7,10 @@ using System.Runtime.InteropServices;
 namespace RB4InstrumentMapper.Parsing
 {
     /// <summary>
-    /// Command ID definitions.
-    /// </summary>
-    internal enum CommandId : byte
-    {
-        Acknowledgement = 0x01,
-        Arrival = 0x02,
-        Status = 0x03,
-        Descriptor = 0x04,
-        Authentication = 0x06,
-        Keystroke = 0x07,
-        SerialNumber = 0x1E,
-        Input = 0x20,
-    }
-
-    /// <summary>
     /// Command flag definitions.
     /// </summary>
     [Flags]
-    internal enum CommandFlags : byte
+    internal enum XboxCommandFlags : byte
     {
         None = 0,
         NeedsAcknowledgement = 0x10,
@@ -38,7 +23,7 @@ namespace RB4InstrumentMapper.Parsing
     /// Header data for a message.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct CommandHeader
+    internal struct XboxCommandHeader
     {
         public const int MinimumByteLength = 4;
 
@@ -48,9 +33,9 @@ namespace RB4InstrumentMapper.Parsing
         public int DataLength;
         public int ChunkIndex;
 
-        public CommandFlags Flags
+        public XboxCommandFlags Flags
         {
-            get => (CommandFlags)(Flags_Client & 0xF0);
+            get => (XboxCommandFlags)(Flags_Client & 0xF0);
             set => Flags_Client = (byte)((byte)value & 0xF0 | Client);
         }
 
@@ -60,7 +45,7 @@ namespace RB4InstrumentMapper.Parsing
             set => Flags_Client = (byte)((byte)Flags | value & 0x0F);
         }
 
-        public static bool TryParse(ReadOnlySpan<byte> data, out CommandHeader header, out int bytesRead)
+        public static bool TryParse(ReadOnlySpan<byte> data, out XboxCommandHeader header, out int bytesRead)
         {
             header = default;
             bytesRead = 0;
@@ -70,7 +55,7 @@ namespace RB4InstrumentMapper.Parsing
             }
 
             // Command info
-            header = new CommandHeader()
+            header = new XboxCommandHeader()
             {
                 CommandId = data[0],
                 Flags_Client = data[1],
@@ -87,7 +72,7 @@ namespace RB4InstrumentMapper.Parsing
             bytesRead += byteLength;
 
             // Chunk index/length
-            if ((header.Flags & CommandFlags.ChunkPacket) != 0)
+            if ((header.Flags & XboxCommandFlags.ChunkPacket) != 0)
             {
                 if (!DecodeLEB128(data.Slice(bytesRead), out int chunkIndex, out byteLength))
                 {
@@ -120,7 +105,7 @@ namespace RB4InstrumentMapper.Parsing
             bytesWritten += byteLength;
 
             // Chunk index/length
-            if ((Flags & CommandFlags.ChunkPacket) != 0)
+            if ((Flags & XboxCommandFlags.ChunkPacket) != 0)
             {
                 if (!EncodeLEB128(buffer.Slice(bytesWritten), ChunkIndex, out byteLength))
                     return false;
@@ -142,7 +127,7 @@ namespace RB4InstrumentMapper.Parsing
             size += length;
 
             // Chunk index
-            if ((Flags & CommandFlags.ChunkPacket) != 0)
+            if ((Flags & XboxCommandFlags.ChunkPacket) != 0)
             {
                 success = EncodeLEB128(encodeBuffer, ChunkIndex, out length);
                 Debug.Assert(success, "Failed to get byte length for chunk index!");
