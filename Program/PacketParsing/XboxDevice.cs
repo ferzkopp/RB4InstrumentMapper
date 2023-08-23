@@ -5,13 +5,13 @@ using System.Runtime.CompilerServices;
 
 namespace RB4InstrumentMapper.Parsing
 {
-    public enum MappingMode
+    internal enum MappingMode
     {
         ViGEmBus = 1,
         vJoy = 2
     }
 
-    public enum XboxResult
+    internal enum XboxResult
     {
         Success,
         Pending,
@@ -22,7 +22,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// An Xbox device.
     /// </summary>
-    public class XboxDevice : IDisposable
+    internal class XboxDevice : IDisposable
     {
         public static MappingMode MapperMode;
 

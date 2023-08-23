@@ -16,7 +16,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <remarks>
     /// These mirror those in the Win32 API; for brevity, only the ones used are defined here.
     /// </remarks>
-    public enum XboxKeyCode : byte
+    internal enum XboxKeyCode : byte
     {
         LeftWindows = 0x5B, // Used for the guide button
     }
