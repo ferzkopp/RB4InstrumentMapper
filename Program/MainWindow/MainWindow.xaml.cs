@@ -160,6 +160,9 @@ namespace RB4InstrumentMapper
 
                 return;
             }
+
+            WinUsbBackend.DeviceAddedOrRemoved += WinUsbDeviceAddedOrRemoved;
+            WinUsbBackend.Initialize();
         }
 
         /// <summary>
@@ -172,6 +175,9 @@ namespace RB4InstrumentMapper
             {
                 StopCapture();
             }
+
+            WinUsbBackend.Uninitialize();
+            WinUsbBackend.DeviceAddedOrRemoved -= WinUsbDeviceAddedOrRemoved;
 
             // Close the log files
             Logging.CloseAll();
@@ -238,11 +244,17 @@ namespace RB4InstrumentMapper
             Console.WriteLine($"Discovered {pcapDeviceList.Count} Pcap devices.");
         }
 
-        private void SetStartButtonEnabled()
+        private void SetStartButtonState()
         {
             startButton.IsEnabled =
-                controllerDeviceTypeCombo.SelectedIndex != (int)ControllerType.None &&
-                pcapDeviceCombo.SelectedIndex != -1;
+                WinUsbBackend.DeviceCount > 0 ||
+                (controllerDeviceTypeCombo.SelectedIndex != (int)ControllerType.None &&
+                pcapDeviceCombo.SelectedIndex != -1);
+        }
+
+        private void WinUsbDeviceAddedOrRemoved()
+        {
+            uiDispatcher.Invoke(SetStartButtonState);
         }
 
         /// <summary>
@@ -250,41 +262,10 @@ namespace RB4InstrumentMapper
         /// </summary>
         private void StartCapture()
         {
-            // Check if a device has been selected
-            if (pcapSelectedDevice == null)
+            if (!StartPcapCapture() || !StartWinUsbCapture())
             {
-                Console.WriteLine("Please select a Pcap device from the Pcap dropdown.");
-                return;
-            }
-
-            // Check if the device is still present
-            var pcapDeviceList = CaptureDeviceList.Instance;
-            pcapDeviceList.Refresh();
-            bool deviceStillPresent = false;
-            foreach (var device in pcapDeviceList)
-            {
-                if (device.Name == pcapSelectedDevice.Name)
-                {
-                    deviceStillPresent = true;
-                    break;
-                }
-            }
-
-            if (!deviceStillPresent)
-            {
-                // Invalidate selected device (but not the saved preference)
-                pcapSelectedDevice = null;
-
-                // Notify user
-                MessageBox.Show(
-                    "Pcap device list has changed and the selected device is no longer present.\nPlease re-select your device from the list and try again.",
-                    "Pcap Device Not Found",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Exclamation
-                );
-
-                // Force a refresh
-                PopulatePcapDropdown();
+                StopPcapCapture();
+                StopWinUsbCapture();
                 return;
             }
 
@@ -311,12 +292,6 @@ namespace RB4InstrumentMapper
                     Console.WriteLine("Disabled packet logging for this capture session.");
                 }
             }
-
-            // Start capture
-            PcapBackend.LogPackets = packetDebug;
-            PcapBackend.OnCaptureStop += OnCaptureStopped;
-            PcapBackend.StartCapture(pcapSelectedDevice);
-            Console.WriteLine($"Listening on {pcapSelectedDevice.GetDisplayName()}...");
         }
 
         private void OnCaptureStopped()
@@ -330,7 +305,8 @@ namespace RB4InstrumentMapper
         /// </summary>
         private void StopCapture()
         {
-            PcapBackend.StopCapture();
+            StopPcapCapture();
+            StopWinUsbCapture();
 
             // Store whether or not the packet log was created
             bool doPacketLogMessage = Logging.PacketLogExists;
@@ -361,6 +337,68 @@ namespace RB4InstrumentMapper
             }
         }
 
+        private bool StartPcapCapture()
+        {
+            // Ignore if no device is selected
+            if (pcapSelectedDevice == null)
+                return true;
+
+            // Check if the device is still present
+            var pcapDeviceList = CaptureDeviceList.Instance;
+            pcapDeviceList.Refresh();
+            bool deviceStillPresent = false;
+            foreach (var device in pcapDeviceList)
+            {
+                if (device.Name == pcapSelectedDevice.Name)
+                {
+                    deviceStillPresent = true;
+                    break;
+                }
+            }
+
+            if (!deviceStillPresent)
+            {
+                // Invalidate selected device (but not the saved preference)
+                pcapSelectedDevice = null;
+
+                // Notify user
+                MessageBox.Show(
+                    "Pcap device list has changed and the selected device is no longer present.\nPlease re-select your device from the list and try again.",
+                    "Pcap Device Not Found",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Exclamation
+                );
+
+                // Force a refresh
+                PopulatePcapDropdown();
+                return false;
+            }
+
+            // Start capture
+            PcapBackend.LogPackets = packetDebug;
+            PcapBackend.OnCaptureStop += OnCaptureStopped;
+            PcapBackend.StartCapture(pcapSelectedDevice);
+            Console.WriteLine($"Listening on {pcapSelectedDevice.GetDisplayName()}...");
+
+            return true;
+        }
+
+        private bool StartWinUsbCapture()
+        {
+            WinUsbBackend.Start();
+            return true;
+        }
+
+        private void StopPcapCapture()
+        {
+            PcapBackend.StopCapture();
+        }
+
+        private void StopWinUsbCapture()
+        {
+            WinUsbBackend.Stop();
+        }
+
         /// <summary>
         /// Handles Pcap device selection changes.
         /// </summary>
@@ -372,7 +410,7 @@ namespace RB4InstrumentMapper
             if (!(pcapDeviceCombo.SelectedItem is ComboBoxItem selection))
             {
                 // Disable start button
-                startButton.IsEnabled = false;
+                SetStartButtonState();
 
                 // Clear saved device
                 Settings.Default.pcapDevice = String.Empty;
@@ -392,7 +430,7 @@ namespace RB4InstrumentMapper
                 Console.WriteLine($"Selected Pcap device {pcapSelectedDevice.GetDisplayName()}");
 
                 // Enable start button
-                SetStartButtonEnabled();
+                SetStartButtonState();
 
                 // Remember selected Pcap device's name
                 Settings.Default.pcapDevice = pcapSelectedDevice.Name;
@@ -524,7 +562,7 @@ namespace RB4InstrumentMapper
             Settings.Default.Save();
 
             // Enable start button
-            SetStartButtonEnabled();
+            SetStartButtonState();
         }
 
         /// <summary>

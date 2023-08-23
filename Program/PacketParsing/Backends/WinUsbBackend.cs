@@ -1,18 +1,22 @@
+using System;
 using System.Collections.Generic;
 using Nefarius.Drivers.WinUSB;
 using Nefarius.Utilities.DeviceManagement.PnP;
-
-// TODO: Doesn't actually work yet, need to send data back to the device
 
 namespace RB4InstrumentMapper.Parsing
 {
     public static class WinUsbBackend
     {
         private static readonly DeviceNotificationListener watcher = new DeviceNotificationListener();
-        private static readonly Dictionary<string, XboxWinUsbDevice> devices
-            = new Dictionary<string, XboxWinUsbDevice>();
+        private static readonly Dictionary<string, XboxWinUsbDevice> devices = new Dictionary<string, XboxWinUsbDevice>();
 
-        public static void Start()
+        public static int DeviceCount => devices.Count;
+
+        public static event Action DeviceAddedOrRemoved;
+
+        private static bool started = false;
+
+        public static void Initialize()
         {
             foreach (var deviceInfo in USBDevice.GetDevices(DeviceInterfaceIds.UsbDevice))
             {
@@ -24,7 +28,7 @@ namespace RB4InstrumentMapper.Parsing
             watcher.StartListen(DeviceInterfaceIds.UsbDevice);
         }
 
-        public static void Stop()
+        public static void Uninitialize()
         {
             watcher.StopListen();
             watcher.DeviceArrived -= DeviceArrived;
@@ -35,6 +39,32 @@ namespace RB4InstrumentMapper.Parsing
                 device.Dispose();
             }
             devices.Clear();
+        }
+
+        public static void Start()
+        {
+            if (started)
+                return;
+
+            foreach (var device in devices.Values)
+            {
+                device.StartReading();
+            }
+
+            started = true;
+        }
+
+        public static void Stop()
+        {
+            if (!started)
+                return;
+
+            foreach (var device in devices.Values)
+            {
+                device.StopReading();
+            }
+
+            started = false;
         }
 
         private static void DeviceArrived(DeviceEventArgs args)
@@ -54,6 +84,8 @@ namespace RB4InstrumentMapper.Parsing
                 return;
 
             devices.Add(devicePath, device);
+
+            DeviceAddedOrRemoved?.Invoke();
         }
 
         private static void RemoveDevice(string devicePath)
@@ -63,6 +95,8 @@ namespace RB4InstrumentMapper.Parsing
 
             devices.Remove(devicePath);
             device.Dispose();
+
+            DeviceAddedOrRemoved?.Invoke();
         }
     }
 }
