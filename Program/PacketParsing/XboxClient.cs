@@ -11,14 +11,39 @@ namespace RB4InstrumentMapper.Parsing
     internal class XboxClient : IDisposable
     {
         /// <summary>
+        /// The parent device of the client.
+        /// </summary>
+        public XboxDevice Parent { get; }
+
+        /// <summary>
+        /// The arrival info of the client.
+        /// </summary>
+        public XboxArrival Arrival { get; private set; }
+
+        /// <summary>
         /// The descriptor of the client.
         /// </summary>
         public XboxDescriptor Descriptor { get; private set; }
 
-        private IDeviceMapper deviceMapper;
+        /// <summary>
+        /// The ID of the client.
+        /// </summary>
+        public byte ClientId { get; }
 
-        private byte[] chunkBuffer;
-        private readonly Dictionary<CommandId, byte> previousSequenceIds = new Dictionary<CommandId, byte>();
+        private DeviceMapper deviceMapper;
+
+        private readonly Dictionary<byte, byte> previousReceiveSequence = new Dictionary<byte, byte>();
+        private readonly Dictionary<byte, byte> previousSendSequence = new Dictionary<byte, byte>();
+        private readonly Dictionary<byte, XboxChunkBuffer> chunkBuffers = new Dictionary<byte, XboxChunkBuffer>()
+        {
+            { XboxDescriptor.CommandId, new XboxChunkBuffer() },
+        };
+
+        public XboxClient(XboxDevice parent, byte clientId)
+        {
+            Parent = parent;
+            ClientId = clientId;
+        }
 
         ~XboxClient()
         {
@@ -28,7 +53,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses command data from a packet.
         /// </summary>
-        internal unsafe XboxResult HandleMessage(CommandHeader header, ReadOnlySpan<byte> commandData)
+        internal unsafe XboxResult HandleMessage(XboxCommandHeader header, ReadOnlySpan<byte> commandData)
         {
             // Verify packet length
             if (header.DataLength != commandData.Length)
@@ -37,131 +62,90 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
             }
 
-            // Chunked packets
-            if ((header.Flags & CommandFlags.ChunkPacket) != 0)
+            // Ensure acknowledgement happens regardless of pending/failure
+            try
             {
-                var chunkResult = ProcessPacketChunk(header, ref commandData);
-                switch (chunkResult)
+                // Chunked packets
+                if ((header.Flags & XboxCommandFlags.ChunkPacket) != 0)
                 {
-                    case XboxResult.Success:
-                        break;
-                    case XboxResult.Pending: // Chunk is unfinished
-                    default: // Error handling the chunk
-                        return chunkResult;
-                }
+                    if (!chunkBuffers.TryGetValue(header.CommandId, out var chunkBuffer))
+                    {
+                        chunkBuffer = new XboxChunkBuffer();
+                        chunkBuffers.Add(header.CommandId, chunkBuffer);
+                    }
 
-                header.DataLength = commandData.Length;
-                header.Flags &= ~(CommandFlags.ChunkPacket | CommandFlags.ChunkStart);
+                    var chunkResult = chunkBuffer.ProcessChunk(ref header, ref commandData);
+                    switch (chunkResult)
+                    {
+                        case XboxResult.Success:
+                            break;
+                        case XboxResult.Pending: // Chunk is unfinished
+                        default: // Error handling the chunk
+                            return chunkResult;
+                    }
+                }
+            }
+            finally
+            {
+                // Acknowledgement
+                if ((header.Flags & XboxCommandFlags.NeedsAcknowledgement) != 0)
+                {
+                    var (sendHeader, acknowledge) = chunkBuffers.TryGetValue(header.CommandId, out var chunkBuffer)
+                        ? XboxAcknowledgement.FromMessage(header, commandData, chunkBuffer)
+                        : XboxAcknowledgement.FromMessage(header, commandData);
+
+                    SendMessage(sendHeader, ref acknowledge);
+                    header.Flags &= ~XboxCommandFlags.NeedsAcknowledgement;
+                }
             }
 
             // Don't handle the same packet twice
-            if (!previousSequenceIds.TryGetValue(header.CommandId, out byte previousSequence))
-            {
-                previousSequenceIds.Add(header.CommandId, header.SequenceCount);
-            }
-            else if (header.SequenceCount == previousSequence)
-            {
+            if (!previousReceiveSequence.TryGetValue(header.CommandId, out byte previousSequence))
+                previousSequence = 0;
+
+            if (header.SequenceCount == previousSequence)
                 return XboxResult.Success;
+            previousReceiveSequence[header.CommandId] = header.SequenceCount;
+
+            // System commands are handled directly
+            if ((header.Flags & XboxCommandFlags.SystemCommand) != 0)
+                return HandleSystemCommand(header.CommandId, commandData);
+
+            // Non-system commands are handled by the mapper
+            if (deviceMapper == null)
+            {
+                deviceMapper = MapperFactory.GetFallbackMapper(Parent.MappingMode, this, Parent.MapGuideButton);
+                if (deviceMapper == null)
+                {
+                    // No more devices available, do nothing
+                    return XboxResult.Success;
+                }
+
+                PacketLogging.PrintMessage("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
+                PacketLogging.PrintMessage("Reconnect it (or hit Start before connecting it) to ensure correct behavior.");
             }
 
-            switch (header.CommandId)
-            {
-                // Commands to ignore
-                case CommandId.Acknowledgement:
-                case CommandId.Authentication:
-                case CommandId.SerialNumber:
-                    break;
+            return deviceMapper.HandleMessage(header.CommandId, commandData);
+        }
 
-                case CommandId.Arrival:
+        private XboxResult HandleSystemCommand(byte commandId, ReadOnlySpan<byte> commandData)
+        {
+            switch (commandId)
+            {
+                case XboxArrival.CommandId:
                     return HandleArrival(commandData);
 
-                case CommandId.Status:
+                case XboxStatus.CommandId:
                     return HandleStatus(commandData);
 
-                case CommandId.Descriptor:
+                case XboxDescriptor.CommandId:
                     return HandleDescriptor(commandData);
 
-                default:
-                    if (deviceMapper == null)
-                    {
-                        deviceMapper = MapperFactory.GetFallbackMapper(XboxDevice.MapperMode);
-                        if (deviceMapper == null)
-                        {
-                            // No more devices available, do nothing
-                            return XboxResult.Success;
-                        }
-
-                        Console.WriteLine("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
-                        Console.WriteLine("Reconnect it (or hit Start before connecting it) to ensure correct behavior.");
-                    }
-
-                    // Hand off unrecognized commands to the mapper
-                    return deviceMapper.HandlePacket(header.CommandId, commandData);
+                case XboxKeystroke.CommandId:
+                    return HandleKeystroke(commandData);
             }
 
             return XboxResult.Success;
-        }
-
-        private unsafe XboxResult ProcessPacketChunk(CommandHeader header, ref ReadOnlySpan<byte> chunkData)
-        {
-            int bufferIndex = header.ChunkIndex;
-
-            // Do nothing with chunks of length 0
-            if (bufferIndex <= 0)
-            {
-                // Chunked packets with a length of 0 are valid and have been observed with Elite controllers
-                bool emptySequence = bufferIndex == 0;
-                Debug.Assert(emptySequence, $"Negative buffer index {bufferIndex}!");
-                return emptySequence ? XboxResult.Success : XboxResult.InvalidMessage;
-            }
-
-            // Start of the chunk sequence
-            if (chunkBuffer == null || (header.Flags & CommandFlags.ChunkStart) != 0)
-            {
-                // Safety check
-                if ((header.Flags & CommandFlags.ChunkStart) == 0)
-                {
-                    Debug.Fail("Invalid chunk sequence start! No chunk buffer exists, expected a chunk start packet");
-                    return XboxResult.InvalidMessage;
-                }
-
-                // Buffer index is the total size of the buffer on the starting packet
-                chunkBuffer = new byte[bufferIndex];
-                bufferIndex = 0;
-            }
-
-            // Buffer index equalling buffer length signals the end of the sequence
-            if (bufferIndex >= chunkBuffer.Length)
-            {
-                // Safety checks
-                if (bufferIndex > chunkBuffer.Length)
-                {
-                    Debug.Fail("Invalid chunk sequence end! Buffer index is beyond the end of the chunk buffer");
-                    return XboxResult.InvalidMessage;
-                }
-
-                if (chunkData.Length != 0)
-                {
-                    Debug.Fail("Invalid chunk sequence end! Data was provided beyond the end of the buffer");
-                    return XboxResult.InvalidMessage;
-                }
-
-                // Send off finished chunk buffer
-                chunkData = chunkBuffer;
-                chunkBuffer = null;
-                return XboxResult.Success;
-            }
-
-            // Verify chunk data bounds
-            if ((bufferIndex + chunkData.Length) > chunkBuffer.Length)
-            {
-                Debug.Fail($"Invalid chunk sequence! Data was provided beyond the end of the buffer");
-                return XboxResult.InvalidMessage;
-            }
-
-            // Copy data to buffer
-            chunkData.CopyTo(chunkBuffer.AsSpan(bufferIndex, chunkData.Length));
-            return XboxResult.Pending;
         }
 
         /// <summary>
@@ -169,11 +153,17 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private unsafe XboxResult HandleArrival(ReadOnlySpan<byte> data)
         {
-            if (data.Length < sizeof(DeviceArrival) || MemoryMarshal.TryRead(data, out DeviceArrival arrival))
+            if (Arrival.SerialNumber != 0)
+                return XboxResult.Success;
+
+            if (data.Length < sizeof(XboxArrival) || !MemoryMarshal.TryRead(data, out XboxArrival arrival))
                 return XboxResult.InvalidMessage;
 
-            Console.WriteLine($"New client connected with ID {arrival.SerialNumber:X12}");
-            return XboxResult.Success;
+            PacketLogging.PrintMessage($"New client connected with ID {arrival.SerialNumber:X12}");
+            Arrival = arrival;
+
+            // Kick off descriptor request
+            return SendMessage(XboxDescriptor.GetDescriptor);
         }
 
         /// <summary>
@@ -181,7 +171,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private unsafe XboxResult HandleStatus(ReadOnlySpan<byte> data)
         {
-            if (data.Length < sizeof(DeviceStatus) || !MemoryMarshal.TryRead(data, out DeviceStatus status))
+            if (data.Length < sizeof(XboxStatus) || !MemoryMarshal.TryRead(data, out XboxStatus status))
                 return XboxResult.InvalidMessage;
 
             if (!status.Connected)
@@ -202,8 +192,87 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
 
             Descriptor = descriptor;
-            deviceMapper = MapperFactory.GetMapper(descriptor.InterfaceGuids, XboxDevice.MapperMode);
+            deviceMapper = MapperFactory.GetMapper(descriptor.InterfaceGuids, Parent.MappingMode, this, Parent.MapGuideButton);
+
+            // Send final set of initialization messages
+            Debug.Assert(Descriptor.OutputCommands.Contains(XboxConfiguration.CommandId));
+            var result = SendMessage(XboxConfiguration.PowerOnDevice);
+            if (result != XboxResult.Success)
+                return result;
+
+            if (Descriptor.OutputCommands.Contains(XboxLedControl.CommandId))
+            {
+                result = SendMessage(XboxLedControl.EnableLed);
+                if (result != XboxResult.Success)
+                    return result;
+            }
+
+            if (Descriptor.OutputCommands.Contains(XboxAuthentication.CommandId))
+            {
+                // Authentication is not and will not be implemented, we just automatically pass all devices
+                result = SendMessage(XboxAuthentication.SuccessMessage);
+                if (result != XboxResult.Success)
+                    return result;
+            }
+
             return XboxResult.Success;
+        }
+
+        private unsafe XboxResult HandleKeystroke(ReadOnlySpan<byte> data)
+        {
+            if (data.Length % sizeof(XboxKeystroke) != 0)
+                return XboxResult.InvalidMessage;
+
+            // Multiple keystrokes can be sent in a single message
+            var keys = MemoryMarshal.Cast<byte, XboxKeystroke>(data);
+            foreach (var key in keys)
+            {
+                deviceMapper.HandleKeystroke(key);
+            }
+
+            return XboxResult.Success;
+        }
+
+        internal unsafe XboxResult SendMessage(XboxMessage message)
+        {
+            return SendMessage(message.Header, message.Data);
+        }
+
+        internal unsafe XboxResult SendMessage<T>(XboxMessage<T> message)
+            where T : unmanaged
+        {
+            return SendMessage(message.Header, ref message.Data);
+        }
+
+        internal unsafe XboxResult SendMessage(XboxCommandHeader header)
+        {
+            SetUpHeader(ref header);
+            return Parent.SendMessage(header);
+        }
+
+        internal unsafe XboxResult SendMessage<T>(XboxCommandHeader header, ref T data)
+            where T : unmanaged
+        {
+            SetUpHeader(ref header);
+            return Parent.SendMessage(header, ref data);
+        }
+
+        internal XboxResult SendMessage(XboxCommandHeader header, Span<byte> data)
+        {
+            SetUpHeader(ref header);
+            return Parent.SendMessage(header, data);
+        }
+
+        private void SetUpHeader(ref XboxCommandHeader header)
+        {
+            header.Client = ClientId;
+
+            if (!previousSendSequence.TryGetValue(header.CommandId, out byte sequence) ||
+                sequence == 0xFF) // Sequence IDs of 0 are not valid
+                sequence = 0;
+
+            header.SequenceCount = ++sequence;
+            previousSendSequence[header.CommandId] = sequence;
         }
 
         public void Dispose()

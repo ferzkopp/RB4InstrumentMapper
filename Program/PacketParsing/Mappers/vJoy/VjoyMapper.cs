@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using RB4InstrumentMapper.Vjoy;
 using vJoyInterfaceWrap;
 
@@ -8,14 +7,13 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// A mapper that maps to a vJoy device.
     /// </summary>
-    internal abstract class VjoyMapper : IDeviceMapper
+    internal abstract class VjoyMapper : DeviceMapper
     {
-        public bool MapGuideButton { get; set; } = false;
-
         protected vJoy.JoystickState state = new vJoy.JoystickState();
         protected uint deviceId = 0;
 
-        public VjoyMapper()
+        public VjoyMapper(XboxClient client, bool mapGuide)
+            : base(client, mapGuide)
         {
             deviceId = VjoyClient.GetNextAvailableID();
             if (deviceId == 0)
@@ -29,57 +27,13 @@ namespace RB4InstrumentMapper.Parsing
             }
 
             state.bDevice = (byte)deviceId;
-            Console.WriteLine($"Acquired vJoy device with ID of {deviceId}");
+            PacketLogging.PrintMessage($"Acquired vJoy device with ID of {deviceId}");
         }
 
-        /// <summary>
-        /// Performs cleanup on object finalization.
-        /// </summary>
-        ~VjoyMapper()
+        protected override void MapGuideButton(bool pressed)
         {
-            Dispose(false);
-        }
-
-        /// <summary>
-        /// Handles an incoming packet.
-        /// </summary>
-        public XboxResult HandlePacket(CommandId command, ReadOnlySpan<byte> data)
-        {
-            if (deviceId == 0)
-                throw new ObjectDisposedException("this");
-
-            switch (command)
-            {
-                case CommandId.Keystroke:
-                    return HandleKeystroke(data);
-
-                default:
-                    return OnPacketReceived(command, data);
-            }
-        }
-
-        protected abstract XboxResult OnPacketReceived(CommandId command, ReadOnlySpan<byte> data);
-
-        private unsafe XboxResult HandleKeystroke(ReadOnlySpan<byte> data)
-        {
-            if (!MapGuideButton)
-                return XboxResult.Success;
-
-            if (data.Length < sizeof(Keystroke))
-                return XboxResult.InvalidMessage;
-
-            // Multiple keystrokes can be sent in a single message
-            var keys = MemoryMarshal.Cast<byte, Keystroke>(data);
-            foreach (var key in keys)
-            {
-                if ((KeyCode)key.Keycode == KeyCode.LeftWindows)
-                {
-                    state.SetButton(VjoyButton.Fourteen, key.Pressed);
-                    VjoyClient.UpdateDevice(deviceId, ref state);
-                }
-            }
-
-            return XboxResult.Success;
+            state.SetButton(VjoyButton.Fourteen, pressed);
+            VjoyClient.UpdateDevice(deviceId, ref state);
         }
 
         // vJoy axes range from 0x0000 to 0x8000, but are exposed as full ints for some reason
@@ -101,16 +55,16 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Parses the state of the d-pad.
         /// </summary>
-        protected static void ParseDpad(ref vJoy.JoystickState state, GamepadButton buttons)
+        protected static void ParseDpad(ref vJoy.JoystickState state, XboxGamepadButton buttons)
         {
             VjoyPoV direction;
-            if ((buttons & GamepadButton.DpadUp) != 0)
+            if ((buttons & XboxGamepadButton.DpadUp) != 0)
             {
-                if ((buttons & GamepadButton.DpadLeft) != 0)
+                if ((buttons & XboxGamepadButton.DpadLeft) != 0)
                 {
                     direction = VjoyPoV.UpLeft;
                 }
-                else if ((buttons & GamepadButton.DpadRight) != 0)
+                else if ((buttons & XboxGamepadButton.DpadRight) != 0)
                 {
                     direction = VjoyPoV.UpRight;
                 }
@@ -119,13 +73,13 @@ namespace RB4InstrumentMapper.Parsing
                     direction = VjoyPoV.Up;
                 }
             }
-            else if ((buttons & GamepadButton.DpadDown) != 0)
+            else if ((buttons & XboxGamepadButton.DpadDown) != 0)
             {
-                if ((buttons & GamepadButton.DpadLeft) != 0)
+                if ((buttons & XboxGamepadButton.DpadLeft) != 0)
                 {
                     direction = VjoyPoV.DownLeft;
                 }
-                else if ((buttons & GamepadButton.DpadRight) != 0)
+                else if ((buttons & XboxGamepadButton.DpadRight) != 0)
                 {
                     direction = VjoyPoV.DownRight;
                 }
@@ -136,11 +90,11 @@ namespace RB4InstrumentMapper.Parsing
             }
             else
             {
-                if ((buttons & GamepadButton.DpadLeft) != 0)
+                if ((buttons & XboxGamepadButton.DpadLeft) != 0)
                 {
                     direction = VjoyPoV.Left;
                 }
-                else if ((buttons & GamepadButton.DpadRight) != 0)
+                else if ((buttons & XboxGamepadButton.DpadRight) != 0)
                 {
                     direction = VjoyPoV.Right;
                 }
@@ -153,16 +107,7 @@ namespace RB4InstrumentMapper.Parsing
             state.bHats = (uint)direction;
         }
 
-        /// <summary>
-        /// Performs cleanup for the vJoy mapper.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        private void Dispose(bool disposing)
+        protected override void DisposeUnmanagedResources()
         {
             // Reset report
             state.Reset();

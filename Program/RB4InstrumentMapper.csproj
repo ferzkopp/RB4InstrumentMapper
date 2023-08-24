@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -57,6 +57,12 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Nefarius.Drivers.WinUSB, Version=4.3.83.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>packages\Nefarius.Drivers.WinUSB.4.3.83\lib\net472\Nefarius.Drivers.WinUSB.dll</HintPath>
+    </Reference>
+    <Reference Include="Nefarius.Utilities.DeviceManagement, Version=3.14.305.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>packages\Nefarius.Utilities.DeviceManagement.3.14.305\lib\netstandard2.0\Nefarius.Utilities.DeviceManagement.dll</HintPath>
+    </Reference>
     <Reference Include="Nefarius.ViGEm.Client, Version=1.21.256.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Nefarius.ViGEm.Client.1.21.256\lib\netstandard2.0\Nefarius.ViGEm.Client.dll</HintPath>
     </Reference>
@@ -108,31 +114,51 @@
     </ApplicationDefinition>
     <Compile Include="MainWindow\PcapDeviceExtensions.cs" />
     <Compile Include="MainWindow\TextBoxWriter.cs" />
+    <Compile Include="PacketParsing\Backends\BackendSettings.cs" />
     <Compile Include="PacketParsing\Backends\PcapBackend.cs" />
-    <Compile Include="PacketParsing\Mappers\DrumsVigemMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\DrumsVjoyMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\FallbackVigemMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\FallbackVjoyMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\GamepadVigemMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\GamepadVjoyMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\GuitarVigemMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\GuitarVjoyMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\IDeviceMapper.cs" />
+    <Compile Include="PacketParsing\Backends\WinUsbBackend.cs" />
+    <Compile Include="PacketParsing\Backends\XboxWinUsbDevice.cs" />
+    <Compile Include="PacketParsing\Mappers\ViGEm\DrumsVigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\ViGEm\FallbackVigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\ViGEm\GamepadVigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\ViGEm\GuitarVigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\ViGEm\GHLGuitarVigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\ViGEm\VigemMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\vJoy\DrumsVjoyMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\vJoy\FallbackVjoyMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\vJoy\GamepadVjoyMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\vJoy\GuitarVjoyMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\vJoy\GHLGuitarVjoyMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\vJoy\VjoyMapper.cs" />
+    <Compile Include="PacketParsing\Mappers\DeviceMapper.cs" />
     <Compile Include="PacketParsing\Mappers\MapperFactory.cs" />
-    <Compile Include="PacketParsing\Mappers\VigemMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\VjoyMapper.cs" />
-    <Compile Include="PacketParsing\Packets\CommandHeader.cs" />
-    <Compile Include="PacketParsing\Packets\DeviceArrival.cs" />
-    <Compile Include="PacketParsing\Packets\DeviceStatus.cs" />
-    <Compile Include="PacketParsing\Packets\DrumInput.cs" />
-    <Compile Include="PacketParsing\Packets\GamepadInput.cs" />
-    <Compile Include="PacketParsing\Packets\GuitarInput.cs" />
-    <Compile Include="PacketParsing\Packets\Keystroke.cs" />
-    <Compile Include="PacketParsing\Packets\XboxDescriptor.cs" />
-    <Compile Include="PacketParsing\DeviceGuids.cs" />
+    <Compile Include="PacketParsing\Mappers\WirelessLegacyMapper.cs" />
+    <Compile Include="PacketParsing\Packets\Drums\XboxDrumInput.cs" />
+    <Compile Include="PacketParsing\Packets\Gamepad\XboxGamepadInput.cs" />
+    <Compile Include="PacketParsing\Packets\Guitar\XboxGuitarInput.cs" />
+    <Compile Include="PacketParsing\Packets\GHLGuitar\XboxGHLGuitarInput.cs" />
+    <Compile Include="PacketParsing\Packets\GHLGuitar\XboxGHLGuitarOutput.cs" />
+    <Compile Include="PacketParsing\Packets\System\XboxAcknowledgement.cs" />
+    <Compile Include="PacketParsing\Packets\System\XboxArrival.cs" />
+    <Compile Include="PacketParsing\Packets\System\XboxAuthentication.cs" />
+    <Compile Include="PacketParsing\Packets\System\XboxConfiguration.cs" />
+    <Compile Include="PacketParsing\Packets\System\XboxDescriptor.cs" />
+    <Compile Include="PacketParsing\Packets\System\XboxKeystroke.cs" />
+    <Compile Include="PacketParsing\Packets\System\XboxLedControl.cs" />
+    <Compile Include="PacketParsing\Packets\System\XboxStatus.cs" />
+    <Compile Include="PacketParsing\Packets\WirelessLegacy\XboxWirelessLegacyDeviceConnect.cs" />
+    <Compile Include="PacketParsing\Packets\WirelessLegacy\XboxWirelessLegacyDeviceDisconnect.cs" />
+    <Compile Include="PacketParsing\Packets\WirelessLegacy\XboxWirelessLegacyInput.cs" />
+    <Compile Include="PacketParsing\Packets\WirelessLegacy\XboxWirelessLegacyRequestDevices.cs" />
+    <Compile Include="PacketParsing\Packets\XboxChunkBuffer.cs" />
+    <Compile Include="PacketParsing\Packets\XboxCommandHeader.cs" />
+    <Compile Include="PacketParsing\Packets\XboxMessage.cs" />
+    <Compile Include="PacketParsing\Packets\XboxPacket.cs" />
     <Compile Include="PacketParsing\ParsingUtils.cs" />
+    <Compile Include="PacketParsing\PacketLogging.cs" />
     <Compile Include="PacketParsing\XboxClient.cs" />
     <Compile Include="PacketParsing\XboxDevice.cs" />
+    <Compile Include="PacketParsing\XboxDeviceGuids.cs" />
     <Compile Include="Vigem\VigemClient.cs" />
     <Compile Include="Vjoy\VjoyClient.cs" />
     <Compile Include="Vjoy\VjoyDefinitions.cs" />

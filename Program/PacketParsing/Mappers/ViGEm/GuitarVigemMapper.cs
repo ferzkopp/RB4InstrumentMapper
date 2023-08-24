@@ -10,18 +10,16 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class GuitarVigemMapper : VigemMapper
     {
-        public GuitarVigemMapper() : base()
+        public GuitarVigemMapper(XboxClient client, bool mapGuide)
+            : base(client, mapGuide)
         {
         }
 
-        /// <summary>
-        /// Handles an incoming packet.
-        /// </summary>
-        protected override XboxResult OnPacketReceived(CommandId command, ReadOnlySpan<byte> data)
+        protected override XboxResult OnMessageReceived(byte command, ReadOnlySpan<byte> data)
         {
             switch (command)
             {
-                case CommandId.Input:
+                case XboxGuitarInput.CommandId:
                     return ParseInput(data);
 
                 default:
@@ -29,12 +27,9 @@ namespace RB4InstrumentMapper.Parsing
             }
         }
 
-        /// <summary>
-        /// Parses an input report.
-        /// </summary>
         private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
-            if (data.Length != sizeof(GuitarInput) || !MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
+            if (data.Length != sizeof(XboxGuitarInput) || !MemoryMarshal.TryRead(data, out XboxGuitarInput guitarReport))
                 return XboxResult.InvalidMessage;
 
             HandleReport(device, guitarReport);
@@ -47,18 +42,18 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Maps guitar input data to an Xbox 360 controller.
         /// </summary>
-        internal static void HandleReport(IXbox360Controller device, in GuitarInput report)
+        internal static void HandleReport(IXbox360Controller device, in XboxGuitarInput report)
         {
             // Menu and Options
-            var buttons = (GamepadButton)report.Buttons;
-            device.SetButtonState(Xbox360Button.Start, (buttons & GamepadButton.Menu) != 0);
-            device.SetButtonState(Xbox360Button.Back, (buttons & GamepadButton.Options) != 0);
+            var buttons = (XboxGamepadButton)report.Buttons;
+            device.SetButtonState(Xbox360Button.Start, (buttons & XboxGamepadButton.Menu) != 0);
+            device.SetButtonState(Xbox360Button.Back, (buttons & XboxGamepadButton.Options) != 0);
 
             // Dpad
-            device.SetButtonState(Xbox360Button.Up, (buttons & GamepadButton.DpadUp) != 0);
-            device.SetButtonState(Xbox360Button.Down, (buttons & GamepadButton.DpadDown) != 0);
-            device.SetButtonState(Xbox360Button.Left, (buttons & GamepadButton.DpadLeft) != 0);
-            device.SetButtonState(Xbox360Button.Right, (buttons & GamepadButton.DpadRight) != 0);
+            device.SetButtonState(Xbox360Button.Up, (buttons & XboxGamepadButton.DpadUp) != 0);
+            device.SetButtonState(Xbox360Button.Down, (buttons & XboxGamepadButton.DpadDown) != 0);
+            device.SetButtonState(Xbox360Button.Left, (buttons & XboxGamepadButton.DpadLeft) != 0);
+            device.SetButtonState(Xbox360Button.Right, (buttons & XboxGamepadButton.DpadRight) != 0);
 
             // Frets
             device.SetButtonState(Xbox360Button.A, report.Green);

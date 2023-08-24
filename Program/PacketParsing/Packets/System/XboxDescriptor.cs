@@ -7,16 +7,18 @@ namespace RB4InstrumentMapper.Parsing
 {
     /// <summary>
     /// The descriptor data of an Xbox One device.
-    /// A large amount of the descriptor data is ignored, only data necessary for identifying device types is read.
     /// </summary>
-    public class XboxDescriptor
+    /// <remarks>
+    /// A large amount of the descriptor data is ignored, only data necessary for identifying device types is read.
+    /// </remarks>
+    internal class XboxDescriptor
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         private struct Header
         {
             public ushort HeaderLength;
-            public int unk1;
-            public ulong unk2;
+            private int unk1;
+            private ulong unk2;
             public ushort DataLength;
         }
 
@@ -26,18 +28,32 @@ namespace RB4InstrumentMapper.Parsing
             public ushort CustomCommands;
             public ushort FirmwareVersions;
             public ushort AudioFormats;
-            public ushort OutputCommands;
             public ushort InputCommands;
+            public ushort OutputCommands;
             public ushort ClassNames;
             public ushort InterfaceGuids;
             public ushort HidDescriptor;
-            public ushort unk1;
-            public ushort unk2;
-            public ushort unk3;
+            private ushort unk1;
+            private ushort unk2;
+            private ushort unk3;
         }
 
-        public IReadOnlyList<string> ClassNames { get; private set; }
-        public IReadOnlyList<Guid> InterfaceGuids { get; private set; }
+        public static readonly XboxMessage GetDescriptor = new XboxMessage()
+        {
+            Header = new XboxCommandHeader()
+            {
+                CommandId = CommandId,
+                Flags = XboxCommandFlags.SystemCommand,
+            },
+            // Header only, no data
+        };
+
+        public const byte CommandId = 0x04;
+
+        public HashSet<byte> InputCommands { get; private set; }
+        public HashSet<byte> OutputCommands { get; private set; }
+        public HashSet<string> ClassNames { get; private set; }
+        public HashSet<Guid> InterfaceGuids { get; private set; }
 
         public static bool Parse(ReadOnlySpan<byte> data, out XboxDescriptor descriptor)
         {
@@ -47,7 +63,7 @@ namespace RB4InstrumentMapper.Parsing
 
         private unsafe bool Parse(ReadOnlySpan<byte> data)
         {
-            if (data == null)
+            if (data.IsEmpty)
                 throw new ArgumentNullException(nameof(data));
 
             // Descriptor header size
@@ -79,7 +95,7 @@ namespace RB4InstrumentMapper.Parsing
                 Debug.Fail($"Buffer size is smaller than size listed in header!  Buffer size: {data.Length}, listed size: {header.DataLength}");
                 return false;
             }
-            Debug.WriteLineIf(data.Length != header.DataLength, $"Buffer size is not the same as size listed in header!  Buffer size: {data.Length}, listed size: {header.DataLength}");
+            Debug.Assert(data.Length == header.DataLength, $"Buffer size is not the same as size listed in header!  Buffer size: {data.Length}, listed size: {header.DataLength}");
             data = data.Slice(header.HeaderLength);
 
             // Data offsets
@@ -92,8 +108,10 @@ namespace RB4InstrumentMapper.Parsing
             // No slice, offsets are relative to the start of the offsets block
 
             // Data elements
+            InputCommands = ParseUnique<byte>(data, offsets.InputCommands, nameof(InputCommands));
+            OutputCommands = ParseUnique<byte>(data, offsets.OutputCommands, nameof(OutputCommands));
             ClassNames = ParseStrings(data, offsets.ClassNames, nameof(ClassNames));
-            InterfaceGuids = ParseElements<Guid>(data, offsets.InterfaceGuids, nameof(InterfaceGuids));
+            InterfaceGuids = ParseUnique<Guid>(data, offsets.InterfaceGuids, nameof(InterfaceGuids));
 
             return true;
         }
@@ -144,7 +162,7 @@ namespace RB4InstrumentMapper.Parsing
             return true;
         }
 
-        private static unsafe T[] ParseElements<T>(ReadOnlySpan<byte> buffer, ushort offset, string elementName, Func<T, bool> customCheck = null)
+        private static unsafe HashSet<T> ParseUnique<T>(ReadOnlySpan<byte> buffer, ushort offset, string elementName)
             where T : unmanaged
         {
             if (!VerifyOffset(buffer, offset, sizeof(T), out byte count, elementName) || count == 0)
@@ -154,54 +172,33 @@ namespace RB4InstrumentMapper.Parsing
 
             // Get data bounds
             buffer = buffer.Slice(offset + sizeof(byte), count * sizeof(T));
+
             // Get element data
-            if (customCheck == null)
+            var set = new HashSet<T>(count);
+            var elements = MemoryMarshal.Cast<byte, T>(buffer);
+            foreach (var element in elements)
             {
-                // No checks, get everything at once
-                return MemoryMarshal.Cast<byte, T>(buffer).ToArray();
+                set.Add(element);
             }
 
-            // Checks required, go through elements individually
-            var elements = new T[count];
-            for (byte index = 0; index < count; index++)
-            {
-                if (!MemoryMarshal.TryRead(buffer, out T element))
-                {
-                    Debug.Fail($"Failed to read element from buffer!  Buffer size: {buffer.Length}, element size: {sizeof(T)}");
-                    TruncateArray(ref elements, index);
-                    break;
-                }
-
-                if (!customCheck(element))
-                {
-                    Debug.Fail($"Check for {elementName} failed!");
-                    TruncateArray(ref elements, index);
-                    break;
-                }
-
-                elements[index] = element;
-                buffer = buffer.Slice(sizeof(T));
-            }
-
-            return elements;
+            return set;
         }
 
-        private static unsafe string[] ParseStrings(ReadOnlySpan<byte> buffer, ushort offset, string elementName)
+        private static unsafe HashSet<string> ParseStrings(ReadOnlySpan<byte> buffer, ushort offset, string elementName)
         {
             if (!VerifyOffset(buffer, offset, 0, out byte count, elementName) || count == 0)
             {
                 return null;
             }
 
-            var elements = new string[count];
+            var set = new HashSet<string>(count);
             buffer = buffer.Slice(offset + 1);
-            for (byte index = 0; index < elements.Length; index++)
+            for (byte index = 0; index < count; index++)
             {
                 // Get length
                 if (!MemoryMarshal.TryRead(buffer, out ushort length))
                 {
-                    // Resize array to exclude null elements
-                    TruncateArray(ref elements, index);
+                    set.TrimExcess();
                     break;
                 }
                 buffer = buffer.Slice(sizeof(ushort));
@@ -210,8 +207,7 @@ namespace RB4InstrumentMapper.Parsing
                 if (buffer.Length < length)
                 {
                     Debug.Fail($"Descriptor string length is greater than buffer size!  Index: {index}; String length: {length}; Buffer size: {buffer.Length}");
-                    // Resize array to exclude null elements
-                    TruncateArray(ref elements, index);
+                    set.TrimExcess();
                     break;
                 }
 
@@ -220,20 +216,13 @@ namespace RB4InstrumentMapper.Parsing
                 fixed (byte* ptr = buffer)
                 {
                     sbyte* sPtr = (sbyte*)ptr;
-                    elements[index] = new string(sPtr, 0, length);
+                    var str = new string(sPtr, 0, length);
+                    set.Add(str);
                 }
                 buffer = buffer.Slice(length);
             }
 
-            return elements;
-        }
-
-        private static void TruncateArray<T>(ref T[] array, int length)
-        {
-            if (length == 0)
-                array = null;
-            else
-                array = array.AsSpan().Slice(0, length).ToArray();
+            return set;
         }
     }
 }

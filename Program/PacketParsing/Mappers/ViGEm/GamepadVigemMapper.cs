@@ -12,18 +12,16 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class GamepadVigemMapper : VigemMapper
     {
-        public GamepadVigemMapper() : base()
+        public GamepadVigemMapper(XboxClient client, bool mapGuide)
+            : base(client, mapGuide)
         {
         }
 
-        /// <summary>
-        /// Handles an incoming packet.
-        /// </summary>
-        protected override XboxResult OnPacketReceived(CommandId command, ReadOnlySpan<byte> data)
+        protected override XboxResult OnMessageReceived(byte command, ReadOnlySpan<byte> data)
         {
             switch (command)
             {
-                case CommandId.Input:
+                case XboxGamepadInput.CommandId:
                     return ParseInput(data);
 
                 default:
@@ -31,12 +29,9 @@ namespace RB4InstrumentMapper.Parsing
             }
         }
 
-        /// <summary>
-        /// Parses an input report.
-        /// </summary>
         private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
-            if (data.Length < sizeof(GamepadInput) || !MemoryMarshal.TryRead(data, out GamepadInput gamepadReport))
+            if (data.Length < sizeof(XboxGamepadInput) || !MemoryMarshal.TryRead(data, out XboxGamepadInput gamepadReport))
                 return XboxResult.InvalidMessage;
 
             HandleReport(device, gamepadReport);
@@ -49,7 +44,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// Maps gamepad input data to an Xbox 360 controller.
         /// </summary>
-        internal static void HandleReport(IXbox360Controller device, in GamepadInput report)
+        internal static void HandleReport(IXbox360Controller device, in XboxGamepadInput report)
         {
             // Face buttons
             device.SetButtonState(Xbox360Button.A, report.A);

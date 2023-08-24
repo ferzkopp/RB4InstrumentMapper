@@ -45,6 +45,12 @@
   <Fragment>
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
       <?define BinariesDir = $(sys.CURRENTDIR)..\Program\bin\x64\Release\?>
+      <Component Id="COMP_NefariusDriversWinUSBdll" Guid="649361B1-8752-453B-B547-87E486249F59">
+        <File Id="FILE_NefariusDriversWinUSBdll" Name="Nefarius.Drivers.WinUSB.dll" Source="$(var.BinariesDir)Nefarius.Drivers.WinUSB.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_NefariusUtilitiesDeviceManagementdll" Guid="CA6FC63B-FF62-4296-A5BA-EE36B3DC2EF7">
+        <File Id="FILE_NefariusUtilitiesDeviceManagementdll" Name="Nefarius.Utilities.DeviceManagement.dll" Source="$(var.BinariesDir)Nefarius.Utilities.DeviceManagement.dll" KeyPath="yes" />
+      </Component>
       <Component Id="COMP_NefariusViGEmClientdll" Guid="04BB3091-EA32-4F10-8F2B-7BA22FF8309A">
         <File Id="FILE_NefariusViGEmClientdll" Name="Nefarius.ViGEm.Client.dll" Source="$(var.BinariesDir)Nefarius.ViGEm.Client.dll" KeyPath="yes" />
       </Component>

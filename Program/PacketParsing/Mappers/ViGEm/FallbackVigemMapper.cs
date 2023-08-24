@@ -8,19 +8,29 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class FallbackVigemMapper : VigemMapper
     {
-        public FallbackVigemMapper() : base()
+        public FallbackVigemMapper(XboxClient client, bool mapGuide)
+            : base(client, mapGuide)
         {
         }
 
-        /// <summary>
-        /// Handles an incoming packet.
-        /// </summary>
-        protected override XboxResult OnPacketReceived(CommandId command, ReadOnlySpan<byte> data)
+        protected override unsafe XboxResult OnMessageReceived(byte command, ReadOnlySpan<byte> data)
         {
             switch (command)
             {
-                case CommandId.Input:
+                case XboxGuitarInput.CommandId:
+                // These have the same value
+                // case DrumInput.CommandId:
+                // #if DEBUG
+                // case GamepadInput.CommandId:
+                // #endif
                     return ParseInput(data);
+
+                case XboxGHLGuitarInput.CommandId:
+                    if (data.Length != sizeof(XboxGHLGuitarInput) || !MemoryMarshal.TryRead(data, out XboxGHLGuitarInput guitarReport))
+                        return XboxResult.InvalidMessage;
+
+                    GHLGuitarVigemMapper.HandleReport(device, guitarReport);
+                    return XboxResult.Success;
 
                 default:
                     return XboxResult.Success;
@@ -32,21 +42,18 @@ namespace RB4InstrumentMapper.Parsing
         // The current state of the d-pad mask from the hit yellow/blue cymbals
         private int dpadMask;
 
-        /// <summary>
-        /// Parses an input report.
-        /// </summary>
         private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
-            if (data.Length == sizeof(GuitarInput) && MemoryMarshal.TryRead(data, out GuitarInput guitarReport))
+            if (data.Length == sizeof(XboxGuitarInput) && MemoryMarshal.TryRead(data, out XboxGuitarInput guitarReport))
             {
                 GuitarVigemMapper.HandleReport(device, guitarReport);
             }
-            else if (data.Length == sizeof(DrumInput) && MemoryMarshal.TryRead(data, out DrumInput drumReport))
+            else if (data.Length == sizeof(XboxDrumInput) && MemoryMarshal.TryRead(data, out XboxDrumInput drumReport))
             {
                 DrumsVigemMapper.HandleReport(device, drumReport, ref previousDpadCymbals, ref dpadMask);
             }
 #if DEBUG
-            else if (data.Length == sizeof(GamepadInput) && MemoryMarshal.TryRead(data, out GamepadInput gamepadReport))
+            else if (data.Length == sizeof(XboxGamepadInput) && MemoryMarshal.TryRead(data, out XboxGamepadInput gamepadReport))
             {
                 GamepadVigemMapper.HandleReport(device, gamepadReport);
             }
