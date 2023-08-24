@@ -1,24 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product
-    Id="*"
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package
     Name="RB4InstrumentMapper"
     Language="1033"
     Version="3.0.0.0"
     Manufacturer="Andreas Schiffler"
-    UpgradeCode="94bef546-701f-4571-9828-d4fa39b2ea84">
-    
-    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+    UpgradeCode="94bef546-701f-4571-9828-d4fa39b2ea84"
+    InstallerVersion="200"
+    Scope="perMachine">
 
     <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
-    
     <MediaTemplate EmbedCab="yes"/>
 
     <?define ResourcesDir = $(sys.CURRENTDIR)Resources\?>
     <Icon Id="FILE_Iconico" SourceFile="$(var.ResourcesDir)Icon.ico"/>
     <Property Id="ARPPRODUCTICON" Value="FILE_Iconico" />
 
-    <UIRef Id="WixUI_Minimal" />
+    <ui:WixUI Id="WixUI_Minimal" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.ResourcesDir)license.rtf" />
     <WixVariable Id="WixUIDialogBmp" Value="$(var.ResourcesDir)dialog.bmp" />
     <WixVariable Id="WixUIBannerBmp" Value="$(var.ResourcesDir)banner.bmp" />
@@ -28,18 +27,16 @@
       <ComponentRef Id="DesktopShortcut" />
       <ComponentRef Id="StartMenuShortcut" />
     </Feature>
-  </Product>
+  </Package>
 
   <Fragment>
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="ProgramFiles64Folder">
-        <Directory Id="INSTALLFOLDER" Name="RB4InstrumentMapper" />
-      </Directory>
-      <Directory Id="DesktopFolder" Name="Desktop" />
-      <Directory Id="ProgramMenuFolder">
-        <Directory Id="ApplicationProgramsFolder" Name="RB4InstrumentMapper"/>
-      </Directory>
-    </Directory>
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="RB4InstrumentMapper" />
+    </StandardDirectory>
+    <StandardDirectory Id="DesktopFolder" />
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="RB4InstrumentMapper" />
+    </StandardDirectory>
   </Fragment>
   
   <Fragment>
@@ -120,7 +117,7 @@
               Type="integer"
               Value="1"
               KeyPath="yes" />
-      <Shortcut Id="StartMenuShortcut" 
+      <Shortcut Id="StartMenuShortcut"
               Target="[INSTALLFOLDER]RB4InstrumentMapper.exe"
               WorkingDirectory="INSTALLFOLDER"
               Directory="ApplicationProgramsFolder"
