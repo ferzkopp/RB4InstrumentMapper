@@ -1,225 +1,53 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{93041197-1E1B-4084-B1DD-C8363A588C48}</ProjectGuid>
+    <TargetFramework>net472</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>RB4InstrumentMapper</RootNamespace>
-    <AssemblyName>RB4InstrumentMapper</AssemblyName>
-    <ApplicationIcon>icon.ico</ApplicationIcon>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <WarningLevel>4</WarningLevel>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</Deterministic>
+    <UseWPF>true</UseWPF>
+    <PublishRelease>true</PublishRelease>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>portable</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>portable</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Nefarius.Drivers.WinUSB, Version=4.3.83.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>packages\Nefarius.Drivers.WinUSB.4.3.83\lib\net472\Nefarius.Drivers.WinUSB.dll</HintPath>
-    </Reference>
-    <Reference Include="Nefarius.Utilities.DeviceManagement, Version=3.14.305.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>packages\Nefarius.Utilities.DeviceManagement.3.14.305\lib\netstandard2.0\Nefarius.Utilities.DeviceManagement.dll</HintPath>
-    </Reference>
-    <Reference Include="Nefarius.ViGEm.Client, Version=1.21.256.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\Nefarius.ViGEm.Client.1.21.256\lib\netstandard2.0\Nefarius.ViGEm.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="PacketDotNet, Version=1.4.7.0, Culture=neutral, PublicKeyToken=451414c7667b2a58, processorArchitecture=MSIL">
-      <HintPath>packages\PacketDotNet.1.4.7\lib\net47\PacketDotNet.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpPcap, Version=6.2.5.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\SharpPcap.6.2.5\lib\netstandard2.0\SharpPcap.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Text.Encoding.CodePages, Version=7.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>packages\System.Text.Encoding.CodePages.7.0.0\lib\net462\System.Text.Encoding.CodePages.dll</HintPath>
-    </Reference>
-    <Reference Include="vJoyInterfaceWrap, Version=0.2.0.5, Culture=neutral, processorArchitecture=MSIL">
+    <PackageReference Include="Nefarius.Drivers.WinUSB" Version="4.3.83" />
+    <PackageReference Include="Nefarius.Utilities.DeviceManagement" Version="3.14.305" />
+    <PackageReference Include="Nefarius.ViGEm.Client" Version="1.21.256" />
+    <PackageReference Include="PacketDotNet" Version="1.4.7" />
+    <PackageReference Include="SharpPcap" Version="6.2.5" />
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
+  </ItemGroup>
+
+  <!-- Had to do the conditions a little oddly to get VS Code stuff working right lol -->
+  <ItemGroup>
+    <Reference Include="vJoyInterfaceWrap, Version=2.2.0.0, Culture=neutral, PublicKeyToken=null">
+      <Private Condition="'$(Platform)' != 'x64'">true</Private>
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Dependencies\x64\vJoyInterfaceWrap.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xaml">
-      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    <Content Condition="'$(Platform)' == 'x64'" Include="Dependencies\x64\vJoyInterface.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="vJoyInterfaceWrap, Version=2.2.0.0, Culture=neutral, PublicKeyToken=null">
+      <Private Condition="'$(Platform)' != 'x86'">true</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Dependencies\x86\vJoyInterfaceWrap.dll</HintPath>
     </Reference>
-    <Reference Include="WindowsBase" />
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
+    <Content Condition="'$(Platform)' == 'x86'" Include="Dependencies\x86\vJoyInterface.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-  <ItemGroup>
-    <ApplicationDefinition Include="App.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </ApplicationDefinition>
-    <Compile Include="MainWindow\PcapDeviceExtensions.cs" />
-    <Compile Include="MainWindow\TextBoxWriter.cs" />
-    <Compile Include="PacketParsing\Backends\BackendSettings.cs" />
-    <Compile Include="PacketParsing\Backends\PcapBackend.cs" />
-    <Compile Include="PacketParsing\Backends\WinUsbBackend.cs" />
-    <Compile Include="PacketParsing\Backends\XboxWinUsbDevice.cs" />
-    <Compile Include="PacketParsing\Mappers\ViGEm\DrumsVigemMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\ViGEm\FallbackVigemMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\ViGEm\GamepadVigemMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\ViGEm\GuitarVigemMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\ViGEm\GHLGuitarVigemMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\ViGEm\VigemMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\vJoy\DrumsVjoyMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\vJoy\FallbackVjoyMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\vJoy\GamepadVjoyMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\vJoy\GuitarVjoyMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\vJoy\GHLGuitarVjoyMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\vJoy\VjoyMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\DeviceMapper.cs" />
-    <Compile Include="PacketParsing\Mappers\MapperFactory.cs" />
-    <Compile Include="PacketParsing\Mappers\WirelessLegacyMapper.cs" />
-    <Compile Include="PacketParsing\Packets\Drums\XboxDrumInput.cs" />
-    <Compile Include="PacketParsing\Packets\Gamepad\XboxGamepadInput.cs" />
-    <Compile Include="PacketParsing\Packets\Guitar\XboxGuitarInput.cs" />
-    <Compile Include="PacketParsing\Packets\GHLGuitar\XboxGHLGuitarInput.cs" />
-    <Compile Include="PacketParsing\Packets\GHLGuitar\XboxGHLGuitarOutput.cs" />
-    <Compile Include="PacketParsing\Packets\System\XboxAcknowledgement.cs" />
-    <Compile Include="PacketParsing\Packets\System\XboxArrival.cs" />
-    <Compile Include="PacketParsing\Packets\System\XboxAuthentication.cs" />
-    <Compile Include="PacketParsing\Packets\System\XboxConfiguration.cs" />
-    <Compile Include="PacketParsing\Packets\System\XboxDescriptor.cs" />
-    <Compile Include="PacketParsing\Packets\System\XboxKeystroke.cs" />
-    <Compile Include="PacketParsing\Packets\System\XboxLedControl.cs" />
-    <Compile Include="PacketParsing\Packets\System\XboxStatus.cs" />
-    <Compile Include="PacketParsing\Packets\WirelessLegacy\XboxWirelessLegacyDeviceConnect.cs" />
-    <Compile Include="PacketParsing\Packets\WirelessLegacy\XboxWirelessLegacyDeviceDisconnect.cs" />
-    <Compile Include="PacketParsing\Packets\WirelessLegacy\XboxWirelessLegacyInput.cs" />
-    <Compile Include="PacketParsing\Packets\WirelessLegacy\XboxWirelessLegacyRequestDevices.cs" />
-    <Compile Include="PacketParsing\Packets\XboxChunkBuffer.cs" />
-    <Compile Include="PacketParsing\Packets\XboxCommandHeader.cs" />
-    <Compile Include="PacketParsing\Packets\XboxMessage.cs" />
-    <Compile Include="PacketParsing\Packets\XboxPacket.cs" />
-    <Compile Include="PacketParsing\ParsingUtils.cs" />
-    <Compile Include="PacketParsing\PacketLogging.cs" />
-    <Compile Include="PacketParsing\XboxClient.cs" />
-    <Compile Include="PacketParsing\XboxDevice.cs" />
-    <Compile Include="PacketParsing\XboxDeviceGuids.cs" />
-    <Compile Include="Vigem\VigemClient.cs" />
-    <Compile Include="Vjoy\VjoyClient.cs" />
-    <Compile Include="Vjoy\VjoyDefinitions.cs" />
-    <Compile Include="Vjoy\VjoyException.cs" />
-    <Compile Include="Vjoy\VjoyExtensions.cs" />
-    <Compile Include="Logging.cs" />
-    <Page Include="MainWindow\MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Compile Include="App.xaml.cs">
-      <DependentUpon>App.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MainWindow\FixedSizeConcurrentQueue.cs" />
-    <Compile Include="MainWindow\MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <None Include="..\.gitignore" />
-    <None Include="packages.config" />
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <None Include="..\README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="..\Docs\Images\ProgramScreenshot.png" />
-    <Resource Include="..\Docs\Images\vJoyConfiguration.png" />
-  </ItemGroup>
+
   <ItemGroup>
     <Content Include="Dependencies\x64\vJoyInterface.dll" />
-    <Content Include="Dependencies\x64\vJoyInterfaceWrap.dll" />
     <Content Include="Dependencies\x86\vJoyInterface.dll" />
-    <Content Include="Dependencies\x86\vJoyInterfaceWrap.dll" />
+    <Resource Include="..\Docs\Images\ProgramScreenshot.png" />
+    <Resource Include="..\Docs\Images\vJoyConfiguration.png" />
+    <None Include="..\.gitignore" />
+    <None Include="..\README.md" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>copy $(ProjectDir)Dependencies\x64\vJoyInterface.dll  $(TargetDir).</PostBuildEvent>
-  </PropertyGroup>
 </Project>

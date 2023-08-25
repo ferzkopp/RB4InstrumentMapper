@@ -87,7 +87,7 @@ Additional documentation is available in the [PlasticBand documentation reposito
 
 To build this program, you will need:
 
-- Visual Studio (or MSBuild + your code editor of choice).
+- Visual Studio, or MSBuild/[the .NET SDK](https://dotnet.microsoft.com/en-us/download) + your code editor of choice.
 - [WiX Toolset v4](https://wixtoolset.org/) if you wish to build the installer.
 
 ## License
