@@ -41,7 +41,10 @@
   
   <Fragment>
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-      <?define BinariesDir = $(sys.CURRENTDIR)..\Program\bin\x64\Release\?>
+      <?define BinariesDir = $(sys.CURRENTDIR)..\Program\bin\x64\Release\net472\?>
+      <Component Id="COMP_MicrosoftWin32Registrydll" Guid="0284DF1B-411B-45D5-A88A-267BFA7C6EBA">
+        <File Id="FILE_MicrosoftWin32Registrydll" Name="Microsoft.Win32.Registry.dll" Source="$(var.BinariesDir)Microsoft.Win32.Registry.dll" KeyPath="yes" />
+      </Component>
       <Component Id="COMP_NefariusDriversWinUSBdll" Guid="649361B1-8752-453B-B547-87E486249F59">
         <File Id="FILE_NefariusDriversWinUSBdll" Name="Nefarius.Drivers.WinUSB.dll" Source="$(var.BinariesDir)Nefarius.Drivers.WinUSB.dll" KeyPath="yes" />
       </Component>
@@ -74,6 +77,12 @@
       </Component>
       <Component Id="COMP_SystemRuntimeCompilerServicesUnsafedll" Guid="57876592-7661-4C2D-AB23-2FAD5BAACCF7">
         <File Id="FILE_SystemRuntimeCompilerServicesUnsafedll" Name="System.Runtime.CompilerServices.Unsafe.dll" Source="$(var.BinariesDir)System.Runtime.CompilerServices.Unsafe.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_SystemSecurityAccessControldll" Guid="A55B55DF-DB95-4507-8944-27F966665656">
+        <File Id="FILE_SystemSecurityAccessControldll" Name="System.Security.AccessControl.dll" Source="$(var.BinariesDir)System.Security.AccessControl.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_SystemSecurityPrincipalWindowsdll" Guid="0E99BF08-F7AB-4623-9D6D-B62CC4B4E014">
+        <File Id="FILE_SystemSecurityPrincipalWindowsdll" Name="System.Security.Principal.Windows.dll" Source="$(var.BinariesDir)System.Security.Principal.Windows.dll" KeyPath="yes" />
       </Component>
       <Component Id="COMP_SystemTextEncodingCodePagesdll" Guid="E21C634A-1279-4BB1-8194-DFAE5DA5CD23">
         <File Id="FILE_SystemTextEncodingCodePagesdll" Name="System.Text.Encoding.CodePages.dll" Source="$(var.BinariesDir)System.Text.Encoding.CodePages.dll" KeyPath="yes" />

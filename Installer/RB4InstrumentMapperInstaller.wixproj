@@ -1,13 +1,13 @@
 <Project Sdk="WixToolset.Sdk/4.0.1">
 
   <PropertyGroup>
-    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <PlatformTarget>x64</PlatformTarget>
     <Name>RB4InstrumentMapperInstaller</Name>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="WixToolset.UI.wixext" Version="4.0.0" />
-    <ProjectReference Include="..\Program\RB4InstrumentMapper.csproj" />
+    <ProjectReference Include="..\Program\RB4InstrumentMapper.csproj" SetConfiguration="Configuration=Release" />
   </ItemGroup>
 
   <ItemGroup>
