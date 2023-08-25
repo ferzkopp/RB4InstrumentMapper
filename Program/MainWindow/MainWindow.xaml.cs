@@ -235,7 +235,11 @@ namespace RB4InstrumentMapper
                 Console.WriteLine("You may need to run through auto-detection or manually select the device from the dropdown as well.");
             }
 
-            Console.WriteLine($"Discovered {pcapDeviceList.Count} Pcap devices.");
+            int count = pcapDeviceList.Count;
+            if (count == 1)
+                Console.WriteLine("Discovered 1 Pcap device.");
+            else
+                Console.WriteLine($"Discovered {pcapDeviceList.Count} Pcap devices.");
         }
 
         private void SetStartButtonState()

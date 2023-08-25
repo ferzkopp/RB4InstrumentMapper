@@ -21,8 +21,8 @@ namespace RB4InstrumentMapper.Parsing
         public override string ToString()
         {
             return Header.IsEmpty
-                ? $"[{Time:yyyy-MM-dd hh:mm:ss.fff}] [{Data.Length:N2}] {(DirectionIn ? "->" : "<-")} {ParsingUtils.ToString(Data)}"
-                : $"[{Time:yyyy-MM-dd hh:mm:ss.fff}] [{Header.Length + Data.Length:N2}] {(DirectionIn ? "->" : "<-")} {ParsingUtils.ToString(Header)} | {ParsingUtils.ToString(Data)}";
+                ? $"[{Time:yyyy-MM-dd hh:mm:ss.fff}] [{Data.Length:D2}] {(DirectionIn ? "->" : "<-")} {ParsingUtils.ToString(Data)}"
+                : $"[{Time:yyyy-MM-dd hh:mm:ss.fff}] [{Header.Length + Data.Length:D2}] {(DirectionIn ? "->" : "<-")} {ParsingUtils.ToString(Header)} | {ParsingUtils.ToString(Data)}";
         }
     }
 }

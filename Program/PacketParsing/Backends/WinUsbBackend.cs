@@ -44,10 +44,9 @@ namespace RB4InstrumentMapper.Parsing
             watcher.DeviceArrived -= DeviceArrived;
             watcher.DeviceRemoved -= DeviceRemoved;
 
-            foreach (var device in devices.Values)
+            foreach (var devicePath in devices.Keys)
             {
-                device.Dispose();
-                DeviceAddedOrRemoved?.Invoke();
+                RemoveDevice(devicePath, remove: false);
             }
             devices.Clear();
 
@@ -106,15 +105,16 @@ namespace RB4InstrumentMapper.Parsing
             DeviceAddedOrRemoved?.Invoke();
         }
 
-        private static void RemoveDevice(string devicePath)
+        private static void RemoveDevice(string devicePath, bool remove = true)
         {
             // Paths are case-insensitive
             devicePath = devicePath.ToLowerInvariant();
             if (!devices.TryGetValue(devicePath, out var device))
                 return;
 
-            devices.Remove(devicePath);
             device.Dispose();
+            if (remove)
+                devices.Remove(devicePath);
 
             PacketLogging.PrintMessage($"Removed device {devicePath}");
             DeviceAddedOrRemoved?.Invoke();

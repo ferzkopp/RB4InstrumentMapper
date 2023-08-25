@@ -88,7 +88,7 @@ namespace RB4InstrumentMapper.Parsing
                     case XboxResult.Disconnected:
                         client.Dispose();
                         clients.Remove(header.Client);
-                        PacketLogging.PrintMessage($"Client {client.Arrival.SerialNumber} disconnected");
+                        PacketLogging.PrintMessage($"Client {client.Arrival.SerialNumber:X12} disconnected");
                         break;
                     default:
                         PacketLogging.PrintVerboseError($"Error handling message: {clientResult}");
