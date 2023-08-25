@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -84,7 +84,10 @@ namespace RB4InstrumentMapper
 
         private void UpdateText()
         {
+            bool doScroll = Math.Abs(textBox.ExtentHeight - (textBox.VerticalOffset + textBox.ViewportHeight)) < (textBox.FontSize * 3);
             textBox.Text = string.Join(Environment.NewLine, visibleTextCache.ToArray());
+            if (doScroll)
+                textBox.ScrollToEnd();
         }
     }
 }
