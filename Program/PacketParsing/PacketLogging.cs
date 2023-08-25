@@ -29,8 +29,9 @@ namespace RB4InstrumentMapper.Parsing
 
         public static void PrintVerboseError(string message)
         {
-            // Always log errors to debug
+            // Always log errors to debug/log
             Debug.WriteLine(message);
+            Logging.Main_WriteLine(message);
             if (!BackendSettings.PrintVerboseErrors)
                 return;
 
