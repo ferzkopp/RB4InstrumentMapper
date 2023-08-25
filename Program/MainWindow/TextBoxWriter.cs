@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,7 +7,7 @@ using System.Windows.Controls;
 namespace RB4InstrumentMapper
 {
     /// <summary>
-    /// A text writer which redirects the standard output stream to a WPF textbox.
+    /// A text writer which writes to a WPF textbox.
     /// </summary>
     /// <remarks>
     /// https://social.technet.microsoft.com/wiki/contents/articles/12347.wpfhowto-add-a-debugoutput-console-to-your-application.aspx
@@ -25,54 +25,35 @@ namespace RB4InstrumentMapper
         private static readonly char[] newlineChars = Environment.NewLine.ToCharArray();
 
         /// <summary>
-        /// Cache for current line.
+        /// Buffer for the current line.
         /// </summary>
-        private static StringBuilder currentLineCache = null;
+        private readonly StringBuilder currentLineCache = new StringBuilder(250);
 
         /// <summary>
         /// Cache of the visible text.
         /// </summary>
-        private static FixedSizeConcurrentQueue<string> visibleTextCache = null;
+        private readonly FixedSizeConcurrentQueue<string> visibleTextCache = new FixedSizeConcurrentQueue<string>(DefaultMaxNumberLines);
 
         /// <summary>
         /// Text box handle that displays text.
         /// </summary>
-        private readonly TextBox textBox = null;
+        private readonly TextBox textBox;
 
         /// <summary>
-        /// Display lines in reverse order (newest first) if set. Defaults to false.
+        /// Delegate for updating the text box.
         /// </summary>
-        private readonly bool displayLinesInReverseOrder = false;
+        private readonly Action updateText;
 
-        /// <summary>
-        /// Display timestamp for each line. Defaults to true.
-        /// </summary>
-        private readonly bool displayLinesWithTimestamp = true;
-
-        /// <summary>
-        /// Connects console output to a given text box.
-        /// </summary>
-        public static void RedirectConsoleToTextBox(
-            TextBox textBox,
-            int maxNumberOfLines = DefaultMaxNumberLines,
-            bool displayLinesInReverseOrder = false,
-            bool displayLinesWithTimestamp = true
-        )
-        {
-            var textboxConsole = new TextBoxWriter(textBox, displayLinesInReverseOrder, displayLinesWithTimestamp);
-            Console.SetOut(textboxConsole);
-            currentLineCache = new StringBuilder();
-            visibleTextCache = new FixedSizeConcurrentQueue<string>(maxNumberOfLines);
-        }
+        public override Encoding Encoding => Encoding.Unicode;
 
         /// <summary>
         /// Creates a new TextBoxConsole.
         /// </summary>
-        public TextBoxWriter(TextBox output, bool reverse = false, bool timestamp = true)
+        public TextBoxWriter(TextBox output)
         {
             textBox = output;
-            displayLinesInReverseOrder = reverse;
-            displayLinesWithTimestamp = timestamp;
+
+            updateText = new Action(UpdateText);
         }
 
         /// <summary>
@@ -81,46 +62,29 @@ namespace RB4InstrumentMapper
         public override void Write(char value)
         {
             base.Write(value);
-            if (textBox != null &&
-                currentLineCache != null &&
-                visibleTextCache != null)
-            {
-                textBox.Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    if (newlineChars.Contains(value))
-                    {
-                        // Newline
-                        if (currentLineCache.Length > 0)
-                        {
-                            // Store line in text cache and flush it
-                            string newText = (displayLinesWithTimestamp) ? "[" + DateTime.Now.ToString("s") + "] " : string.Empty;
-                            newText += currentLineCache.ToString();
-                            visibleTextCache.Enqueue(newText);
-                            currentLineCache.Clear();
 
-                            // Display text cache
-                            if (displayLinesInReverseOrder)
-                            {
-                                textBox.Text = string.Join(Environment.NewLine, visibleTextCache.ToArray().Reverse());
-                            }
-                            else
-                            {
-                                textBox.Text = string.Join(Environment.NewLine, visibleTextCache.ToArray());
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Collect characters in line
-                        currentLineCache.Append(value);
-                    }
-                }));
+            if (!newlineChars.Contains(value))
+            {
+                // Collect characters in line
+                currentLineCache.Append(value);
+                return;
             }
+
+            // Newline
+            // Ignore empty lines
+            if (currentLineCache.Length < 1)
+                return;
+
+            // Store line in text cache and flush it
+            string newText = currentLineCache.ToString();
+            currentLineCache.Clear();
+            visibleTextCache.Enqueue(newText);
+            textBox.Dispatcher.BeginInvoke(updateText);
         }
 
-        /// <summary>
-        /// Gets the encoding of the outputter.
-        /// </summary>
-        public override Encoding Encoding => Encoding.UTF8;
+        private void UpdateText()
+        {
+            textBox.Text = string.Join(Environment.NewLine, visibleTextCache.ToArray());
+        }
     }
 }

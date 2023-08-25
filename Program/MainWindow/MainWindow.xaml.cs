@@ -70,7 +70,8 @@ namespace RB4InstrumentMapper
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Connect to console
-            TextBoxWriter.RedirectConsoleToTextBox(messageConsole, displayLinesWithTimestamp: false);
+            var textboxConsole = new TextBoxWriter(messageConsole);
+            Console.SetOut(textboxConsole);
 
             // Check for Pcap
             try
