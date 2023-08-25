@@ -61,6 +61,42 @@ namespace RB4InstrumentMapper.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool verboseErrorLog {
+            get {
+                return ((bool)(this["verboseErrorLog"]));
+            }
+            set {
+                this["verboseErrorLog"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool pcapEnabled {
+            get {
+                return ((bool)(this["pcapEnabled"]));
+            }
+            set {
+                this["pcapEnabled"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool usbEnabled {
+            get {
+                return ((bool)(this["usbEnabled"]));
+            }
+            set {
+                this["usbEnabled"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("-1")]
         public int controllerDeviceType {
             get {

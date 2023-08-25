@@ -5,29 +5,48 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RB4InstrumentMapper"
         mc:Ignorable="d"
-        Title="RB4InstrumentMapper" Height="499" Width="800" Loaded="Window_Loaded" Closed="Window_Closed" ResizeMode="CanMinimize" MinWidth="800" MinHeight="2">
+        Title="RB4InstrumentMapper"
+        Height="540" Width="800" MinWidth="800" MinHeight="2" ResizeMode="CanMinimize"
+        Loaded="Window_Loaded" Closed="Window_Closed">
+
     <Grid Margin="10,10,10,10">
-        <Label Name="mainTitleLabel" Content="Rock Band 4 Instrument Mapper" HorizontalAlignment="Left" Height="44" VerticalAlignment="Top" Width="381" FontSize="24" FontWeight="Bold" Margin="9,0,0,0" VerticalContentAlignment="Center"/>
-        <Label x:Name="versionLabel" Content="vX.X.X.X" HorizontalAlignment="Right" Height="44" Margin="0,0,10,0" VerticalAlignment="Top" Width="375" IsEnabled="False" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" FontSize="18"/>
-        <GroupBox Header="Pcap" Margin="10,44,10,0" Height="107" VerticalAlignment="Top">
+        <Label Name="mainTitleLabel" Content="Rock Band 4 Instrument Mapper" FontSize="24" FontWeight="Bold" Height="44" Width="381" VerticalAlignment="Top" HorizontalAlignment="Left" VerticalContentAlignment="Center" HorizontalContentAlignment="Left"/>
+        <Label x:Name="versionLabel" Content="vX.X.X.X" FontSize="18" Height="44" Width="375" VerticalAlignment="Top" HorizontalAlignment="Right" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+        <GroupBox Header="Pcap Devices" Margin="0,50,390,0" Height="110" VerticalAlignment="Top" HorizontalAlignment="Stretch">
             <Grid Margin="10,10,10,10">
-                <Label Content="Devices:" HorizontalAlignment="Left" Height="29" Margin="0,0,0,0" VerticalAlignment="Top" Width="56"/>
-                <ComboBox Name="pcapDeviceCombo" Height="29" Margin="56,0,138,0" VerticalAlignment="Top" SelectionChanged="pcapDeviceCombo_SelectionChanged"/>
-                <CheckBox x:Name="packetDebugCheckBox" Content="Show packets (for debugging)" HorizontalAlignment="Left" Height="22" Margin="68,42,0,0" VerticalAlignment="Top" Width="184" Checked="packetDebugCheckBox_Checked" Unchecked="packetDebugCheckBox_Unchecked"/>
-                <CheckBox x:Name="packetLogCheckBox" Content="Log packets to file" HorizontalAlignment="Left" Height="22" Margin="267,42,0,0" VerticalAlignment="Top" Width="120" Checked="packetLogCheckBox_Checked" Unchecked="packetLogCheckBox_Unchecked"/>
-                <Button x:Name="pcapAutoDetectButton" Content="Auto-Detect Device" HorizontalAlignment="Right" VerticalAlignment="Top" Width="133" Height="29" Click="pcapAutoDetectButton_Click"/>
-                <Button x:Name="pcapRefreshButton" Content="Refresh List" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="133" Height="29" Click="pcapRefreshButton_Click"/>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <ComboBox Name="pcapDeviceCombo" Height="30" Margin="75,0,0,0" VerticalAlignment="Top" Grid.Column="0" Grid.ColumnSpan="2" SelectionChanged="pcapDeviceCombo_SelectionChanged"/>
+                <Button x:Name="pcapRefreshButton" Content="Refresh" Height="30" Margin="0,0,2.5,0" VerticalAlignment="Bottom" Grid.Column="0" Click="pcapRefreshButton_Click"/>
+                <Button x:Name="pcapAutoDetectButton" Content="Auto-Detect" Height="30" Margin="2.5,0,0,0" VerticalAlignment="Bottom" Grid.Column="1" Click="pcapAutoDetectButton_Click"/>
+                <CheckBox x:Name="pcapEnabledCheckBox" Content="Enabled" Height="22" Margin="0,6,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Grid.Column="0" Checked="pcapEnabledCheckBox_CheckedChanged" Unchecked="pcapEnabledCheckBox_CheckedChanged"/>
             </Grid>
         </GroupBox>
-        <Label Content="Controller Type:" HorizontalAlignment="Left" Height="30" VerticalAlignment="Top" Width="96" Margin="27,162,0,0"/>
-        <ComboBox x:Name="controllerDeviceTypeCombo" Margin="129,162,0,0" SelectionChanged="controllerDeviceTypeCombo_SelectionChanged" Height="30" VerticalAlignment="Top" HorizontalAlignment="Left" Width="201">
-            <ComboBoxItem Content="vJoy" IsEnabled="False"/>
-            <ComboBoxItem Content="ViGEmBus" IsEnabled="False"/>
-        </ComboBox>
-        <Button Name="startButton" Content="Start" Margin="0,158,26,0" Click="startButton_Click" HorizontalAlignment="Right" Width="133" Height="40" VerticalAlignment="Top" FontSize="18" IsEnabled="False"/>
-        <GroupBox Header="Console" Margin="10,198,10,10">
+        <GroupBox Header="USB Devices" Height="104" Margin="0,165,390,0" VerticalAlignment="Top">
             <Grid Margin="10,10,10,10">
-                <TextBox Name="messageConsole" Margin="0,0,0,0" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Visible" IsReadOnly="True" FontSize="12" IsUndoEnabled="False"/>
+                <Label x:Name="usbDeviceCountLabel" Content="Count: 10" Margin="0,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
+                <!-- <Button x:Name="usbShowDevicesButton" Content="Show Devices (TODO)" Height="30" Width="176" VerticalAlignment="Bottom" HorizontalAlignment="Right" IsEnabled="False"/> -->
+                <CheckBox x:Name="usbEnabledCheckBox" Content="Enabled" Height="22" Margin="0,6,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Checked="usbEnabledCheckBox_CheckedChanged" Unchecked="usbEnabledCheckBox_CheckedChanged"/>
+            </Grid>
+        </GroupBox>
+        <GroupBox Header="Capture" Height="219" Width="385" Margin="0,50,0,0" VerticalAlignment="Top" HorizontalAlignment="Right">
+            <Grid Margin="10,10,10,10">
+                <Label Content="Controller Emulation Type" Height="30" Width="150" Margin="-5,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                <ComboBox x:Name="controllerDeviceTypeCombo" Height="30" Width="198" VerticalAlignment="Top" HorizontalAlignment="Right" SelectionChanged="controllerDeviceTypeCombo_SelectionChanged">
+                    <ComboBoxItem x:Name="vjoyDeviceTypeOption" Content="vJoy" IsEnabled="False"/>
+                    <ComboBoxItem x:Name="vigemDeviceTypeOption" Content="ViGEmBus" IsEnabled="False"/>
+                </ComboBox>
+                <Button x:Name="startButton" Content="Start" FontSize="18" Height="60" Width="348" Margin="0,116,0,0" VerticalAlignment="Top" HorizontalAlignment="Center" IsEnabled="False" Click="startButton_Click"/>
+                <CheckBox x:Name="packetDebugCheckBox" Content="Show packets (for debugging)" Height="22" Width="180" Margin="0,35,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Checked="packetDebugCheckBox_CheckedChanged" Unchecked="packetDebugCheckBox_CheckedChanged"/>
+                <CheckBox x:Name="packetLogCheckBox" Content="Log packets to file" Height="22" Width="120" Margin="0,62,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Checked="packetLogCheckBox_CheckedChanged" Unchecked="packetLogCheckBox_CheckedChanged"/>
+                <CheckBox x:Name="verboseErrorCheckBox" Content="Show verbose (unimportant) errors" Height="22" Width="210" Margin="0,89,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Checked="verboseErrorCheckBox_CheckedChanged" Unchecked="verboseErrorCheckBox_CheckedChanged"/>
+            </Grid>
+        </GroupBox>
+        <GroupBox Header="Console" Margin="0,274,0,0">
+            <Grid Margin="10,10,10,10">
+                <TextBox Name="messageConsole" FontSize="12" TextWrapping="Wrap" IsReadOnly="True" VerticalScrollBarVisibility="Visible"/>
             </Grid>
         </GroupBox>
     </Grid>

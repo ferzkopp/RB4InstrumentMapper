@@ -15,10 +15,14 @@ namespace RB4InstrumentMapper.Parsing
 
         public static event Action DeviceAddedOrRemoved;
 
+        private static bool initialized = false;
         private static bool started = false;
 
         public static void Initialize()
         {
+            if (initialized)
+                return;
+
             foreach (var deviceInfo in USBDevice.GetDevices(DeviceInterfaceIds.UsbDevice))
             {
                 AddDevice(deviceInfo.DevicePath);
@@ -27,10 +31,15 @@ namespace RB4InstrumentMapper.Parsing
             watcher.DeviceArrived += DeviceArrived;
             watcher.DeviceRemoved += DeviceRemoved;
             watcher.StartListen(DeviceInterfaceIds.UsbDevice);
+
+            initialized = true;
         }
 
         public static void Uninitialize()
         {
+            if (!initialized)
+                return;
+
             watcher.StopListen();
             watcher.DeviceArrived -= DeviceArrived;
             watcher.DeviceRemoved -= DeviceRemoved;
@@ -38,8 +47,11 @@ namespace RB4InstrumentMapper.Parsing
             foreach (var device in devices.Values)
             {
                 device.Dispose();
+                DeviceAddedOrRemoved?.Invoke();
             }
             devices.Clear();
+
+            initialized = false;
         }
 
         public static void Start()

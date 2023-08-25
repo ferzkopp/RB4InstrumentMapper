@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -28,17 +26,12 @@ namespace RB4InstrumentMapper
         private ILiveDevice pcapSelectedDevice = null;
 
         /// <summary>
-        /// Flag indicating that packet capture is active.
+        /// Whether or not packet capture is active.
         /// </summary>
         private bool packetCaptureActive = false;
 
         /// <summary>
-        /// Flag indicating if packets should be shown.
-        /// </summary>
-        private bool packetDebug = false;
-
-        /// <summary>
-        /// Flag indicating if packets should be logged to a file.
+        /// Whether or not packets should be logged to a file.
         /// </summary>
         private bool packetDebugLog = false;
 
@@ -54,7 +47,7 @@ namespace RB4InstrumentMapper
         {
             None = -1,
             vJoy = 0,
-            VigemBus = 1
+            ViGEmBus = 1
         }
 
         public MainWindow()
@@ -67,7 +60,7 @@ namespace RB4InstrumentMapper
             versionLabel.Content += " Debug";
 #endif
 
-            // Capture Dispatcher object for use in callback
+            // Capture Dispatcher object for use in callbacks
             uiDispatcher = Dispatcher;
         }
 
@@ -79,10 +72,29 @@ namespace RB4InstrumentMapper
             // Connect to console
             TextBoxWriter.RedirectConsoleToTextBox(messageConsole, displayLinesWithTimestamp: false);
 
-            // Load saved settings
-            packetDebugCheckBox.IsChecked = Settings.Default.packetDebug;
-            packetLogCheckBox.IsChecked = Settings.Default.packetDebugLog;
-            int deviceType = controllerDeviceTypeCombo.SelectedIndex = Settings.Default.controllerDeviceType;
+            // Check for Pcap
+            try
+            {
+                PopulatePcapDropdown();
+            }
+            catch (DllNotFoundException ex)
+            {
+                MessageBox.Show("Could not load Pcap interface! Please ensure WinPcap is installed on your system.", "Couldn't Find WinPcap", MessageBoxButton.OK, MessageBoxImage.Error);
+                Logging.Main_WriteException(ex, "Failed to load Pcap interface!");
+                Application.Current.Shutdown();
+                return;
+            }
+
+            // Load console/log settings
+            SetPacketDebug(Settings.Default.packetDebug);
+            SetPacketDebugLog(Settings.Default.packetDebugLog);
+            SetVerboseErrors(Settings.Default.verboseErrorLog);
+
+            // Load backend settings
+            SetPcapEnabled(Settings.Default.pcapEnabled);
+            SetUsbEnabled(Settings.Default.usbEnabled);
+            var deviceType = (ControllerType)Settings.Default.controllerDeviceType;
+            SetDeviceType(deviceType);
 
             // Check for vJoy
             bool vjoyFound = VjoyClient.Enabled;
@@ -93,12 +105,14 @@ namespace RB4InstrumentMapper
 
                 if (VjoyClient.GetAvailableDeviceCount() > 0)
                 {
-                    (controllerDeviceTypeCombo.Items[0] as ComboBoxItem).IsEnabled = true;
+                    vjoyDeviceTypeOption.IsEnabled = true;
                 }
                 else
                 {
+                    Console.WriteLine("No vJoy devices found. vJoy selection will be unavailable.");
+
                     // Reset device type selection if it was set to vJoy
-                    if (deviceType == (int)ControllerType.vJoy)
+                    if (deviceType == ControllerType.vJoy)
                     {
                         controllerDeviceTypeCombo.SelectedIndex = (int)ControllerType.None;
                     }
@@ -109,7 +123,7 @@ namespace RB4InstrumentMapper
                 Console.WriteLine("No vJoy driver found, or vJoy is disabled. vJoy selection will be unavailable.");
 
                 // Reset device type selection if it was set to vJoy
-                if (deviceType == (int)ControllerType.vJoy)
+                if (deviceType == ControllerType.vJoy)
                 {
                     controllerDeviceTypeCombo.SelectedIndex = (int)ControllerType.None;
                 }
@@ -120,7 +134,7 @@ namespace RB4InstrumentMapper
             if (vigemFound)
             {
                 Console.WriteLine("ViGEmBus found!");
-                (controllerDeviceTypeCombo.Items[1] as ComboBoxItem).IsEnabled = true;
+                vigemDeviceTypeOption.IsEnabled = true;
             }
             else
             {
@@ -128,38 +142,19 @@ namespace RB4InstrumentMapper
                 Console.WriteLine("ViGEmBus not found. ViGEmBus selection will be unavailable.");
 
                 // Reset device type selection if it was set to ViGEmBus
-                if (deviceType == (int)ControllerType.VigemBus)
+                if (deviceType == ControllerType.ViGEmBus)
                 {
                     controllerDeviceTypeCombo.SelectedIndex = (int)ControllerType.None;
                 }
             }
 
             // Exit if neither ViGEmBus nor vJoy are installed
-            if (!(vjoyFound || vigemFound))
+            if (!vjoyFound && !vigemFound)
             {
                 MessageBox.Show("No controller emulators found! Please install vJoy or ViGEmBus.\nThe program will now shut down.", "No Controller Emulators Found", MessageBoxButton.OK, MessageBoxImage.Error);
                 Application.Current.Shutdown();
                 return;
             }
-
-            // Initialize Pcap dropdown
-            try
-            {
-                PopulatePcapDropdown();
-            }
-            catch (DllNotFoundException ex)
-            {
-                MessageBox.Show("Could not load Pcap interface! Please ensure WinPcap is installed on your system.", "Couldn't Find WinPcap", MessageBoxButton.OK, MessageBoxImage.Error);
-                Application.Current.Shutdown();
-
-                // Log exception
-                Logging.Main_WriteException(ex, "Failed to load Pcap interface!");
-
-                return;
-            }
-
-            WinUsbBackend.DeviceAddedOrRemoved += WinUsbDeviceAddedOrRemoved;
-            WinUsbBackend.Initialize();
         }
 
         /// <summary>
@@ -167,19 +162,17 @@ namespace RB4InstrumentMapper
         /// </summary>
         private void Window_Closed(object sender, EventArgs e)
         {
-            // Shutdown
+            // Shut down
             if (packetCaptureActive)
             {
                 StopCapture();
             }
-
             WinUsbBackend.Uninitialize();
             WinUsbBackend.DeviceAddedOrRemoved -= WinUsbDeviceAddedOrRemoved;
 
-            // Close the log files
+            // Clean up
+            Settings.Default.Save();
             Logging.CloseAll();
-
-            // Dispose ViGEmBus
             VigemClient.Dispose();
         }
 
@@ -193,6 +186,10 @@ namespace RB4InstrumentMapper
         {
             // Clear combo list
             pcapDeviceCombo.Items.Clear();
+
+            // Skip everything else
+            if (!Settings.Default.pcapEnabled)
+                return;
 
             // Refresh the device list
             var pcapDeviceList = CaptureDeviceList.Instance;
@@ -252,7 +249,11 @@ namespace RB4InstrumentMapper
 
         private void WinUsbDeviceAddedOrRemoved()
         {
-            uiDispatcher.Invoke(SetStartButtonState);
+            uiDispatcher.Invoke(() =>
+            {
+                SetStartButtonState();
+                usbDeviceCountLabel.Content = $"Count: {WinUsbBackend.DeviceCount}";
+            });
         }
 
         /// <summary>
@@ -271,11 +272,14 @@ namespace RB4InstrumentMapper
             packetCaptureActive = true;
 
             // Set window controls
+            pcapEnabledCheckBox.IsEnabled = false;
             pcapDeviceCombo.IsEnabled = false;
             pcapAutoDetectButton.IsEnabled = false;
             pcapRefreshButton.IsEnabled = false;
+            usbEnabledCheckBox.IsEnabled = false;
             packetDebugCheckBox.IsEnabled = false;
             packetLogCheckBox.IsEnabled = false;
+            verboseErrorCheckBox.IsEnabled = false;
 
             controllerDeviceTypeCombo.IsEnabled = false;
 
@@ -316,11 +320,14 @@ namespace RB4InstrumentMapper
             packetCaptureActive = false;
 
             // Set window controls
-            pcapDeviceCombo.IsEnabled = true;
-            pcapAutoDetectButton.IsEnabled = true;
-            pcapRefreshButton.IsEnabled = true;
+            pcapEnabledCheckBox.IsEnabled = true;
+            usbEnabledCheckBox.IsEnabled = true;
+            SetPcapEnabled(Settings.Default.pcapEnabled);
+            SetUsbEnabled(Settings.Default.usbEnabled);
+
             packetDebugCheckBox.IsEnabled = true;
             packetLogCheckBox.IsEnabled = true;
+            verboseErrorCheckBox.IsEnabled = true;
 
             controllerDeviceTypeCombo.IsEnabled = true;
 
@@ -338,8 +345,8 @@ namespace RB4InstrumentMapper
 
         private bool StartPcapCapture()
         {
-            // Ignore if no device is selected
-            if (pcapSelectedDevice == null)
+            // Ignore if disabled or no device is selected
+            if (!Settings.Default.pcapEnabled || pcapSelectedDevice == null)
                 return true;
 
             // Check if the device is still present
@@ -374,7 +381,6 @@ namespace RB4InstrumentMapper
             }
 
             // Start capture
-            BackendSettings.LogPackets = packetDebug;
             PcapBackend.OnCaptureStop += OnCaptureStopped;
             PcapBackend.StartCapture(pcapSelectedDevice);
             Console.WriteLine($"Listening on {pcapSelectedDevice.GetDisplayName()}...");
@@ -384,6 +390,9 @@ namespace RB4InstrumentMapper
 
         private bool StartWinUsbCapture()
         {
+            if (!Settings.Default.usbEnabled)
+                return true;
+
             WinUsbBackend.Start();
             return true;
         }
@@ -398,11 +407,135 @@ namespace RB4InstrumentMapper
             WinUsbBackend.Stop();
         }
 
+        private void SetPcapEnabled(bool enabled)
+        {
+            if (pcapEnabledCheckBox.IsChecked != enabled)
+            {
+                // Let the event handler set everything
+                pcapEnabledCheckBox.IsChecked = enabled;
+                return;
+            }
+
+            Settings.Default.pcapEnabled = enabled;
+
+            pcapDeviceCombo.IsEnabled = enabled;
+            pcapAutoDetectButton.IsEnabled = enabled;
+            pcapRefreshButton.IsEnabled = enabled;
+
+            PopulatePcapDropdown();
+        }
+
+        private void SetUsbEnabled(bool enabled)
+        {
+            if (usbEnabledCheckBox.IsChecked != enabled)
+            {
+                usbEnabledCheckBox.IsChecked = enabled;
+                return;
+            }
+
+            Settings.Default.usbEnabled = enabled;
+
+            usbDeviceCountLabel.IsEnabled = enabled;
+            // TODO: Uncomment when this button is implemented
+            // usbShowDevicesButton.IsEnabled = enabled;
+
+            if (enabled)
+            {
+                WinUsbBackend.DeviceAddedOrRemoved += WinUsbDeviceAddedOrRemoved;
+                WinUsbBackend.Initialize();
+            }
+            else
+            {
+                WinUsbBackend.Uninitialize();
+                WinUsbBackend.DeviceAddedOrRemoved -= WinUsbDeviceAddedOrRemoved;
+            }
+
+            usbDeviceCountLabel.Content = $"Count: {WinUsbBackend.DeviceCount}";
+        }
+
+        private void SetPacketDebug(bool enabled)
+        {
+            if (packetDebugCheckBox.IsChecked != enabled)
+            {
+                packetDebugCheckBox.IsChecked = enabled;
+                return;
+            }
+
+            Settings.Default.packetDebug = enabled;
+
+            BackendSettings.LogPackets = enabled;
+            packetLogCheckBox.IsEnabled = enabled;
+            packetDebugLog = enabled && packetLogCheckBox.IsChecked.GetValueOrDefault();
+        }
+
+        private void SetPacketDebugLog(bool enabled)
+        {
+            if (packetLogCheckBox.IsChecked != enabled)
+            {
+                packetLogCheckBox.IsChecked = enabled;
+                return;
+            }
+
+            packetDebugLog = Settings.Default.packetDebugLog = enabled;
+        }
+
+        private void SetVerboseErrors(bool enabled)
+        {
+            if (packetDebugCheckBox.IsChecked != enabled)
+            {
+                verboseErrorCheckBox.IsChecked = enabled;
+                return;
+            }
+
+            Settings.Default.verboseErrorLog = enabled;
+            BackendSettings.PrintVerboseErrors = enabled;
+        }
+
+        private void SetDeviceType(ControllerType type)
+        {
+            int typeInt = (int)type;
+            if (controllerDeviceTypeCombo.SelectedIndex != typeInt)
+            {
+                controllerDeviceTypeCombo.SelectedIndex = typeInt;
+                return;
+            }
+
+            Settings.Default.controllerDeviceType = typeInt;
+
+            switch (type)
+            {
+                case ControllerType.vJoy:
+                    if (VjoyClient.GetAvailableDeviceCount() > 0)
+                    {
+                        BackendSettings.MapperMode = MappingMode.vJoy;
+                    }
+                    else
+                    {
+                        // Reset device type selection
+                        // The parse mode and saved setting will get set automatically since setting this fires off this handler again
+                        controllerDeviceTypeCombo.SelectedIndex = -1;
+                        return;
+                    }
+                    break;
+
+                case ControllerType.ViGEmBus:
+                    BackendSettings.MapperMode = MappingMode.ViGEmBus;
+                    break;
+
+                case ControllerType.None:
+                default:
+                    BackendSettings.MapperMode = 0;
+                    Settings.Default.controllerDeviceType = (int)ControllerType.None;
+                    break;
+            }
+
+            // Enable start button
+            SetStartButtonState();
+        }
+
         /// <summary>
         /// Handles Pcap device selection changes.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void pcapDeviceCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Get selected combo box item
@@ -413,7 +546,6 @@ namespace RB4InstrumentMapper
 
                 // Clear saved device
                 Settings.Default.pcapDevice = String.Empty;
-                Settings.Default.Save();
                 return;
             }
             string itemName = selection.Name;
@@ -433,7 +565,6 @@ namespace RB4InstrumentMapper
 
                 // Remember selected Pcap device's name
                 Settings.Default.pcapDevice = pcapSelectedDevice.Name;
-                Settings.Default.Save();
             }
         }
 
@@ -453,70 +584,53 @@ namespace RB4InstrumentMapper
         }
 
         /// <summary>
-        /// Handles the packet debug checkbox being checked.
+        /// Handles the verbose error checkbox being checked.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void packetDebugCheckBox_Checked(object sender, RoutedEventArgs e)
+        private void pcapEnabledCheckBox_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            packetDebug = true;
-            packetLogCheckBox.IsEnabled = true;
-            packetDebugLog = packetLogCheckBox.IsChecked.GetValueOrDefault();
-
-            // Remember selected packet debug state
-            Settings.Default.packetDebug = true;
-            Settings.Default.Save();
+            bool pcapEnabled = pcapEnabledCheckBox.IsChecked.GetValueOrDefault();
+            SetPcapEnabled(pcapEnabled);
         }
 
         /// <summary>
-        /// Handles the packet debug checkbox being unchecked.
+        /// Handles the verbose error checkbox being checked.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void packetDebugCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        private void usbEnabledCheckBox_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            packetDebug = false;
-            packetLogCheckBox.IsEnabled = false;
-            packetDebugLog = false;
+            bool usbEnabled = usbEnabledCheckBox.IsChecked.GetValueOrDefault();
+            SetUsbEnabled(usbEnabled);
+        }
 
-            // Remember selected packet debug state
-            Settings.Default.packetDebug = false;
-            Settings.Default.Save();
+        /// <summary>
+        /// Handles the packet debug checkbox being checked/unchecked.
+        /// </summary>
+        private void packetDebugCheckBox_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            bool packetDebug = packetDebugCheckBox.IsChecked.GetValueOrDefault();
+            SetPacketDebug(packetDebug);
         }
 
         /// <summary>
         /// Handles the packet debug checkbox being checked.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void packetLogCheckBox_Checked(object sender, RoutedEventArgs e)
+        private void packetLogCheckBox_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            packetDebugLog = true;
-
-            // Remember selected packet debug state
-            Settings.Default.packetDebugLog = true;
-            Settings.Default.Save();
+            bool packetDebugLog = packetLogCheckBox.IsChecked.GetValueOrDefault();
+            SetPacketDebugLog(packetDebugLog);
         }
 
         /// <summary>
-        /// Handles the packet debug checkbox being unchecked.
+        /// Handles the verbose error checkbox being checked.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void packetLogCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        private void verboseErrorCheckBox_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            packetDebugLog = false;
-
-            // Remember selected packet debug state
-            Settings.Default.packetDebugLog = false;
-            Settings.Default.Save();
+            bool verboseErrors = verboseErrorCheckBox.IsChecked.GetValueOrDefault();
+            SetVerboseErrors(verboseErrors);
         }
 
         /// <summary>
         /// Handles the click of the Pcap Refresh button.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void pcapRefreshButton_Click(object sender, RoutedEventArgs e)
         {
             // Re-populate dropdown
@@ -525,50 +639,12 @@ namespace RB4InstrumentMapper
 
         private void controllerDeviceTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Set parsing mode
-            switch (controllerDeviceTypeCombo.SelectedIndex)
-            {
-                // vJoy
-                case 0:
-                    if (VjoyClient.GetAvailableDeviceCount() > 0)
-                    {
-                        BackendSettings.MapperMode = MappingMode.vJoy;
-                        Settings.Default.controllerDeviceType = (int)ControllerType.vJoy;
-                    }
-                    else
-                    {
-                        // Reset device type selection
-                        // The parse mode and saved setting will get set automatically since setting this fires off this handler again
-                        controllerDeviceTypeCombo.SelectedIndex = -1;
-                        return;
-                    }
-                    break;
-
-                // ViGEmBus
-                case 1:
-                    BackendSettings.MapperMode = MappingMode.ViGEmBus;
-                    Settings.Default.controllerDeviceType = (int)ControllerType.VigemBus;
-                    break;
-
-                default:
-                    BackendSettings.MapperMode = 0;
-                    Settings.Default.controllerDeviceType = (int)ControllerType.None;
-                    break;
-            }
-
-            // Save setting
-            Settings.Default.controllerDeviceType = controllerDeviceTypeCombo.SelectedIndex;
-            Settings.Default.Save();
-
-            // Enable start button
-            SetStartButtonState();
+            SetDeviceType((ControllerType)controllerDeviceTypeCombo.SelectedIndex);
         }
 
         /// <summary>
         /// Handles the Pcap auto-detect button being clicked.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void pcapAutoDetectButton_Click(object sender, RoutedEventArgs e)
         {
             MessageBoxResult result;
@@ -597,7 +673,6 @@ namespace RB4InstrumentMapper
 
                     // Remember the new device
                     Settings.Default.pcapDevice = pcapSelectedDevice.Name;
-                    Settings.Default.Save();
 
                     // Refresh the dropdown
                     PopulatePcapDropdown();
@@ -690,7 +765,6 @@ namespace RB4InstrumentMapper
 
                 // Remember the new device
                 Settings.Default.pcapDevice = pcapSelectedDevice.Name;
-                Settings.Default.Save();
             }
             else
             {
