@@ -245,10 +245,9 @@ namespace RB4InstrumentMapper
 
         private void SetStartButtonState()
         {
-            startButton.IsEnabled =
+            startButton.IsEnabled = BackendSettings.MapperMode != 0 &&
+                (packetCaptureActive ||
                 WinUsbBackend.DeviceCount > 0 ||
-                packetCaptureActive ||
-                (controllerDeviceTypeCombo.SelectedIndex != (int)ControllerType.None &&
                 pcapDeviceCombo.SelectedIndex != -1);
         }
 
@@ -517,7 +516,7 @@ namespace RB4InstrumentMapper
                     else
                     {
                         // Reset device type selection
-                        // The parse mode and saved setting will get set automatically since setting this fires off this handler again
+                        // Setting this fires off this handler again, no extra handling is needed
                         controllerDeviceTypeCombo.SelectedIndex = -1;
                         return;
                     }
@@ -534,7 +533,6 @@ namespace RB4InstrumentMapper
                     break;
             }
 
-            // Enable start button
             SetStartButtonState();
         }
 
