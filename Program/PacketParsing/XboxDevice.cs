@@ -28,7 +28,7 @@ namespace RB4InstrumentMapper.Parsing
         public MappingMode MappingMode { get; }
         public bool MapGuideButton { get; }
 
-        public XboxDevice(MappingMode mode, bool mapGuide) : this(mode, mapGuide, 0)
+        public XboxDevice(MappingMode mode) : this(mode, mapGuide: false, 0)
         {
         }
 

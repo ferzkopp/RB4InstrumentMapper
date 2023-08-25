@@ -90,7 +90,7 @@ namespace RB4InstrumentMapper.Parsing
             if (started)
                 device.StartReading();
 
-            Debug.WriteLine($"Added device {devicePath}");
+            PacketLogging.PrintMessage($"Added device {devicePath}");
             DeviceAddedOrRemoved?.Invoke();
         }
 
@@ -104,7 +104,7 @@ namespace RB4InstrumentMapper.Parsing
             devices.Remove(devicePath);
             device.Dispose();
 
-            Debug.WriteLine($"Removed device {devicePath}");
+            PacketLogging.PrintMessage($"Removed device {devicePath}");
             DeviceAddedOrRemoved?.Invoke();
         }
     }
