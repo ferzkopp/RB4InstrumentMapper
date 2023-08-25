@@ -394,6 +394,7 @@ namespace RB4InstrumentMapper
 
         private bool StartWinUsbCapture()
         {
+            // Ignore if disabled
             if (!Settings.Default.usbEnabled)
                 return true;
 
@@ -403,11 +404,19 @@ namespace RB4InstrumentMapper
 
         private void StopPcapCapture()
         {
+            // Ignore if disabled or no device is selected
+            if (!Settings.Default.pcapEnabled || pcapSelectedDevice == null)
+                return;
+
             PcapBackend.StopCapture();
         }
 
         private void StopWinUsbCapture()
         {
+            // Ignore if disabled
+            if (!Settings.Default.usbEnabled)
+                return;
+
             WinUsbBackend.Stop();
         }
 
@@ -443,15 +452,18 @@ namespace RB4InstrumentMapper
             // TODO: Uncomment when this button is implemented
             // usbShowDevicesButton.IsEnabled = enabled;
 
-            if (enabled)
+            if (WinUsbBackend.Initialized != enabled)
             {
-                WinUsbBackend.DeviceAddedOrRemoved += WinUsbDeviceAddedOrRemoved;
-                WinUsbBackend.Initialize();
-            }
-            else
-            {
-                WinUsbBackend.Uninitialize();
-                WinUsbBackend.DeviceAddedOrRemoved -= WinUsbDeviceAddedOrRemoved;
+                if (enabled)
+                {
+                    WinUsbBackend.DeviceAddedOrRemoved += WinUsbDeviceAddedOrRemoved;
+                    WinUsbBackend.Initialize();
+                }
+                else
+                {
+                    WinUsbBackend.Uninitialize();
+                    WinUsbBackend.DeviceAddedOrRemoved -= WinUsbDeviceAddedOrRemoved;
+                }
             }
 
             usbDeviceCountLabel.Content = $"Count: {WinUsbBackend.DeviceCount}";

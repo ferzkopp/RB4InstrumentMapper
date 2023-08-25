@@ -29,28 +29,50 @@ namespace RB4InstrumentMapper.Parsing
 
         public static XboxWinUsbDevice TryCreate(string devicePath)
         {
-            // Only accept WinUSB devices, at least for now
-            var pnpDevice = PnPDevice.GetDeviceByInterfaceId(devicePath);
-            var classGuid = pnpDevice.GetProperty<Guid>(DevicePropertyKey.Device_ClassGuid);
-            if (classGuid != WinUsbClassGuid)
-                return null;
-
-            // Check for the Xbox One compatible ID
-            if (!HasCompatibleId(pnpDevice, XGIP_COMPATIBLE_ID))
-                return null;
-
-            // Open device
-            var usbDevice = USBDevice.GetSingleDeviceByPath(devicePath);
-
-            // Get input data pipe
-            var mainInterface = FindMainInterface(usbDevice);
-            if (mainInterface == null)
+            try
             {
-                usbDevice.Dispose();
+                if (!IsCompatibleDevice(devicePath))
+                    return null;
+
+                var usbDevice = USBDevice.GetSingleDeviceByPath(devicePath);
+                var mainInterface = FindMainInterface(usbDevice);
+                if (mainInterface == null)
+                {
+                    usbDevice.Dispose();
+                    return null;
+                }
+
+                return new XboxWinUsbDevice(usbDevice, mainInterface, BackendSettings.MapperMode);
+            }
+            catch (Exception ex)
+            {
+                PacketLogging.PrintVerboseException("Failed to create WinUSB device!", ex);
                 return null;
             }
+        }
 
-            return new XboxWinUsbDevice(usbDevice, mainInterface, BackendSettings.MapperMode);
+        public static bool IsCompatibleDevice(string devicePath)
+        {
+            try
+            {
+                var device = PnPDevice.GetDeviceByInterfaceId(devicePath);
+
+                // Only accept WinUSB devices, at least for now
+                var classGuid = device.GetProperty<Guid>(DevicePropertyKey.Device_ClassGuid);
+                if (classGuid != WinUsbClassGuid)
+                    return false;
+
+                // Check for the Xbox One compatible ID
+                if (!HasCompatibleId(device, XGIP_COMPATIBLE_ID))
+                    return false;
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                PacketLogging.PrintVerboseException("Failed to determine device compatibility!", ex);
+                return false;
+            }
         }
 
         public void StartReading()

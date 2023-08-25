@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using Nefarius.Drivers.WinUSB;
 using Nefarius.Utilities.DeviceManagement.PnP;
@@ -9,18 +9,18 @@ namespace RB4InstrumentMapper.Parsing
     public static class WinUsbBackend
     {
         private static readonly DeviceNotificationListener watcher = new DeviceNotificationListener();
-        private static readonly Dictionary<string, XboxWinUsbDevice> devices = new Dictionary<string, XboxWinUsbDevice>();
+        private static readonly ConcurrentDictionary<string, XboxWinUsbDevice> devices = new ConcurrentDictionary<string, XboxWinUsbDevice>();
 
         public static int DeviceCount => devices.Count;
 
         public static event Action DeviceAddedOrRemoved;
 
-        private static bool initialized = false;
-        private static bool started = false;
+        public static bool Initialized { get; private set; } = false;
+        public static bool Started { get; private set; } = false;
 
         public static void Initialize()
         {
-            if (initialized)
+            if (Initialized)
                 return;
 
             foreach (var deviceInfo in USBDevice.GetDevices(DeviceInterfaceIds.UsbDevice))
@@ -32,12 +32,12 @@ namespace RB4InstrumentMapper.Parsing
             watcher.DeviceRemoved += DeviceRemoved;
             watcher.StartListen(DeviceInterfaceIds.UsbDevice);
 
-            initialized = true;
+            Initialized = true;
         }
 
         public static void Uninitialize()
         {
-            if (!initialized)
+            if (!Initialized)
                 return;
 
             watcher.StopListen();
@@ -50,33 +50,41 @@ namespace RB4InstrumentMapper.Parsing
             }
             devices.Clear();
 
-            initialized = false;
+            Initialized = false;
         }
 
         public static void Start()
         {
-            if (started)
+            if (Started)
                 return;
 
-            foreach (var device in devices.Values)
+            foreach (var pair in devices)
             {
-                device.StartReading();
+                string path = pair.Key;
+                var device = pair.Value;
+
+                Debug.Assert(device == null, "Initialized device found!");
+                InitializeDevice(path);
             }
 
-            started = true;
+            Started = true;
         }
 
         public static void Stop()
         {
-            if (!started)
+            if (!Started)
                 return;
 
-            foreach (var device in devices.Values)
+            foreach (var pair in devices)
             {
+                string path = pair.Key;
+                var device = pair.Value;
+
                 device.StopReading();
+                devices[path] = null;
             }
 
-            started = false;
+            Started = false;
         }
 
         private static void DeviceArrived(DeviceEventArgs args)
@@ -93,16 +101,29 @@ namespace RB4InstrumentMapper.Parsing
         {
             // Paths are case-insensitive
             devicePath = devicePath.ToLowerInvariant();
-            var device = XboxWinUsbDevice.TryCreate(devicePath);
-            if (device == null)
+            if (!XboxWinUsbDevice.IsCompatibleDevice(devicePath))
                 return;
 
-            devices.Add(devicePath, device);
-            if (started)
-                device.StartReading();
+            if (Started)
+                InitializeDevice(devicePath);
+            else
+                devices.TryAdd(devicePath, null);
 
             PacketLogging.PrintMessage($"Added device {devicePath}");
             DeviceAddedOrRemoved?.Invoke();
+        }
+
+        private static void InitializeDevice(string path)
+        {
+            var device = XboxWinUsbDevice.TryCreate(path);
+            if (device == null)
+            {
+                Debug.Fail($"Non-compatible device {path} added to device list!");
+                return;
+            }
+
+            device.StartReading();
+            devices[path] = device;
         }
 
         private static void RemoveDevice(string devicePath, bool remove = true)
@@ -112,9 +133,9 @@ namespace RB4InstrumentMapper.Parsing
             if (!devices.TryGetValue(devicePath, out var device))
                 return;
 
-            device.Dispose();
+            device?.Dispose();
             if (remove)
-                devices.Remove(devicePath);
+                devices.TryRemove(devicePath, out _);
 
             PacketLogging.PrintMessage($"Removed device {devicePath}");
             DeviceAddedOrRemoved?.Invoke();
