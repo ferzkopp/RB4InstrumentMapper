@@ -3,6 +3,10 @@
   <PropertyGroup>
     <PlatformTarget>x64</PlatformTarget>
     <Name>RB4InstrumentMapperInstaller</Name>
+
+    <!-- Allow same-version upgrades so we can do test builds without touching the actual version number
+      ICE61: "This product should remove only older versions of itself. The Maximum version is not less than the current product." -->
+    <SuppressIces>ICE61</SuppressIces>
   </PropertyGroup>
 
   <ItemGroup>

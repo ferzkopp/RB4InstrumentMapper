@@ -10,7 +10,8 @@
     InstallerVersion="200"
     Scope="perMachine">
 
-    <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+      DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
     <MediaTemplate EmbedCab="yes"/>
 
     <?define ResourcesDir = $(sys.CURRENTDIR)Resources\?>
