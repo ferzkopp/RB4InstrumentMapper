@@ -1,20 +1,27 @@
 ﻿# RB4InstrumentMapper
 
-A program that maps packets from Xbox One Rock Band 4 instruments to virtual controllers, for use in [Clone Hero](https://clonehero.net/).
+A program that maps packets from Xbox One instrument peripherals to virtual controllers, for use in games such as [Clone Hero](https://clonehero.net/).
 
 ![RB4InstrumentMapper Application Screenshot](/Docs/Images/ProgramScreenshot.png "RB4InstrumentMapper Application Screenshot")
 
-Both guitars and drums are supported through an Xbox One wireless receiver.
+## Requirements
 
-## Software Requirements
+### Software
 
 - Windows 10 64-bit
-- [WinPCap](https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe)
+- [WinPCap](https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe) (for wireless peripherals)
 - [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest) or [vJoy](https://github.com/jshafer817/vJoy/releases/latest)
+
+### Hardware
+
+- Xbox One wireless receiver (for wireless peripherals)
+  - This is *not* the same as Xbox 360 wireless receivers! You must get an Xbox One (or just "Xbox") receiver, such as [this one](https://amzn.to/2W7qQbt). Third-party receivers are untested, and they will not be deliberately supported.
 
 ## Hardware Notes
 
-Jaguar guitars require a firmware update in order to connect to the receiver.
+All Xbox One instruments are supported (RB4 guitars/drums, GHL guitar), along with the RB4 wireless legacy adapter.
+
+Jaguar guitars require a firmware update in order to connect to Xbox One receivers.
 
 - [Instructions](https://bit.ly/2UHzonU)
 - [Firmware installer backup](https://drive.google.com/file/d/1DQxkkbBfi-UOqdX6vp5TaX6F2N2OBDra/view?usp=drivesdk)
@@ -29,37 +36,75 @@ Some guitars/drumkits might not sync properly when using just the sync button. T
 
 ## Installation
 
-1. Install [WinPCap](https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe).
-2. Install [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest) (recommended) or [vJoy](https://github.com/jshafer817/vJoy/releases/latest).
-   - If you installed vJoy, configure it:
-     1. Open your Start menu, find the `vJoy` folder, and open the `Configure vJoy` program inside it.
-     2. Configure one device for each one of your guitars/drumkits, using these settings:
-        - Number of Buttons: 16
-        - POV Hat Switch: Continuous, POVs: 1
-        - Axes: `X`, `Y`, `Z`
+### If you are using wireless peripherals:
 
-        ![vJoy Configuration Screenshot](/Docs/Images/vJoyConfiguration.png "vJoy Configuration Screenshot")
+1. Install [WinPCap](https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe)
 
-     3. Click Apply.
-   - If you installed ViGEmBus, there's no configuration required. Outputs for guitars and drums will match that of their Xbox 360 counterparts.
-3. Restart your PC.
+### If you are using wired (USB) peripherals:
+
+1. Download [Zadig](https://zadig.akeo.ie/) and run it.
+2. Under Options, select `List All Devices`.
+3. Select your device, then change the box to the right of the green/orange arrow to the `WinUSB` driver. Things should look like the example below:
+
+   ![Zadig Example](/Docs/Images/Zadig.png "Zadig Example")
+
+4. Hit `Replace Driver`, and repeat for any additional peripherals you wish to use.
+
+- A future version will make this a little more streamlined and allow you to swap the driver directly in the program.
+
+### Next, install a controller emulation driver:
+
+- Both of these can be installed simultaneously if desired, however RB4InstrumentMapper will only use one of them at a time.
+- Option 1: [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest)
+  - Recommended, as it requires no configuration and is significantly easier to use. All device outputs will match those of their Xbox 360 counterparts.
+- Option 2: [vJoy](https://github.com/jshafer817/vJoy/releases/latest)
+  - Supported as an alternative to ViGEmBus, in case of issues. Requires some setup:
+  1. Download and install vJoy.
+  2. After installing, open your Start menu, find the `vJoy` folder, and open the `Configure vJoy` program inside it.
+  3. Configure one device for each one of your controllers, using these settings:
+     - Number of Buttons: 16
+     - POV Hat Switch: Continuous, POVs: 1
+     - Axes: `X`, `Y`, `Z`
+
+     ![vJoy Configuration Screenshot](/Docs/Images/vJoyConfiguration.png "vJoy Configuration Screenshot")
+
+  4. Click Apply.
+
+### Finally, restart your PC.
+
+Things will probably work fine if you don't, but it's generally safest to restart regardless.
 
 ## Usage
 
-1. Select your Xbox One receiver from the dropdown menu.
-   - Xbox receivers should be detected automatically.
-   - If they are not, click the `Auto-Detect Pcap` button and follow its instructions.
-2. Select either vJoy or ViGEmBus in the Controller Type dropdown.
-3. Connect your instruments if you haven't yet.
-4. Click the Start button. Devices will be detected automatically.
-5. Map the controls for each instrument in Clone Hero:
-   1. Press Space on the main menu.
-   2. Click the Assign Controller button and press a button on the instrument for it to be assigned.
-   3. Click the slots in the Controller column to map each of the controls.
-   4. Repeat for each connected device.
-   5. Click `Done`.
+### If you are using wireless devices (Pcap):
 
-Selections are saved and should persist across program sessions.
+- Ensure the `Enable` checkbox under the Pcap group is checked.
+- Select your Xbox One receiver from the dropdown menu.
+  - Xbox receivers should be detected automatically. If they are not, click the `Auto-Detect Pcap` button and follow its instructions.
+- **Do not connect your instruments yet!** In order for things to work correctly, you must hit Start before connecting them.
+  - A best effort is made for devices connected before starting, but correct behavior cannot be ensured for them.
+
+### If you are using wired devices (USB):
+
+- Ensure the `Enable` checkbox under the USB group is checked.
+- **Ensure you have installed WinUSB on the devices you want to use! They will not be recognized otherwise!**
+- Devices will be detected automatically as they are connected/removed.
+
+### Starting the program
+
+Select either ViGEmBus or vJoy in the Controller Type dropdown, then hit the Start button.
+
+- You may now connect any wireless devices you wish to use.
+
+### Mapping your controls in Clone Hero
+
+Now that the program is running, map your controls for each instrument in Clone Hero:
+
+1. Press Space on the main menu.
+2. Click Assign Controller and press a button on the device for it to be assigned.
+3. Click the slots in the Controller column to map each of the controls.
+4. Repeat for each connected device.
+5. Click `Done`.
 
 ## Packet Logs
 
@@ -73,15 +118,17 @@ In the case that the program crashes, an error log is saved to a `RB4InstrumentM
 
 ## References
 
+Predecessors:
+
 - [GuitarSniffer repository](https://github.com/artman41/guitarsniffer)
 - [DrumSniffer repository](https://github.com/Dunkalunk/guitarsniffer)
 
-Packet Data:
+Packet data:
 
 - [GuitarSniffer guitar packet logs](https://1drv.ms/f/s!AgQGk0OeTMLwhA-uDO9IQHEHqGhv)
 - GuitarSniffer guitar packet spreadsheets: [New](https://docs.google.com/spreadsheets/d/1ITZUvRniGpfS_HV_rBpSwlDdGukc3GC1CeOe7SavQBo/edit?usp=sharing), [Old](https://1drv.ms/x/s!AgQGk0OeTMLwg3GBDXFUC3Erj4Wb)
-
-Additional documentation is available in the [PlasticBand documentation repository](https://github.com/TheNathannator/PlasticBand).
+- [rb4.app's Javascript source](https://rb4.app/js/app.js)
+- Original research, found in the [PlasticBand documentation repository](https://github.com/TheNathannator/PlasticBand).
 
 ## Building
 
