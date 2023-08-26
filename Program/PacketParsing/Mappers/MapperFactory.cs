@@ -26,9 +26,7 @@ namespace RB4InstrumentMapper.Parsing
 
             { XboxDeviceGuids.MadCatzLegacyWireless, GetWirelessLegacyMapper },
 
-#if DEBUG
             { XboxDeviceGuids.XboxGamepad,    GetGamepadMapper },
-#endif
         };
 
         public static DeviceMapper GetMapper(IEnumerable<Guid> interfaceGuids, MappingMode mode,
@@ -109,10 +107,20 @@ namespace RB4InstrumentMapper.Parsing
             }
         }
 
-#if DEBUG
         public static DeviceMapper GetGamepadMapper(MappingMode mode, XboxClient client, bool mapGuide)
-            => GetMapper(mode, client, mapGuide, VigemGamepadMapper, VjoyGamepadMapper);
+        {
+#if DEBUG
+            PacketLogging.PrintMessage("Warning: Gamepads are only supported in debug mode for testing purposes, they will not work in release builds.");
+            return GetMapper(mode, client, mapGuide, VigemGamepadMapper, VjoyGamepadMapper);
+#else
+            // Don't log a message if connected over Pcap, as they're most likely not trying to use it with the program
+            if (client.Parent.Backend == BackendType.Usb)
+                PacketLogging.PrintMessage("Warning: Gamepads are not supported in RB4InstrumentMapper, as Windows already supports them.");
+            return null;
+#endif
+        }
 
+#if DEBUG
         private static DeviceMapper VigemGamepadMapper(XboxClient client, bool mapGuide)
             => new GamepadVigemMapper(client, mapGuide);
 
