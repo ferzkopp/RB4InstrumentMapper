@@ -188,9 +188,12 @@ namespace RB4InstrumentMapper
             // Clear combo list
             pcapDeviceCombo.Items.Clear();
 
-            // Skip everything else
+            // Skip everything else if disabled
             if (!Settings.Default.pcapEnabled)
+            {
+                SetStartButtonState();
                 return;
+            }
 
             // Refresh the device list
             var pcapDeviceList = CaptureDeviceList.Instance;
@@ -241,14 +244,34 @@ namespace RB4InstrumentMapper
                 Console.WriteLine("Discovered 1 Pcap device.");
             else
                 Console.WriteLine($"Discovered {pcapDeviceList.Count} Pcap devices.");
+
+            SetStartButtonState();
         }
 
         private void SetStartButtonState()
         {
-            startButton.IsEnabled = BackendSettings.MapperMode != 0 &&
-                (packetCaptureActive ||
-                WinUsbBackend.DeviceCount > 0 ||
-                pcapDeviceCombo.SelectedIndex != -1);
+            bool startEnabled = true;
+
+            // At least one backend must be enabled
+            bool backendEnabled = Settings.Default.usbEnabled || Settings.Default.pcapEnabled;
+            usbEnabledCheckBox.FontWeight = backendEnabled ? FontWeights.Normal : FontWeights.Bold;
+            pcapEnabledCheckBox.FontWeight = backendEnabled ? FontWeights.Normal : FontWeights.Bold;
+            startEnabled &= backendEnabled;
+
+            // If Pcap is enabled, a capture device must be selected
+            // If USB is also enabled, this condition is ignored
+            bool pcapBold = Settings.Default.pcapEnabled && pcapDeviceCombo.SelectedIndex == -1;
+            pcapBold &= !Settings.Default.usbEnabled;
+            pcapDeviceLabel.FontWeight = pcapBold ? FontWeights.Bold : FontWeights.Normal;
+            startEnabled &= !pcapBold;
+
+            // Emulation type must be selected
+            bool emulationTypeSelected = BackendSettings.MapperMode != 0;
+            controllerDeviceTypeLabel.FontWeight = BackendSettings.MapperMode != 0 ? FontWeights.Normal : FontWeights.Bold;
+            startEnabled &= emulationTypeSelected;
+
+            // Enable start button if all the conditions above pass
+            startButton.IsEnabled = startEnabled;
         }
 
         private void WinUsbDeviceAddedOrRemoved()
@@ -431,6 +454,7 @@ namespace RB4InstrumentMapper
 
             Settings.Default.pcapEnabled = enabled;
 
+            pcapDeviceLabel.IsEnabled = enabled;
             pcapDeviceCombo.IsEnabled = enabled;
             pcapAutoDetectButton.IsEnabled = enabled;
             pcapRefreshButton.IsEnabled = enabled;
@@ -467,6 +491,7 @@ namespace RB4InstrumentMapper
             }
 
             usbDeviceCountLabel.Content = $"Count: {WinUsbBackend.DeviceCount}";
+            SetStartButtonState();
         }
 
         private void SetPacketDebug(bool enabled)
