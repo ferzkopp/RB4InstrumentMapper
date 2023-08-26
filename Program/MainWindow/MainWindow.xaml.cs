@@ -81,14 +81,17 @@ namespace RB4InstrumentMapper
             // Check for Pcap
             try
             {
-                PopulatePcapDropdown();
+                var pcapDeviceList = CaptureDeviceList.Instance;
+                pcapDeviceList.Refresh();
             }
-            catch (DllNotFoundException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show("Could not load Pcap interface! Please ensure WinPcap is installed on your system.", "Couldn't Find WinPcap", MessageBoxButton.OK, MessageBoxImage.Error);
+                Console.WriteLine("Could not load Pcap interface! Pcap backend will be unavailable.");
                 Logging.Main_WriteException(ex, "Failed to load Pcap interface!");
-                Application.Current.Shutdown();
-                return;
+
+                // Force-disable Pcap backend
+                Settings.Default.pcapEnabled = false;
+                pcapEnabledCheckBox.IsEnabled = false;
             }
 
             // Load console/log settings
