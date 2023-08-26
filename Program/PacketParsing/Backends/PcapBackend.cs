@@ -51,6 +51,7 @@ namespace RB4InstrumentMapper.Parsing
 
         private static ILiveDevice captureDevice = null;
         private static readonly Dictionary<ulong, XboxDevice> devices = new Dictionary<ulong, XboxDevice>();
+        private static readonly HashSet<ulong> unsupportedDevices = new HashSet<ulong>();
 
         /// <summary>
         /// Starts capturing packets from the given device.
@@ -123,6 +124,10 @@ namespace RB4InstrumentMapper.Parsing
             ulong deviceId = header.DeviceId;
             if (!devices.TryGetValue(deviceId, out var device))
             {
+                // Ignore devices marked as unsupported
+                if (unsupportedDevices.Contains(deviceId))
+                    return;
+
                 device = new XboxDevice(BackendSettings.MapperMode, BackendType.Pcap);
                 devices.Add(deviceId, device);
                 PacketLogging.PrintMessage($"Device with ID {deviceId:X12} was connected");
@@ -139,11 +144,19 @@ namespace RB4InstrumentMapper.Parsing
             try
             {
                 var result = device.HandlePacket(xboxPacket);
-                if (result == XboxResult.Disconnected)
+                switch (result)
                 {
-                    device.Dispose();
-                    devices.Remove(deviceId);
-                    PacketLogging.PrintMessage($"Device with ID {deviceId:X12} was disconnected");
+                    case XboxResult.Disconnected:
+                        device.Dispose();
+                        devices.Remove(deviceId);
+                        PacketLogging.PrintMessage($"Device with ID {deviceId:X12} was disconnected");
+                        break;
+
+                    case XboxResult.UnsupportedDevice:
+                        device.Dispose();
+                        devices.Remove(deviceId);
+                        unsupportedDevices.Add(deviceId);
+                        break;
                 }
             }
             catch (ThreadAbortException)

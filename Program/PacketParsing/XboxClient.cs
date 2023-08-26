@@ -193,6 +193,12 @@ namespace RB4InstrumentMapper.Parsing
 
             Descriptor = descriptor;
             deviceMapper = MapperFactory.GetMapper(descriptor.InterfaceGuids, Parent.MappingMode, this, Parent.MapGuideButton);
+            if (deviceMapper == null)
+            {
+                // Device is unsupported
+                SendMessage(XboxConfiguration.PowerOffDevice);
+                return XboxResult.UnsupportedDevice;
+            }
 
             // Send final set of initialization messages
             Debug.Assert(Descriptor.OutputCommands.Contains(XboxConfiguration.CommandId));

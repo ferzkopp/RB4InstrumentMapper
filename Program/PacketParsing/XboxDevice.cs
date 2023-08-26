@@ -17,6 +17,7 @@ namespace RB4InstrumentMapper.Parsing
         Pending,
         Disconnected,
         InvalidMessage,
+        UnsupportedDevice,
     }
 
     /// <summary>
@@ -87,11 +88,18 @@ namespace RB4InstrumentMapper.Parsing
                     client = new XboxClient(this, header.Client);
                     clients.Add(header.Client, client);
                 }
+
                 var clientResult = client.HandleMessage(header, commandData);
                 switch (clientResult)
                 {
                     case XboxResult.Success:
                     case XboxResult.Pending:
+                        break;
+                    case XboxResult.UnsupportedDevice:
+                        client.Dispose();
+                        clients.Remove(header.Client);
+                        if (header.Client == 0)
+                            return clientResult;
                         break;
                     case XboxResult.Disconnected:
                         client.Dispose();

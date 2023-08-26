@@ -43,13 +43,13 @@ namespace RB4InstrumentMapper.Parsing
 
                 if (interfaceGuid != default)
                 {
-                    PacketLogging.PrintMessage($"More than one unique interface GUID found! Cannot get specific mapper, using fallback mapper instead.");
-                    PacketLogging.PrintMessage($"Consider filing a GitHub issue with the GUIDs below so that this can be addressed:");
+                    PacketLogging.PrintMessage($"More than one recognized interface found! Cannot get specific mapper, device will not be mapped.");
+                    PacketLogging.PrintMessage($"Consider filing a GitHub issue with the GUIDs below if this device should be supported:");
                     foreach (var guid2 in interfaceGuids)
                     {
                         PacketLogging.PrintMessage($"- {guid2}");
                     }
-                    return GetFallbackMapper(mode, client, mapGuide);
+                    return null;
                 }
 
                 interfaceGuid = guid;
@@ -57,21 +57,21 @@ namespace RB4InstrumentMapper.Parsing
 
             if (interfaceGuid == default)
             {
-                PacketLogging.PrintMessage($"Could not find interface GUID for device! Using fallback mapper instead.");
-                PacketLogging.PrintMessage($"Consider filing a GitHub issue with the GUIDs below so that this can be addressed:");
+                PacketLogging.PrintMessage($"Could not find any supported interface IDs! Device will not be mapped.");
+                PacketLogging.PrintMessage($"Consider filing a GitHub issue with the GUIDs below if this device should be supported:");
                 foreach (var guid2 in interfaceGuids)
                 {
                     PacketLogging.PrintMessage($"- {guid2}");
                 }
-                return GetFallbackMapper(mode, client, mapGuide);
+                return null;
             }
 
             // Get mapper creation delegate for interface GUID
             if (!guidToMapper.TryGetValue(interfaceGuid, out var func))
             {
-                PacketLogging.PrintMessage($"Could not get a specific mapper for interface GUID {interfaceGuid}! Using fallback mapper instead.");
-                PacketLogging.PrintMessage($"Consider filing a GitHub issue with the GUID above so that it can be assigned the correct mapper.");
-                return GetFallbackMapper(mode, client, mapGuide);
+                PacketLogging.PrintMessage($"Could not get a specific mapper for interface {interfaceGuid}! Device will not be mapped.");
+                PacketLogging.PrintMessage($"Consider filing a GitHub issue with the GUID above if this device should be supported.");
+                return null;
             }
 
             return func(mode, client, mapGuide);
