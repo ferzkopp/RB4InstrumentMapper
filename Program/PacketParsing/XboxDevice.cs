@@ -5,6 +5,12 @@ using System.Runtime.CompilerServices;
 
 namespace RB4InstrumentMapper.Parsing
 {
+    internal enum BackendType
+    {
+        Pcap,
+        Usb,
+    }
+
     internal enum XboxResult
     {
         Success,
@@ -26,15 +32,17 @@ namespace RB4InstrumentMapper.Parsing
         private readonly int maxPacketSize;
 
         public MappingMode MappingMode { get; }
+        public BackendType Backend { get; }
         public bool MapGuideButton { get; }
 
-        public XboxDevice(MappingMode mode) : this(mode, mapGuide: false, 0)
+        public XboxDevice(MappingMode mode, BackendType backend) : this(mode, backend, mapGuide: false, 0)
         {
         }
 
-        protected XboxDevice(MappingMode mode, bool mapGuide, int maxPacket)
+        protected XboxDevice(MappingMode mode, BackendType backend, bool mapGuide, int maxPacket)
         {
             MappingMode = mode;
+            Backend = backend;
             MapGuideButton = mapGuide;
             maxPacketSize = maxPacket;
         }

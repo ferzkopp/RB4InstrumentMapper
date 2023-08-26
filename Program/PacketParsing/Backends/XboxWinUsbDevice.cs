@@ -21,7 +21,7 @@ namespace RB4InstrumentMapper.Parsing
         private volatile bool readPackets = false;
 
         private XboxWinUsbDevice(USBDevice usb, USBInterface @interface, MappingMode mode)
-            : base(mode, mapGuide: true, @interface.OutPipe.MaximumPacketSize)
+            : base(mode, BackendType.Usb, mapGuide: true, @interface.OutPipe.MaximumPacketSize)
         {
             usbDevice = usb;
             mainInterface = @interface;
