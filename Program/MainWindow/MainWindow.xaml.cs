@@ -252,20 +252,21 @@ namespace RB4InstrumentMapper
 
             // At least one backend must be enabled
             bool backendEnabled = Settings.Default.usbEnabled || Settings.Default.pcapEnabled;
-            usbEnabledCheckBox.FontWeight = backendEnabled ? FontWeights.Normal : FontWeights.Bold;
-            pcapEnabledCheckBox.FontWeight = backendEnabled ? FontWeights.Normal : FontWeights.Bold;
+            usbEnabledCheckBox.FontWeight = !backendEnabled && usbEnabledCheckBox.IsEnabled ? FontWeights.Bold : FontWeights.Normal;
+            pcapEnabledCheckBox.FontWeight = !backendEnabled && pcapEnabledCheckBox.IsEnabled ? FontWeights.Bold : FontWeights.Normal;
             startEnabled &= backendEnabled;
 
             // If Pcap is enabled, a capture device must be selected
             // If USB is also enabled, this condition is ignored
             bool pcapBold = Settings.Default.pcapEnabled && pcapDeviceCombo.SelectedIndex == -1;
             pcapBold &= !Settings.Default.usbEnabled;
-            pcapDeviceLabel.FontWeight = pcapBold ? FontWeights.Bold : FontWeights.Normal;
+            pcapDeviceLabel.FontWeight = pcapBold && pcapDeviceLabel.IsEnabled ? FontWeights.Bold : FontWeights.Normal;
             startEnabled &= !pcapBold;
 
             // Emulation type must be selected
             bool emulationTypeSelected = BackendSettings.MapperMode != 0;
-            controllerDeviceTypeLabel.FontWeight = BackendSettings.MapperMode != 0 ? FontWeights.Normal : FontWeights.Bold;
+            controllerDeviceTypeLabel.FontWeight = !emulationTypeSelected &&
+                controllerDeviceTypeLabel.IsEnabled ? FontWeights.Bold : FontWeights.Normal;
             startEnabled &= emulationTypeSelected;
 
             // Enable start button if all the conditions above pass
