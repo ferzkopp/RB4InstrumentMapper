@@ -36,6 +36,11 @@ namespace RB4InstrumentMapper
         private bool packetDebugLog = false;
 
         /// <summary>
+        /// Whether or not packets should be logged to a file.
+        /// </summary>
+        private bool firstPcapRefresh = true;
+
+        /// <summary>
         /// Prefix for Pcap combo box items.
         /// </summary>
         private const string pcapComboBoxPrefix = "pcapDeviceComboBoxItem";
@@ -232,10 +237,10 @@ namespace RB4InstrumentMapper
                 });
             }
 
-            if (pcapSelectedDevice == null)
+            if (firstPcapRefresh && pcapSelectedDevice == null)
             {
                 pcapDeviceCombo.SelectedIndex = -1;
-                Console.WriteLine("No Xbox controller receivers detected during refresh! Please ensure you have one connected, and that you are using WinPcap and not Npcap.");
+                Console.WriteLine("No Xbox controller receivers detected! Please ensure you have one connected, and that you are using WinPcap and not Npcap.");
                 Console.WriteLine("You may need to run through auto-detection or manually select the device from the dropdown as well.");
             }
 
@@ -246,6 +251,8 @@ namespace RB4InstrumentMapper
                 Console.WriteLine($"Discovered {pcapDeviceList.Count} Pcap devices.");
 
             SetStartButtonState();
+
+            firstPcapRefresh = false;
         }
 
         private void SetStartButtonState()
