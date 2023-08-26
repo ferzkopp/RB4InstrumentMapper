@@ -116,23 +116,15 @@ namespace RB4InstrumentMapper
                 else
                 {
                     Console.WriteLine("No vJoy devices found. vJoy selection will be unavailable.");
-
-                    // Reset device type selection if it was set to vJoy
-                    if (deviceType == ControllerType.vJoy)
-                    {
-                        controllerDeviceTypeCombo.SelectedIndex = (int)ControllerType.None;
-                    }
+                    vjoyDeviceTypeOption.IsEnabled = false;
+                    vjoyDeviceTypeOption.IsSelected = false;
                 }
             }
             else
             {
                 Console.WriteLine("No vJoy driver found, or vJoy is disabled. vJoy selection will be unavailable.");
-
-                // Reset device type selection if it was set to vJoy
-                if (deviceType == ControllerType.vJoy)
-                {
-                    controllerDeviceTypeCombo.SelectedIndex = (int)ControllerType.None;
-                }
+                vjoyDeviceTypeOption.IsEnabled = false;
+                vjoyDeviceTypeOption.IsSelected = false;
             }
 
             // Check for ViGEmBus
@@ -146,12 +138,8 @@ namespace RB4InstrumentMapper
             {
                 vigemFound = false;
                 Console.WriteLine("ViGEmBus not found. ViGEmBus selection will be unavailable.");
-
-                // Reset device type selection if it was set to ViGEmBus
-                if (deviceType == ControllerType.ViGEmBus)
-                {
-                    controllerDeviceTypeCombo.SelectedIndex = (int)ControllerType.None;
-                }
+                vigemDeviceTypeOption.IsEnabled = false;
+                vigemDeviceTypeOption.IsSelected = false;
             }
 
             // Exit if neither ViGEmBus nor vJoy are installed
@@ -220,7 +208,7 @@ namespace RB4InstrumentMapper
 
                 string deviceName = $"{itemNumber}. {device.GetDisplayName()}";
                 string itemName = pcapComboBoxPrefix + itemNumber;
-                bool isSelected = device.Name.Equals(currentPcapSelection) || device.Name.Equals(pcapSelectedDevice?.Name);
+                bool isSelected = device.Name == currentPcapSelection || device.Name == pcapSelectedDevice?.Name;
 
                 if (isSelected || (string.IsNullOrEmpty(currentPcapSelection) && device.IsXboxOneReceiver()))
                 {
