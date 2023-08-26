@@ -29,6 +29,13 @@ namespace RB4InstrumentMapper.Parsing
             { XboxDeviceGuids.XboxGamepad,    GetGamepadMapper },
         };
 
+        // Interface GUIDs to ignore when more than one supported interface is found
+        private static readonly HashSet<Guid> conflictIgnoredIds = new HashSet<Guid>()
+        {
+            // GHL guitars list both a unique interface and the gamepad interface
+            XboxDeviceGuids.XboxGamepad,
+        };
+
         public static DeviceMapper GetMapper(IEnumerable<Guid> interfaceGuids, MappingMode mode,
             XboxClient client, bool mapGuide)
         {
@@ -41,6 +48,10 @@ namespace RB4InstrumentMapper.Parsing
 
                 if (interfaceGuid != default)
                 {
+                    // Ignore IDs known to have conflicts
+                    if (conflictIgnoredIds.Contains(guid))
+                        continue;
+
                     PacketLogging.PrintMessage($"More than one recognized interface found! Cannot get specific mapper, device will not be mapped.");
                     PacketLogging.PrintMessage($"Consider filing a GitHub issue with the GUIDs below if this device should be supported:");
                     foreach (var guid2 in interfaceGuids)
