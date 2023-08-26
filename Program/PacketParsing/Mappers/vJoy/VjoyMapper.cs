@@ -12,8 +12,8 @@ namespace RB4InstrumentMapper.Parsing
         protected vJoy.JoystickState state = new vJoy.JoystickState();
         protected uint deviceId = 0;
 
-        public VjoyMapper(XboxClient client, bool mapGuide)
-            : base(client, mapGuide)
+        public VjoyMapper(XboxClient client)
+            : base(client)
         {
             deviceId = VjoyClient.GetNextAvailableID();
             if (deviceId == 0)

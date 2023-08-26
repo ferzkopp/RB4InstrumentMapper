@@ -16,10 +16,11 @@ namespace RB4InstrumentMapper.Parsing
         /// Initializes a new device mapper with the given parent client,
         /// and option of whether or not to map the guide button.
         /// </summary>
-        public DeviceMapper(XboxClient client, bool mapGuide)
+        public DeviceMapper(XboxClient client)
         {
             this.client = client;
-            mapGuideButton = mapGuide;
+
+            mapGuideButton = client.Parent.MapGuideButton;
         }
 
         ~DeviceMapper()

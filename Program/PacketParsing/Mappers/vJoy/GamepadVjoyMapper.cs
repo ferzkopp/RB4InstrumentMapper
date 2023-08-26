@@ -12,8 +12,8 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class GamepadVjoyMapper : VjoyMapper
     {
-        public GamepadVjoyMapper(XboxClient client, bool mapGuide)
-            : base(client, mapGuide)
+        public GamepadVjoyMapper(XboxClient client)
+            : base(client)
         {
         }
 

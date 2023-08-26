@@ -9,8 +9,8 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class FallbackVjoyMapper : VjoyMapper
     {
-        public FallbackVjoyMapper(XboxClient client, bool mapGuide)
-            : base(client, mapGuide)
+        public FallbackVjoyMapper(XboxClient client)
+            : base(client)
         {
         }
 

@@ -13,13 +13,9 @@ namespace RB4InstrumentMapper.Parsing
         // Mappers are not guaranteed to be created for each device, unknown subtypes will be ignored and have none
         private readonly Dictionary<byte, DeviceMapper> mappers = new Dictionary<byte, DeviceMapper>();
 
-        private readonly MappingMode mappingMode;
-
-        public WirelessLegacyMapper(MappingMode mode, XboxClient client, bool mapGuide)
-            : base(client, mapGuide)
+        public WirelessLegacyMapper(XboxClient client)
+            : base(client)
         {
-            mappingMode = mode;
-
             client.SendMessage(XboxWirelessLegacyRequestDevices.RequestDevices);
         }
 
@@ -116,16 +112,16 @@ namespace RB4InstrumentMapper.Parsing
             {
 #if DEBUG
                 case XInputDeviceSubtype.Gamepad:
-                    return MapperFactory.GetGamepadMapper(mappingMode, client, mapGuideButton);
+                    return MapperFactory.GetGamepadMapper(client);
 #endif
 
                 case XInputDeviceSubtype.Guitar:
                 case XInputDeviceSubtype.GuitarAlternate:
                 case XInputDeviceSubtype.GuitarBass:
-                    return MapperFactory.GetGuitarMapper(mappingMode, client, mapGuideButton);
+                    return MapperFactory.GetGuitarMapper(client);
 
                 case XInputDeviceSubtype.Drums:
-                    return MapperFactory.GetGuitarMapper(mappingMode, client, mapGuideButton);
+                    return MapperFactory.GetGuitarMapper(client);
 
                 default:
                     PacketLogging.PrintMessage($"User index {connect.UserIndex + 1} on the legacy adapter has an unsupported subtype ({subtype})!");

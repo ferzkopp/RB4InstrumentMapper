@@ -114,7 +114,7 @@ namespace RB4InstrumentMapper.Parsing
             // Non-system commands are handled by the mapper
             if (deviceMapper == null)
             {
-                deviceMapper = MapperFactory.GetFallbackMapper(Parent.MappingMode, this, Parent.MapGuideButton);
+                deviceMapper = MapperFactory.GetFallbackMapper(this);
                 if (deviceMapper == null)
                 {
                     // No more devices available, do nothing
@@ -192,7 +192,7 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
 
             Descriptor = descriptor;
-            deviceMapper = MapperFactory.GetMapper(descriptor.InterfaceGuids, Parent.MappingMode, this, Parent.MapGuideButton);
+            deviceMapper = MapperFactory.GetMapper(this);
             if (deviceMapper == null)
             {
                 // Device is unsupported

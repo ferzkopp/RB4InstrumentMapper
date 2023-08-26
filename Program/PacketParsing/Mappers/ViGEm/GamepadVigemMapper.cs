@@ -12,8 +12,8 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class GamepadVigemMapper : VigemMapper
     {
-        public GamepadVigemMapper(XboxClient client, bool mapGuide)
-            : base(client, mapGuide)
+        public GamepadVigemMapper(XboxClient client)
+            : base(client)
         {
         }
 

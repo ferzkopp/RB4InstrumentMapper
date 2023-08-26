@@ -8,8 +8,8 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class FallbackVigemMapper : VigemMapper
     {
-        public FallbackVigemMapper(XboxClient client, bool mapGuide)
-            : base(client, mapGuide)
+        public FallbackVigemMapper(XboxClient client)
+            : base(client)
         {
         }
 
