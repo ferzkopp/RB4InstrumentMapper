@@ -472,8 +472,7 @@ namespace RB4InstrumentMapper
             Settings.Default.usbEnabled = enabled;
 
             usbDeviceCountLabel.IsEnabled = enabled;
-            // TODO: Uncomment when this button is implemented
-            // usbShowDevicesButton.IsEnabled = enabled;
+            usbConfigureDevicesButton.IsEnabled = enabled;
 
             if (WinUsbBackend.Initialized != enabled)
             {
@@ -676,9 +675,21 @@ namespace RB4InstrumentMapper
             PopulatePcapDropdown();
         }
 
+        /// <summary>
+        /// Handles the controller type setting being changed.
+        /// </summary>
         private void controllerDeviceTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             SetDeviceType((ControllerType)controllerDeviceTypeCombo.SelectedIndex);
+        }
+
+        /// <summary>
+        /// Handles the click of the USB Configure Devices button.
+        /// </summary>
+        private void usbConfigureDevicesButton_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new UsbDeviceListWindow();
+            window.ShowDialog();
         }
 
         /// <summary>

@@ -12,10 +12,10 @@
     <Grid Margin="10,10,10,10">
         <Label Name="mainTitleLabel" Content="Rock Band 4 Instrument Mapper" FontSize="24" FontWeight="Bold" Height="44" Width="381" VerticalAlignment="Top" HorizontalAlignment="Left" VerticalContentAlignment="Center" HorizontalContentAlignment="Left"/>
         <Label x:Name="versionLabel" Content="vX.X.X.X" FontSize="18" Height="44" Width="375" VerticalAlignment="Top" HorizontalAlignment="Right" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
-        <GroupBox Header="Pcap" Margin="0,50,350,0" Height="110" VerticalAlignment="Top">
+        <GroupBox Header="Pcap" Margin="0,50,0,0" Height="110" Width="495" VerticalAlignment="Top" HorizontalAlignment="Left">
             <Grid Margin="10,10,10,10">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0.5*"/>
+                    <ColumnDefinition Width="75"/>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
@@ -26,24 +26,24 @@
                 <ComboBox Name="pcapDeviceCombo" Height="30" VerticalAlignment="Bottom" Grid.Column="1" Grid.ColumnSpan="2" SelectionChanged="pcapDeviceCombo_SelectionChanged"/>
             </Grid>
         </GroupBox>
-        <GroupBox Header="USB" Height="104" Margin="0,165,350,0" VerticalAlignment="Top">
+        <GroupBox Header="USB" Height="110" Margin="500,50,0,0" VerticalAlignment="Top">
             <Grid Margin="10,10,10,10">
                 <Label x:Name="usbDeviceCountLabel" Content="Count: 10" Margin="0,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
-                <!-- <Button x:Name="usbShowDevicesButton" Content="Show Devices (TODO)" Height="30" Width="176" VerticalAlignment="Bottom" HorizontalAlignment="Right" IsEnabled="False"/> -->
+                <Button x:Name="usbConfigureDevicesButton" Content="Configure Devices" Height="30" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Click="usbConfigureDevicesButton_Click"/>
                 <CheckBox x:Name="usbEnabledCheckBox" Content="Enabled" Height="22" Margin="0,6,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Checked="usbEnabledCheckBox_CheckedChanged" Unchecked="usbEnabledCheckBox_CheckedChanged"/>
             </Grid>
         </GroupBox>
-        <GroupBox Header="Capture" Height="219" Width="345" Margin="0,50,0,0" VerticalAlignment="Top" HorizontalAlignment="Right">
+        <GroupBox Header="Capture" Height="104" Margin="0,165,0,0" VerticalAlignment="Top">
             <Grid Margin="10,10,10,10">
                 <Label x:Name="controllerDeviceTypeLabel" Content="Controller Emulation Type" Height="30" Width="160" Margin="-5,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Left"/>
-                <ComboBox x:Name="controllerDeviceTypeCombo" Height="30" Width="158" VerticalAlignment="Top" HorizontalAlignment="Right" SelectionChanged="controllerDeviceTypeCombo_SelectionChanged">
+                <ComboBox x:Name="controllerDeviceTypeCombo" Height="30" Width="160" VerticalAlignment="Bottom" HorizontalAlignment="Left" SelectionChanged="controllerDeviceTypeCombo_SelectionChanged">
                     <ComboBoxItem x:Name="vjoyDeviceTypeOption" Content="vJoy" IsEnabled="False"/>
                     <ComboBoxItem x:Name="vigemDeviceTypeOption" Content="ViGEmBus" IsEnabled="False"/>
                 </ComboBox>
-                <Button x:Name="startButton" Content="Start" FontSize="18" Height="60" Margin="0,116,0,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" IsEnabled="False" Click="startButton_Click"/>
-                <CheckBox x:Name="packetDebugCheckBox" Content="Show packets (for debugging)" Height="22" Width="180" Margin="0,35,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Checked="packetDebugCheckBox_CheckedChanged" Unchecked="packetDebugCheckBox_CheckedChanged"/>
-                <CheckBox x:Name="packetLogCheckBox" Content="Log packets to file" Height="22" Width="120" Margin="0,62,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Checked="packetLogCheckBox_CheckedChanged" Unchecked="packetLogCheckBox_CheckedChanged"/>
-                <CheckBox x:Name="verboseErrorCheckBox" Content="Show verbose (unimportant) errors" Height="22" Width="210" Margin="0,89,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Checked="verboseErrorCheckBox_CheckedChanged" Unchecked="verboseErrorCheckBox_CheckedChanged"/>
+                <Button x:Name="startButton" Content="Start" FontSize="18" Width="250" VerticalAlignment="Stretch" HorizontalAlignment="Right" IsEnabled="False" Click="startButton_Click"/>
+                <CheckBox x:Name="packetDebugCheckBox" Content="Show packets (for debugging)" Height="22" Width="180" Margin="175,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Checked="packetDebugCheckBox_CheckedChanged" Unchecked="packetDebugCheckBox_CheckedChanged"/>
+                <CheckBox x:Name="packetLogCheckBox" Content="Log packets to file" Height="22" Width="120" Margin="175,23,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Checked="packetLogCheckBox_CheckedChanged" Unchecked="packetLogCheckBox_CheckedChanged"/>
+                <CheckBox x:Name="verboseErrorCheckBox" Content="Show verbose (unimportant) errors" Width="210" Margin="175,46,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Checked="verboseErrorCheckBox_CheckedChanged" Unchecked="verboseErrorCheckBox_CheckedChanged"/>
             </Grid>
         </GroupBox>
         <GroupBox Header="Console" Margin="0,274,0,0">
