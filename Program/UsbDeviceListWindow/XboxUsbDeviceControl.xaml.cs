@@ -1,7 +1,9 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using Nefarius.Drivers.WinUSB;
 using Nefarius.Utilities.DeviceManagement.PnP;
+using RB4InstrumentMapper.Parsing;
 
 namespace RB4InstrumentMapper
 {
@@ -39,6 +41,32 @@ namespace RB4InstrumentMapper
 
         private void switchDriverButton_Clicked(object sender, RoutedEventArgs args)
         {
+            if (IsWinUsb)
+                RevertDriver();
+            else
+                SwitchToWinUSB();
+        }
+
+        private void SwitchToWinUSB()
+        {
+            // Attempt normally in case we already have admin permissions
+            if (WinUsbBackend.SwitchDeviceToWinUSB(PnpDevice))
+                return;
+
+            // Otherwise, do it in a separate admin process
+            if (!Program.StartWinUsbProcess(PnpDevice.InstanceId))
+                MessageBox.Show("Failed to switch device to WinUSB!", "Failed To Switch Driver", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        private void RevertDriver()
+        {
+            // Attempt normally in case we already have admin permissions
+            if (WinUsbBackend.RevertDevice(PnpDevice))
+                return;
+
+            // Otherwise, do it in a separate admin process
+            if (!Program.StartRevertProcess(PnpDevice.InstanceId))
+                MessageBox.Show("Failed to revert device to its original driver!", "Failed To Switch Driver", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 }

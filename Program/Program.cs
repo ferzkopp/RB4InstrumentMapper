@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Text;
 using System.Windows;
 using RB4InstrumentMapper.Parsing;
@@ -50,6 +51,43 @@ namespace RB4InstrumentMapper
 
             Logging.CloseAll();
             return exitCode;
+        }
+
+        public static bool StartWinUsbProcess(string instanceId)
+        {
+            string args = $"{WinUsbOption} {instanceId}";
+            return RunElevated(args);
+        }
+
+        public static bool StartRevertProcess(string instanceId)
+        {
+            string args = $"{RevertOption} {instanceId}";
+            return RunElevated(args);
+        }
+
+        private static bool RunElevated(string args)
+        {
+            string location = Assembly.GetEntryAssembly().Location;
+            var processInfo = new ProcessStartInfo()
+            {
+                Verb = "runas", // Run as admin
+                FileName = location,
+                Arguments = args,
+                CreateNoWindow = true,
+            };
+
+            try
+            {
+                var process = Process.Start(processInfo);
+                process.WaitForExit();
+                return process.ExitCode == 0;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Failed to create elevated process!");
+                Debug.WriteLine(ex);
+                return false;
+            }
         }
 
         /// <summary>
