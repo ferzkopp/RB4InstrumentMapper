@@ -56,14 +56,26 @@ namespace RB4InstrumentMapper.Parsing
             try
             {
                 var device = PnPDevice.GetDeviceByInterfaceId(devicePath);
+                return IsCompatibleDevice(device);
+            }
+            catch (Exception ex)
+            {
+                PacketLogging.PrintVerboseException("Failed to determine device compatibility!", ex);
+                return false;
+            }
+        }
 
+        public static bool IsCompatibleDevice(PnPDevice device)
+        {
+            try
+            {
                 // Only accept WinUSB devices, at least for now
                 var classGuid = device.GetProperty<Guid>(DevicePropertyKey.Device_ClassGuid);
                 if (classGuid != WinUsbClassGuid)
                     return false;
 
                 // Check for the Xbox One compatible ID
-                if (!HasCompatibleId(device, XGIP_COMPATIBLE_ID))
+                if (!IsXGIPDevice(device))
                     return false;
 
                 return true;
@@ -73,6 +85,12 @@ namespace RB4InstrumentMapper.Parsing
                 PacketLogging.PrintVerboseException("Failed to determine device compatibility!", ex);
                 return false;
             }
+        }
+
+        public static bool IsXGIPDevice(PnPDevice device)
+        {
+            // Check for the Xbox One compatible ID
+            return HasCompatibleId(device, XGIP_COMPATIBLE_ID);
         }
 
         public void StartReading()

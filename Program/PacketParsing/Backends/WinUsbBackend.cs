@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Nefarius.Drivers.WinUSB;
+using Nefarius.Utilities.DeviceManagement.Extensions;
 using Nefarius.Utilities.DeviceManagement.PnP;
 
 namespace RB4InstrumentMapper.Parsing
@@ -139,6 +140,86 @@ namespace RB4InstrumentMapper.Parsing
 
             PacketLogging.PrintMessage($"Removed device {devicePath}");
             DeviceAddedOrRemoved?.Invoke();
+        }
+
+        public static bool SwitchDeviceToWinUSB(string instanceId)
+        {
+            try
+            {
+                var device = PnPDevice.GetDeviceByInstanceId(instanceId).ToUsbPnPDevice();
+                return SwitchDeviceToWinUSB(device);
+            }
+            catch (Exception ex)
+            {
+                // Verbose since this will be attempted twice: once in-process, and once in a separate elevated process
+                PacketLogging.PrintVerboseException($"Failed to switch device {instanceId} to WinUSB!", ex);
+                return false;
+            }
+        }
+
+        public static bool SwitchDeviceToWinUSB(UsbPnPDevice device)
+        {
+            try
+            {
+                if (!XboxWinUsbDevice.IsXGIPDevice(device))
+                {
+                    Debug.Fail($"Device instance {device.InstanceId} is not an XGIP device!");
+                    return false;
+                }
+
+                device.InstallNullDriver(out bool reboot);
+                if (reboot)
+                    device.CyclePort();
+
+                device.InstallCustomDriver("winusb.inf", out reboot);
+                if (reboot)
+                    device.CyclePort();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Verbose since this will be attempted twice: once in-process, and once in a separate elevated process
+                PacketLogging.PrintVerboseException($"Failed to switch device {device.InstanceId} to WinUSB!", ex);
+                return false;
+            }
+        }
+
+        public static bool RevertDevice(string instanceId)
+        {
+            try
+            {
+                var device = PnPDevice.GetDeviceByInstanceId(instanceId).ToUsbPnPDevice();
+                return RevertDevice(device);
+            }
+            catch (Exception ex)
+            {
+                // Verbose since this will be attempted twice: once in-process, and once in a separate elevated process
+                PacketLogging.PrintVerboseException($"Failed to revert device {instanceId} to its original driver!", ex);
+                return false;
+            }
+        }
+
+        public static bool RevertDevice(UsbPnPDevice device)
+        {
+            try
+            {
+                device.InstallNullDriver(out bool reboot);
+                if (reboot)
+                    device.CyclePort();
+
+                device.Uninstall(out reboot);
+                if (reboot)
+                    device.CyclePort();
+
+                return Devcon.Refresh();
+            }
+            catch (Exception ex)
+            {
+                // Verbose since this will be attempted twice: once in-process, and once in a separate elevated process
+                PacketLogging.PrintVerboseException($"Failed to revert device {device.InstanceId} to its original driver!", ex);
+                return false;
+            }
         }
     }
 }
