@@ -9,6 +9,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+    <StartupObject>RB4InstrumentMapper.Program</StartupObject>
     <ApplicationIcon>icon.ico</ApplicationIcon>
 
     <Error Condition="'$(Platform)' != 'x64'">This project only supports x64 platforms!</Error>
