@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Nefarius.Drivers.WinUSB;
@@ -12,6 +13,9 @@ namespace RB4InstrumentMapper
     /// </summary>
     public partial class XboxUsbDeviceControl : UserControl
     {
+        public event Action<XboxUsbDeviceControl> DriverSwitchStart;
+        public event Action<XboxUsbDeviceControl> DriverSwitchEnd;
+
         public string DevicePath { get; }
         public UsbPnPDevice PnpDevice { get; }
         public bool IsWinUsb { get; }
@@ -39,33 +43,49 @@ namespace RB4InstrumentMapper
             }
         }
 
-        private void switchDriverButton_Clicked(object sender, RoutedEventArgs args)
+        public void Enable()
         {
-            if (IsWinUsb)
-                RevertDriver();
-            else
-                SwitchToWinUSB();
+            switchDriverButton.IsEnabled = true;
         }
 
-        private void SwitchToWinUSB()
+        public void Disable()
+        {
+            switchDriverButton.IsEnabled = false;
+        }
+
+        private async void switchDriverButton_Clicked(object sender, RoutedEventArgs args)
+        {
+            DriverSwitchStart?.Invoke(this);
+            switchDriverProgress.Visibility = Visibility.Visible;
+
+            if (IsWinUsb)
+                await RevertDriver();
+            else
+                await SwitchToWinUSB();
+
+            switchDriverProgress.Visibility = Visibility.Hidden;
+            DriverSwitchEnd?.Invoke(this);
+        }
+
+        private async Task SwitchToWinUSB()
         {
             // Attempt normally in case we already have admin permissions
-            if (WinUsbBackend.SwitchDeviceToWinUSB(PnpDevice))
+            if (await Task.Run(() => WinUsbBackend.SwitchDeviceToWinUSB(PnpDevice)))
                 return;
 
             // Otherwise, do it in a separate admin process
-            if (!Program.StartWinUsbProcess(PnpDevice.InstanceId))
+            if (!await Program.StartWinUsbProcess(PnpDevice.InstanceId))
                 MessageBox.Show("Failed to switch device to WinUSB!", "Failed To Switch Driver", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
-        private void RevertDriver()
+        private async Task RevertDriver()
         {
             // Attempt normally in case we already have admin permissions
-            if (WinUsbBackend.RevertDevice(PnpDevice))
+            if (await Task.Run(() => WinUsbBackend.RevertDevice(PnpDevice)))
                 return;
 
             // Otherwise, do it in a separate admin process
-            if (!Program.StartRevertProcess(PnpDevice.InstanceId))
+            if (!await Program.StartRevertProcess(PnpDevice.InstanceId))
                 MessageBox.Show("Failed to revert device to its original driver!", "Failed To Switch Driver", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }

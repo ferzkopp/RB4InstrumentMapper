@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using Nefarius.Drivers.WinUSB;
@@ -15,6 +16,8 @@ namespace RB4InstrumentMapper
     {
         private readonly DeviceNotificationListener watcher = new DeviceNotificationListener();
 
+        private bool switchingDriver = false;
+
         public UsbDeviceListWindow()
         {
             InitializeComponent();
@@ -29,16 +32,65 @@ namespace RB4InstrumentMapper
             Refresh();
         }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            e.Cancel = switchingDriver;
+            base.OnClosing(e);
+        }
+
         private void WindowClosed(object sender, EventArgs e)
         {
             watcher.StopListen();
             watcher.Dispose();
         }
 
+        private void DriverSwitchStart(XboxUsbDeviceControl sender)
+        {
+            switchingDriver = true;
+            // This hides the entire title bar. Not the prettiest, but properly disabling
+            // the close button requires calling into native, and I don't wanna do that just for this window lol
+            WindowStyle = WindowStyle.None;
+
+            DisableAllEntries(winUsbDeviceList);
+            DisableAllEntries(xgipDeviceList);
+        }
+
+        private void DriverSwitchEnd(XboxUsbDeviceControl sender)
+        {
+            switchingDriver = false;
+            WindowStyle = WindowStyle.SingleBorderWindow;
+
+            // Bit redundant, but w/e lol
+            EnableAllEntries(winUsbDeviceList);
+            EnableAllEntries(xgipDeviceList);
+
+            Refresh();
+        }
+
+        private void EnableAllEntries(StackPanel devices)
+        {
+            foreach (XboxUsbDeviceControl entry in devices.Children)
+            {
+                entry.Enable();
+            }
+
+            devices.UpdateLayout();
+        }
+
+        private void DisableAllEntries(StackPanel devices)
+        {
+            foreach (XboxUsbDeviceControl entry in devices.Children)
+            {
+                entry.Disable();
+            }
+
+            devices.UpdateLayout();
+        }
+
         private void Refresh()
         {
-            winUsbDeviceList.Children.Clear();
-            xgipDeviceList.Children.Clear();
+            RemoveAll(winUsbDeviceList);
+            RemoveAll(xgipDeviceList);
 
             foreach (var deviceInfo in USBDevice.GetDevices(DeviceInterfaceIds.UsbDevice))
             {
@@ -48,11 +100,17 @@ namespace RB4InstrumentMapper
 
         private void DeviceArrived(DeviceEventArgs args)
         {
+            if (switchingDriver)
+                return;
+
             Dispatcher.BeginInvoke(new Action(() => AddDevice(args.SymLink)));
         }
 
         private void DeviceRemoved(DeviceEventArgs args)
         {
+            if (switchingDriver)
+                return;
+
             Dispatcher.BeginInvoke(new Action(() => RemoveDevice(args.SymLink)));
         }
 
@@ -64,11 +122,15 @@ namespace RB4InstrumentMapper
             if (XboxWinUsbDevice.IsCompatibleDevice(pnpDevice))
             {
                 var deviceControl = new XboxUsbDeviceControl(devicePath, pnpDevice, winusb: true);
+                deviceControl.DriverSwitchStart += DriverSwitchStart;
+                deviceControl.DriverSwitchEnd += DriverSwitchEnd;
                 winUsbDeviceList.Children.Add(deviceControl);
             }
             else if (XboxWinUsbDevice.IsXGIPDevice(pnpDevice))
             {
                 var deviceControl = new XboxUsbDeviceControl(devicePath, pnpDevice, winusb: false);
+                deviceControl.DriverSwitchStart += DriverSwitchStart;
+                deviceControl.DriverSwitchEnd += DriverSwitchEnd;
                 xgipDeviceList.Children.Add(deviceControl);
             }
         }
@@ -84,18 +146,34 @@ namespace RB4InstrumentMapper
         private void RemoveDevice(string devicePath, StackPanel devices)
         {
             var children = devices.Children;
+            // By index, since we need to modify the list
             for (int i = 0; i < children.Count; i++)
             {
                 var entry = (XboxUsbDeviceControl)children[i];
                 if (entry.DevicePath == devicePath)
                 {
-                    children.Remove(entry);
+                    entry.DriverSwitchStart -= DriverSwitchStart;
+                    entry.DriverSwitchEnd -= DriverSwitchEnd;
+
+                    children.RemoveAt(i);
                     // Continue through everything to ensure removal
                     // For some reason, things don't get removed correctly otherwise
                     i--;
                 }
             }
 
+            devices.UpdateLayout();
+        }
+
+        private void RemoveAll(StackPanel devices)
+        {
+            foreach (XboxUsbDeviceControl entry in devices.Children)
+            {
+                entry.DriverSwitchStart -= DriverSwitchStart;
+                entry.DriverSwitchEnd -= DriverSwitchEnd;
+            }
+
+            devices.Children.Clear();
             devices.UpdateLayout();
         }
     }

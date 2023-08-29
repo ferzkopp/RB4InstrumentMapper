@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using RB4InstrumentMapper.Parsing;
 using RB4InstrumentMapper.Properties;
@@ -53,19 +54,19 @@ namespace RB4InstrumentMapper
             return exitCode;
         }
 
-        public static bool StartWinUsbProcess(string instanceId)
+        public static Task<bool> StartWinUsbProcess(string instanceId)
         {
             string args = $"{WinUsbOption} {instanceId}";
             return RunElevated(args);
         }
 
-        public static bool StartRevertProcess(string instanceId)
+        public static Task<bool> StartRevertProcess(string instanceId)
         {
             string args = $"{RevertOption} {instanceId}";
             return RunElevated(args);
         }
 
-        private static bool RunElevated(string args)
+        private static async Task<bool> RunElevated(string args)
         {
             string location = Assembly.GetEntryAssembly().Location;
             var processInfo = new ProcessStartInfo()
@@ -79,7 +80,7 @@ namespace RB4InstrumentMapper
             try
             {
                 var process = Process.Start(processInfo);
-                process.WaitForExit();
+                await Task.Run(process.WaitForExit);
                 return process.ExitCode == 0;
             }
             catch (Exception ex)

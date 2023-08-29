@@ -15,6 +15,7 @@
         </Border>
         <Label x:Name="manufacturerLabel" Content="Manufacturer" Margin="85,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
         <Label x:Name="nameLabel" Content="Name" Margin="85,20,0,0" VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
+        <ProgressBar x:Name="switchDriverProgress" IsIndeterminate="True" Height="15" Margin="85,0,105,0" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility="Hidden"/>
         <Button x:Name="switchDriverButton" Content="Switch Driver" Height="30" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="switchDriverButton_Clicked"/>
     </Grid>
 </UserControl>
