@@ -4,11 +4,33 @@ A program that maps packets from Xbox One instrument peripherals to virtual cont
 
 ![RB4InstrumentMapper Application Screenshot](/Docs/Images/ProgramScreenshot.png "RB4InstrumentMapper Application Screenshot")
 
+All Xbox One instruments are supported (RB4 guitars/drums, GHL guitar), along with the RB4 wireless legacy adapter.
+
+## Table of Contents
+
+- [Requirements](#requirements)
+  - [Software](#software)
+  - [Hardware](#hardware)
+- [Installation](#installation)
+  - [Wireless Devices (Pcap)](#wireless-devices-pcap)
+  - [Wired Devices (USB)](#wired-devices-usb)
+  - [Controller Emulation Driver](#controller-emulation-driver)
+- [Usage](#usage)
+  - [Wireless Devices (Pcap)](#wireless-devices-pcap-1)
+  - [Wired Devices (USB)](#wired-devices-usb-1)
+  - [Starting the program](#starting-the-program)
+  - [Mapping your controls in Clone Hero](#mapping-your-controls-in-clone-hero)
+- [Packet Logs](#packet-logs)
+- [Error Logs](#error-logs)
+- [References](#references)
+- [Building](#building)
+- [License](#license)
+
 ## Requirements
 
 ### Software
 
-- Windows 10 64-bit
+- Windows 10/11 64-bit
 - [WinPCap](https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe) (for wireless peripherals)
 - [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest) or [vJoy](https://github.com/jshafer817/vJoy/releases/latest)
 
@@ -17,30 +39,19 @@ A program that maps packets from Xbox One instrument peripherals to virtual cont
 - Xbox One wireless receiver (for wireless peripherals)
   - This is *not* the same as Xbox 360 wireless receivers! You must get an Xbox One (or just "Xbox") receiver, such as [this one](https://amzn.to/2W7qQbt). Third-party receivers are untested, and they will not be deliberately supported.
 
-## Hardware Notes
-
-All Xbox One instruments are supported (RB4 guitars/drums, GHL guitar), along with the RB4 wireless legacy adapter.
-
-Jaguar guitars require a firmware update in order to connect to Xbox One receivers.
-
-- [Instructions](https://bit.ly/2UHzonU)
-- [Firmware installer backup](https://drive.google.com/file/d/1DQxkkbBfi-UOqdX6vp5TaX6F2N2OBDra/view?usp=drivesdk)
-
-Some guitars/drumkits might not sync properly when using just the sync button. This includes the PDP drumkit and occasionally the Jaguar guitar. Follow these steps to sync your device correctly:
-
-1. Go to Windows settings > Devices > Bluetooth & other devices
-2. Click `Add Bluetooth or other device` and pick the `Everything else` option.
-3. Press and hold the sync button until the Xbox button light flashes quickly.
-4. Select `Xbox compatible game controller` from the list once it appears.
-5. If that doesn't work, restart your PC and try again.
-
 ## Installation
 
-### If you are using wireless peripherals:
+### Wireless Devices (Pcap)
 
-1. Install [WinPCap](https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe)
+Rock Band 4 guitars and drumkits, connected through an Xbox One receiver. This section of setup is not required if you will only be using USB devices.
 
-### If you are using wired (USB) peripherals:
+Install [WinPCap](https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe). This will be used to capture packets from the Xbox One receiver.
+
+### Wired Devices (USB)
+
+Rock Band 4 wireless legacy adapter, Guitar Hero Live guitar/dongle. This section of setup is not required if you will only be using wireless devices through an Xbox One receiver.
+
+You will need to install the WinUSB driver onto each device you wish to use. **RB4InstrumentMapper is capable of doing this directly, through the `Configure Devices` button on its main menu.** However, if you run into any issues, this method of installing the driver will work as an alternative.
 
 1. Download [Zadig](https://zadig.akeo.ie/) and run it.
 2. Under Options, select `List All Devices`.
@@ -50,9 +61,13 @@ Some guitars/drumkits might not sync properly when using just the sync button. T
 
 4. Hit `Replace Driver`, and repeat for any additional peripherals you wish to use.
 
-- A future version will make this a little more streamlined and allow you to swap the driver directly in the program.
+To undo this process, press Windows + X and select `Device Manager`, then find the device under the `Universal Serial Bus devices` category (*not `Universal Serial Bus controllers`*), right-click it and hit Uninstall, and check the checkbox that says `Uninstall driver software for this device.`.
 
-### Next, install a controller emulation driver:
+***DO NOT INSTALL THE DRIVER ON YOUR XBOX ONE RECEIVER!!!*** RB4InstrumentMapper is not capable of handling it in this state, and it will become nonfunctional until you uninstall the device in Device Manager.
+
+### Controller Emulation Driver
+
+This is the part that allows RB4InstrumentMapper to send inputs based on the packets it receives. It is required for both wired and wireless devices.
 
 - Both of these can be installed simultaneously if desired, however RB4InstrumentMapper will only use one of them at a time.
 - Option 1: [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest)
@@ -70,31 +85,42 @@ Some guitars/drumkits might not sync properly when using just the sync button. T
 
   4. Click Apply.
 
-### Finally, restart your PC.
+### Jaguar Guitar Firmware Update
 
-Things will probably work fine if you don't, but it's generally safest to restart regardless.
+Jaguar guitars require a firmware update in order to connect to Xbox One receivers.
+
+- [Instructions](https://bit.ly/2UHzonU)
+- [Firmware installer backup](https://drive.google.com/file/d/1DQxkkbBfi-UOqdX6vp5TaX6F2N2OBDra/view?usp=drivesdk)
 
 ## Usage
 
-### If you are using wireless devices (Pcap):
+### Wireless Devices (Pcap)
 
 - Ensure the `Enable` checkbox under the Pcap group is checked.
 - Select your Xbox One receiver from the dropdown menu.
   - Xbox receivers should be detected automatically. If they are not, click the `Auto-Detect Pcap` button and follow its instructions.
-- **Do not connect your instruments yet!** In order for things to work correctly, you must hit Start before connecting them.
+- **Do not connect your instruments yet!** Hit the Start button first, or else devices may not function correctly.
   - A best effort is made for devices connected before starting, but correct behavior cannot be ensured for them.
+- After hitting Start, connect your instruments. They will be picked up and mapped automatically as long as the program is running.
 
-### If you are using wired devices (USB):
+Some guitars/drumkits might not sync properly when using just the sync button. This includes the PDP drumkit and occasionally the Jaguar guitar. Follow these steps to sync your device correctly:
+
+1. Go to Windows settings > Devices > Bluetooth & other devices
+2. Click `Add Bluetooth or other device` and pick the `Everything else` option.
+3. Press and hold the sync button until the Xbox button light flashes quickly.
+4. Select `Xbox compatible game controller` from the list once it appears.
+5. If that doesn't work, restart your PC and try again.
+
+### Wired Devices (USB)
 
 - Ensure the `Enable` checkbox under the USB group is checked.
 - **Ensure you have installed WinUSB on the devices you want to use! They will not be recognized otherwise!**
-- Devices will be detected automatically as they are connected/removed.
+  - You can do this easily by hitting the `Configure Devices` button under the USB group.
+- Devices will be detected automatically as they are connected/removed, though they will not be mapped until you hit Start.
 
 ### Starting the program
 
-Select either ViGEmBus or vJoy in the Controller Type dropdown, then hit the Start button.
-
-- You may now connect any wireless devices you wish to use.
+Select either ViGEmBus or vJoy in the Controller Type dropdown, then hit the Start button. Devices will be picked up and mapped automatically until you hit Stop or close the program.
 
 ### Mapping your controls in Clone Hero
 
