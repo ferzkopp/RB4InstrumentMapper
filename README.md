@@ -90,7 +90,7 @@ This is the part that allows RB4InstrumentMapper to send inputs based on the pac
 Jaguar guitars require a firmware update in order to connect to Xbox One receivers.
 
 - [Instructions](https://bit.ly/2UHzonU)
-- [Firmware installer backup](https://drive.google.com/file/d/1DQxkkbBfi-UOqdX6vp5TaX6F2N2OBDra/view?usp=drivesdk)
+- [CH wiki re-host](https://wiki.clonehero.net/link/61), in case the above link goes down again
 
 ## Usage
 
