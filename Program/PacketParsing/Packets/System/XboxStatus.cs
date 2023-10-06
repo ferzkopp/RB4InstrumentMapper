@@ -34,9 +34,12 @@ namespace RB4InstrumentMapper.Parsing
         public const byte CommandId = 0x03;
 
         private readonly byte status;
-        private readonly byte unk1;
-        private readonly byte unk2;
-        private readonly byte unk3;
+
+        // The GHL guitar does not send these bytes,
+        // so they are ignored since we don't recognize them anyways
+        // private readonly byte unk1;
+        // private readonly byte unk2;
+        // private readonly byte unk3;
 
         public bool Connected => (status & 0b1100_0000) != 0;
         public XboxBatteryType BatteryType => (XboxBatteryType)(status & 0b0000_1100);

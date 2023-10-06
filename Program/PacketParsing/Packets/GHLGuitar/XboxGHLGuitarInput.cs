@@ -45,7 +45,7 @@ namespace RB4InstrumentMapper.Parsing
     /// <summary>
     /// An input report from a guitar.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, Pack = 1)]
+    [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 27)]
     internal struct XboxGHLGuitarInput
     {
         public const byte CommandId = 0x21;
