@@ -19,6 +19,7 @@ namespace RB4InstrumentMapper.Parsing
 
         private Thread readThread;
         private volatile bool readPackets = false;
+        private volatile bool ioError = false;
 
         private XboxWinUsbDevice(USBDevice usb, USBInterface @interface, MappingMode mode)
             : base(mode, BackendType.Usb, mapGuide: true, @interface.OutPipe.MaximumPacketSize)
@@ -98,6 +99,7 @@ namespace RB4InstrumentMapper.Parsing
             if (readPackets)
                 return;
 
+            ioError = false;
             readPackets = true;
             readThread = new Thread(ReadThread);
             readThread.Start();
@@ -105,8 +107,22 @@ namespace RB4InstrumentMapper.Parsing
 
         public void StopReading()
         {
-            // Always reset device
+            // Abort in pipe
+            if (!ioError)
+            {
+                try
+                {
+                    mainInterface.InPipe.Abort();
+                }
+                catch (Exception ex)
+                {
+                    PacketLogging.PrintVerboseException($"Failed to abort read pipe!", ex);
+                }
+            }
+
+            // Reset device
             SendMessage(XboxConfiguration.ResetDevice);
+
             if (!readPackets)
                 return;
 
@@ -119,21 +135,12 @@ namespace RB4InstrumentMapper.Parsing
         {
             Span<byte> readBuffer = stackalloc byte[mainInterface.InPipe.MaximumPacketSize];
 
-            // Number of errors after which reading will stop
-            const int errorThreshold = 3;
-            int errorCount = 0;
             while (readPackets)
             {
                 // Read packet data
                 int bytesRead = ReadPacket(readBuffer);
                 if (bytesRead < 0)
-                {
-                    if (errorCount > errorThreshold)
-                        break;
-
-                    errorCount++;
-                    continue;
-                }
+                    break;
 
                 // Process packet data
                 var packetData = readBuffer.Slice(0, bytesRead);
@@ -146,29 +153,53 @@ namespace RB4InstrumentMapper.Parsing
 
         private int ReadPacket(Span<byte> readBuffer)
         {
-            try
-            {
-                return mainInterface.InPipe.Read(readBuffer);
-            }
-            catch (Exception ex)
-            {
-                PacketLogging.PrintVerboseException("Error while reading packet!", ex);
+            if (ioError)
                 return -1;
+
+            const int retryThreshold = 3;
+            int retryCount = 0;
+
+            do
+            {
+                try
+                {
+                    return mainInterface.InPipe.Read(readBuffer);
+                }
+                catch (Exception ex)
+                {
+                    PacketLogging.PrintVerboseException("Error while reading packet!", ex);
+                }
             }
+            while (++retryCount < retryThreshold);
+
+            ioError = true;
+            return -1;
         }
 
         protected override XboxResult SendPacket(Span<byte> data)
         {
-            try
+            if (ioError)
+                return XboxResult.Disconnected;
+
+            const int retryThreshold = 3;
+            int retryCount = 0;
+
+            do
             {
-                mainInterface.OutPipe.Write(data);
-                return XboxResult.Success;
+                try
+                {
+                    mainInterface.OutPipe.Write(data);
+                    return XboxResult.Success;
+                }
+                catch (Exception ex)
+                {
+                    PacketLogging.PrintVerboseException($"Error while sending packet! (Attempt {retryCount + 1})", ex);
+                }
             }
-            catch (Exception ex)
-            {
-                PacketLogging.PrintVerboseException("Error while sending packet!", ex);
-                return XboxResult.InvalidMessage;
-            }
+            while (++retryCount < retryThreshold);
+
+            ioError = true;
+            return XboxResult.Disconnected;
         }
 
         private static bool HasCompatibleId(PnPDevice pnpDevice, string compatibleId)

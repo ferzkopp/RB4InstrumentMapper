@@ -65,7 +65,7 @@ namespace RB4InstrumentMapper.Parsing
             // The header length is very important in these scenarios, as it determines which bytes are part of the message
             // and where the next message's header begins.
             var data = packet.Data;
-            while (data.Length > 0)
+            while (!data.IsEmpty)
             {
                 // Command header
                 if (!XboxCommandHeader.TryParse(data, out var header, out int headerLength))
@@ -173,18 +173,7 @@ namespace RB4InstrumentMapper.Parsing
 
             var xboxPacket = new XboxPacket(packetBuffer, directionIn: false);
             PacketLogging.LogPacket(xboxPacket);
-
-            // Attempt a few times
-            const int retryThreshold = 3;
-            int retryCount = 0;
-            XboxResult result;
-            do
-            {
-                result = SendPacket(packetBuffer);
-            }
-            while (++retryCount < retryThreshold && result != XboxResult.Success);
-
-            return result;
+            return SendPacket(packetBuffer);
         }
 
         protected virtual XboxResult SendPacket(Span<byte> data)
