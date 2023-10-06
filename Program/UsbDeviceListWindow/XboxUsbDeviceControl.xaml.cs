@@ -34,12 +34,16 @@ namespace RB4InstrumentMapper
                 manufacturerLabel.Content = usbDevice.Descriptor.Manufacturer;
                 nameLabel.Content = usbDevice.Descriptor.Product;
                 switchDriverButton.Content = "Revert Driver";
+                xboxIconImage.Visibility = Visibility.Hidden;
+                usbIconImage.Visibility = Visibility.Visible;
             }
             else
             {
                 manufacturerLabel.Content = PnpDevice.GetProperty<string>(DevicePropertyKey.Device_Manufacturer);
                 nameLabel.Content = PnpDevice.GetProperty<string>(DevicePropertyKey.NAME);
                 switchDriverButton.Content = "Switch Driver";
+                xboxIconImage.Visibility = Visibility.Visible;
+                usbIconImage.Visibility = Visibility.Hidden;
             }
         }
 

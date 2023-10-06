@@ -11,7 +11,12 @@
         BorderBrush="{DynamicResource {x:Static SystemColors.WindowFrameBrushKey}}">
     <Grid Margin="9,9,9,9">
         <Border Width="80" BorderThickness="1" VerticalAlignment="Stretch" HorizontalAlignment="Left" BorderBrush="{DynamicResource {x:Static SystemColors.WindowFrameBrushKey}}">
-            <Image x:Name="deviceTypeImage" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+            <!-- This is a bit of a hack, but all the other alternatives are
+                much too complicated for just switching between two images lol -->
+            <Grid>
+                <Image x:Name="xboxIconImage" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Source="Icons/Xbox.png"/>
+                <Image x:Name="usbIconImage" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Source="Icons/USB.png"/>
+            </Grid>
         </Border>
         <Label x:Name="manufacturerLabel" Content="Manufacturer" Margin="85,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
         <Label x:Name="nameLabel" Content="Name" Margin="85,20,0,0" VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
