@@ -82,39 +82,39 @@ namespace RB4InstrumentMapper.Parsing
                 return null;
             }
 
-            return func(client);
+            try
+            {
+                return func(client);
+            }
+            catch (Exception ex)
+            {
+                PacketLogging.PrintException("Failed to create mapper for device!", ex);
+                return null;
+            }
         }
 
         private static DeviceMapper GetMapper(XboxClient client, CreateMapper createVigem, CreateMapper createVjoy)
         {
-            try
+            DeviceMapper mapper;
+            var mode = client.Parent.MappingMode;
+            switch (mode)
             {
-                DeviceMapper mapper;
-                var mode = client.Parent.MappingMode;
-                switch (mode)
-                {
-                    case MappingMode.ViGEmBus:
-                        mapper = VigemClient.AreDevicesAvailable ? createVigem(client) : null;
-                        break;
-                    case MappingMode.vJoy:
-                        mapper = VjoyClient.AreDevicesAvailable ? createVjoy(client) : null;
-                        // Check if all devices have been used
-                        if (mapper != null && !VjoyClient.AreDevicesAvailable)
-                            PacketLogging.PrintMessage("vJoy device limit reached, no new devices will be handled.");
-                        break;
-                    default:
-                        throw new NotImplementedException($"Unhandled mapping mode {mode}!");
-                }
+                case MappingMode.ViGEmBus:
+                    mapper = VigemClient.AreDevicesAvailable ? createVigem(client) : null;
+                    break;
+                case MappingMode.vJoy:
+                    mapper = VjoyClient.AreDevicesAvailable ? createVjoy(client) : null;
+                    // Check if all devices have been used
+                    if (mapper != null && !VjoyClient.AreDevicesAvailable)
+                        PacketLogging.PrintMessage("vJoy device limit reached, no new devices will be handled.");
+                    break;
+                default:
+                    throw new NotImplementedException($"Unhandled mapping mode {mode}!");
+            }
 
-                if (mapper != null)
-                    PacketLogging.PrintMessage($"Created new {mapper.GetType().Name}");
-                return mapper;
-            }
-            catch (Exception ex)
-            {
-                PacketLogging.PrintMessage($"Failed to create mapper for device: {ex.GetFirstLine()}");
-                return null;
-            }
+            if (mapper != null)
+                PacketLogging.PrintMessage($"Created new {mapper.GetType().Name}");
+            return mapper;
         }
 
         public static DeviceMapper GetGamepadMapper(XboxClient client)
@@ -167,17 +167,9 @@ namespace RB4InstrumentMapper.Parsing
 
         public static DeviceMapper GetWirelessLegacyMapper(XboxClient client)
         {
-            try
-            {
-                var mapper = new WirelessLegacyMapper(client);
-                PacketLogging.PrintMessage($"Created new {nameof(WirelessLegacyMapper)} mapper");
-                return mapper;
-            }
-            catch (Exception ex)
-            {
-                PacketLogging.PrintMessage($"Failed to create mapper for device: {ex.GetFirstLine()}");
-                return null;
-            }
+            var mapper = new WirelessLegacyMapper(client);
+            PacketLogging.PrintMessage($"Created new {nameof(WirelessLegacyMapper)} mapper");
+            return mapper;
         }
 
         public static DeviceMapper GetFallbackMapper(XboxClient client)
