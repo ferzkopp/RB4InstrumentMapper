@@ -101,6 +101,9 @@ namespace RB4InstrumentMapper.Parsing
             {
                 case MappingMode.ViGEmBus:
                     mapper = VigemClient.AreDevicesAvailable ? createVigem(client) : null;
+                    // Check if all devices have been used
+                    if (mapper != null && !VigemClient.AreDevicesAvailable)
+                        PacketLogging.PrintMessage("ViGEmBus device limit reached, no new devices will be handled.");
                     break;
                 case MappingMode.vJoy:
                     mapper = VjoyClient.AreDevicesAvailable ? createVjoy(client) : null;
