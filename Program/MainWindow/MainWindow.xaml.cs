@@ -102,8 +102,7 @@ namespace RB4InstrumentMapper
             // Load backend settings
             SetPcapEnabled(Settings.Default.pcapEnabled);
             SetUsbEnabled(Settings.Default.usbEnabled);
-            var deviceType = (ControllerType)Settings.Default.controllerDeviceType;
-            SetDeviceType(deviceType);
+            // Device type is set after initializing the clients
 
             // Check for vJoy
             bool vjoyFound = VjoyClient.Enabled;
@@ -139,11 +138,14 @@ namespace RB4InstrumentMapper
             }
             else
             {
-                vigemFound = false;
                 Console.WriteLine("ViGEmBus not found. ViGEmBus selection will be unavailable.");
                 vigemDeviceTypeOption.IsEnabled = false;
                 vigemDeviceTypeOption.IsSelected = false;
             }
+
+            // Set device type
+            var deviceType = (ControllerType)Settings.Default.controllerDeviceType;
+            SetDeviceType(deviceType);
 
             // Exit if neither ViGEmBus nor vJoy are installed
             if (!vjoyFound && !vigemFound)
@@ -535,6 +537,9 @@ namespace RB4InstrumentMapper
             int typeInt = (int)type;
             if (controllerDeviceTypeCombo.SelectedIndex != typeInt)
             {
+                // Set device type selection to the correct thing
+                // Setting this fires off the handler, so we need to return
+                // and let the second call set things
                 controllerDeviceTypeCombo.SelectedIndex = typeInt;
                 return;
             }
@@ -544,27 +549,38 @@ namespace RB4InstrumentMapper
             switch (type)
             {
                 case ControllerType.vJoy:
-                    if (VjoyClient.GetAvailableDeviceCount() > 0)
+                    if (vjoyDeviceTypeOption.IsEnabled && VjoyClient.GetAvailableDeviceCount() > 0)
                     {
                         BackendSettings.MapperMode = MappingMode.vJoy;
                     }
                     else
                     {
                         // Reset device type selection
-                        // Setting this fires off this handler again, no extra handling is needed
+                        // Setting this fires off the handler again, no extra handling is needed
+                        BackendSettings.MapperMode = 0;
                         controllerDeviceTypeCombo.SelectedIndex = -1;
                         return;
                     }
                     break;
 
                 case ControllerType.ViGEmBus:
-                    BackendSettings.MapperMode = MappingMode.ViGEmBus;
+                    if (vigemDeviceTypeOption.IsEnabled && VigemClient.Initialized)
+                    {
+                        BackendSettings.MapperMode = MappingMode.ViGEmBus;
+                    }
+                    else
+                    {
+                        // Reset device type selection
+                        // Setting this fires off the handler again, no extra handling is needed
+                        BackendSettings.MapperMode = 0;
+                        controllerDeviceTypeCombo.SelectedIndex = -1;
+                        return;
+                    }
                     break;
 
                 case ControllerType.None:
                 default:
                     BackendSettings.MapperMode = 0;
-                    Settings.Default.controllerDeviceType = (int)ControllerType.None;
                     break;
             }
 
