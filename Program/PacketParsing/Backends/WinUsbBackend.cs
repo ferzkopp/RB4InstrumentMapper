@@ -12,12 +12,13 @@ namespace RB4InstrumentMapper.Parsing
         private static readonly DeviceNotificationListener watcher = new DeviceNotificationListener();
         private static readonly ConcurrentDictionary<string, XboxWinUsbDevice> devices = new ConcurrentDictionary<string, XboxWinUsbDevice>();
 
+        private static bool inputsEnabled = false;
+
         public static int DeviceCount => devices.Count;
 
         public static event Action DeviceAddedOrRemoved;
 
         public static bool Initialized { get; private set; } = false;
-        public static bool Started { get; private set; } = false;
 
         public static void Initialize()
         {
@@ -54,40 +55,6 @@ namespace RB4InstrumentMapper.Parsing
             Initialized = false;
         }
 
-        public static void Start()
-        {
-            if (Started)
-                return;
-
-            foreach (var pair in devices)
-            {
-                string path = pair.Key;
-                var device = pair.Value;
-
-                Debug.Assert(device == null, "Initialized device found!");
-                InitializeDevice(path);
-            }
-
-            Started = true;
-        }
-
-        public static void Stop()
-        {
-            if (!Started)
-                return;
-
-            foreach (var pair in devices)
-            {
-                string path = pair.Key;
-                var device = pair.Value;
-
-                device?.StopReading();
-                devices[path] = null;
-            }
-
-            Started = false;
-        }
-
         private static void DeviceArrived(DeviceEventArgs args)
         {
             AddDevice(args.SymLink);
@@ -102,29 +69,16 @@ namespace RB4InstrumentMapper.Parsing
         {
             // Paths are case-insensitive
             devicePath = devicePath.ToLowerInvariant();
-            if (!XboxWinUsbDevice.IsCompatibleDevice(devicePath))
+            var device = XboxWinUsbDevice.TryCreate(devicePath);
+            if (device == null)
                 return;
 
-            if (Started)
-                InitializeDevice(devicePath);
-            else
-                devices.TryAdd(devicePath, null);
+            device.EnableInputs(inputsEnabled);
+            device.StartReading();
+            devices[devicePath] = device;
 
             PacketLogging.PrintMessage($"Added device {devicePath}");
             DeviceAddedOrRemoved?.Invoke();
-        }
-
-        private static void InitializeDevice(string path)
-        {
-            var device = XboxWinUsbDevice.TryCreate(path);
-            if (device == null)
-            {
-                Debug.Fail($"Non-compatible device {path} added to device list!");
-                return;
-            }
-
-            device.StartReading();
-            devices[path] = device;
         }
 
         private static void RemoveDevice(string devicePath, bool remove = true)
@@ -134,12 +88,21 @@ namespace RB4InstrumentMapper.Parsing
             if (!devices.TryGetValue(devicePath, out var device))
                 return;
 
-            device?.Dispose();
+            device.Dispose();
             if (remove)
                 devices.TryRemove(devicePath, out _);
 
             PacketLogging.PrintMessage($"Removed device {devicePath}");
             DeviceAddedOrRemoved?.Invoke();
+        }
+
+        public static void EnableInputs(bool enabled)
+        {
+            inputsEnabled = enabled;
+            foreach (var device in devices.Values)
+            {
+                device.EnableInputs(enabled);
+            }
         }
 
         public static bool SwitchDeviceToWinUSB(string instanceId)

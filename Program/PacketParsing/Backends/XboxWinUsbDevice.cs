@@ -21,8 +21,8 @@ namespace RB4InstrumentMapper.Parsing
         private volatile bool readPackets = false;
         private volatile bool ioError = false;
 
-        private static volatile bool inputsEnabled = false;
-        private static bool previousInputsEnabled = false;
+        private static volatile bool inputsEnabled = true;
+        private static bool previousInputsEnabled = true;
 
         private XboxWinUsbDevice(USBDevice usb, USBInterface @interface, MappingMode mode)
             : base(mode, BackendType.Usb, mapGuide: true, @interface.OutPipe.MaximumPacketSize)

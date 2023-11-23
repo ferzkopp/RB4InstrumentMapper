@@ -31,10 +31,12 @@ namespace RB4InstrumentMapper.Parsing
         private readonly Dictionary<byte, XboxClient> clients = new Dictionary<byte, XboxClient>();
 
         private readonly int maxPacketSize;
+        private bool inputsEnabled = true;
 
         public MappingMode MappingMode { get; }
         public BackendType Backend { get; }
         public bool MapGuideButton { get; }
+        public bool InputsEnabled => inputsEnabled;
 
         public XboxDevice(MappingMode mode, BackendType backend) : this(mode, backend, mapGuide: false, 0)
         {
@@ -184,6 +186,7 @@ namespace RB4InstrumentMapper.Parsing
 
         public virtual void EnableInputs(bool enabled)
         {
+            inputsEnabled = enabled;
             foreach (var client in clients.Values)
             {
                 client?.EnableInputs(enabled);

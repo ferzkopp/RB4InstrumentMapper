@@ -84,7 +84,9 @@ namespace RB4InstrumentMapper.Parsing
 
             try
             {
-                return func(client);
+                var mapper = func(client);
+                mapper.EnableInputs(client.Parent.InputsEnabled);
+                return mapper;
             }
             catch (Exception ex)
             {

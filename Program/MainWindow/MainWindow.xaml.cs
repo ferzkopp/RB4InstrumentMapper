@@ -422,7 +422,7 @@ namespace RB4InstrumentMapper
             if (!Settings.Default.usbEnabled)
                 return true;
 
-            WinUsbBackend.Start();
+            WinUsbBackend.EnableInputs(true);
             return true;
         }
 
@@ -441,7 +441,7 @@ namespace RB4InstrumentMapper
             if (!Settings.Default.usbEnabled)
                 return;
 
-            WinUsbBackend.Stop();
+            WinUsbBackend.EnableInputs(false);
         }
 
         private void SetPcapEnabled(bool enabled)
