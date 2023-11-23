@@ -2,7 +2,7 @@
 
 A program that maps packets from Xbox One instrument peripherals to virtual controllers, for use in games such as [Clone Hero](https://clonehero.net/).
 
-![RB4InstrumentMapper Application Screenshot](/Docs/Images/ProgramScreenshot.png "RB4InstrumentMapper Application Screenshot")
+![RB4InstrumentMapper main menu](/Docs/Images/ProgramScreenshot.png "RB4InstrumentMapper main menu")
 
 All Xbox One instruments are supported (RB4 guitars/drums, GHL guitar), along with the RB4 wireless legacy adapter.
 
@@ -47,23 +47,13 @@ Rock Band 4 guitars and drumkits, connected through an Xbox One receiver. This s
 
 Install [WinPCap](https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe). This will be used to capture packets from the Xbox One receiver.
 
+*Note that the Guitar Hero Live guitar is not considered a wireless device to RB4InstrumentMapper, as its dongle acts as a wired device. See the section below for setup.*
+
 ### Wired Devices (USB)
 
 Rock Band 4 wireless legacy adapter, Guitar Hero Live guitar/dongle. This section of setup is not required if you will only be using wireless devices through an Xbox One receiver.
 
-You will need to install the WinUSB driver onto each device you wish to use. **RB4InstrumentMapper is capable of doing this directly, through the `Configure Devices` button on its main menu.** However, if you run into any issues, this method of installing the driver will work as an alternative.
-
-1. Download [Zadig](https://zadig.akeo.ie/) and run it.
-2. Under Options, select `List All Devices`.
-3. Select your device, then change the box to the right of the green/orange arrow to the `WinUSB` driver. Things should look like the example below:
-
-   ![Zadig Example](/Docs/Images/Zadig.png "Zadig Example")
-
-4. Hit `Replace Driver`, and repeat for any additional peripherals you wish to use.
-
-To undo this process, press Windows + X and select `Device Manager`, then find the device under the `Universal Serial Bus devices` category (*not `Universal Serial Bus controllers`*), right-click it and hit Uninstall, and check the checkbox that says `Uninstall driver software for this device.`.
-
-***DO NOT INSTALL THE DRIVER ON YOUR XBOX ONE RECEIVER!!!*** RB4InstrumentMapper is not capable of handling it in this state, and it will become nonfunctional until you uninstall the device in Device Manager.
+No additional software installation is needed for USB devices. However, you will need to install the WinUSB driver on each device you wish to use; covered later.
 
 ### Controller Emulation Driver
 
@@ -113,6 +103,10 @@ Some guitars/drumkits might not sync properly when using just the sync button. T
 
 ### Wired Devices (USB)
 
+You will need to install the WinUSB driver onto each device you wish to use. **RB4InstrumentMapper is capable of doing this directly, through the `Configure Devices` button on its main menu.** However, if you run into any issues, there is an [alternative method](#alternate-winusb-install-instructions) of installing this driver.
+
+![Configure Devices example](/Docs/Images/ConfigureDevices.png "Configure Devices example")
+
 - Ensure the `Enable` checkbox under the USB group is checked.
 - **Ensure you have installed WinUSB on the devices you want to use! They will not be recognized otherwise!**
   - You can do this easily by hitting the `Configure Devices` button under the USB group.
@@ -142,6 +136,29 @@ Note that these settings are meant for debugging purposes only, leaving them ena
 
 In the case that the program crashes, an error log is saved to a `RB4InstrumentMapper` > `Logs` folder inside your Documents folder. Make sure to include it when getting help or creating an issue report for the crash.
 
+## Alternate WinUSB Install Instructions
+
+RB4InstrumentMapper is capable of installing the WinUSB driver on Xbox One devices directly, through the `Configure Devices` button on its main menu. However, if you run into any issues with it, this method of installing the driver will work as an alternative.
+
+1. Download [Zadig](https://zadig.akeo.ie/) and run it.
+2. Under Options, select `List All Devices`.
+3. Select your device, then change the box to the right of the green/orange arrow to the `WinUSB` driver. Things should look like the example below:
+
+   ![Zadig example](/Docs/Images/Zadig.png "Zadig example")
+
+4. Hit `Replace Driver`, and repeat for any additional peripherals you wish to use.
+
+To undo this process, press Windows + X and select `Device Manager`, then find the device under the `Universal Serial Bus devices` category (*not `Universal Serial Bus controllers`*), right-click it and hit Uninstall, and check the checkbox that says `Uninstall driver software for this device.`.
+
+***DO NOT INSTALL THE DRIVER ON YOUR XBOX ONE RECEIVER!!!*** RB4InstrumentMapper is not capable of handling it in this state, and it will become nonfunctional until you uninstall the device in Device Manager!
+
+## Building
+
+To build this program, you will need:
+
+- Visual Studio, or MSBuild/[the .NET SDK](https://dotnet.microsoft.com/en-us/download) + your code editor of choice.
+- [WiX Toolset v4](https://wixtoolset.org/) if you wish to build the installer.
+
 ## References
 
 Predecessors:
@@ -155,13 +172,6 @@ Packet data:
 - GuitarSniffer guitar packet spreadsheets: [New](https://docs.google.com/spreadsheets/d/1ITZUvRniGpfS_HV_rBpSwlDdGukc3GC1CeOe7SavQBo/edit?usp=sharing), [Old](https://1drv.ms/x/s!AgQGk0OeTMLwg3GBDXFUC3Erj4Wb)
 - [rb4.app's Javascript source](https://rb4.app/js/app.js)
 - Original research, found in the [PlasticBand documentation repository](https://github.com/TheNathannator/PlasticBand).
-
-## Building
-
-To build this program, you will need:
-
-- Visual Studio, or MSBuild/[the .NET SDK](https://dotnet.microsoft.com/en-us/download) + your code editor of choice.
-- [WiX Toolset v4](https://wixtoolset.org/) if you wish to build the installer.
 
 ## License
 
