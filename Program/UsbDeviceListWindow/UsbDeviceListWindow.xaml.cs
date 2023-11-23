@@ -116,22 +116,30 @@ namespace RB4InstrumentMapper
 
         private void AddDevice(string devicePath)
         {
-            devicePath = devicePath.ToLower();
-            var pnpDevice = PnPDevice.GetDeviceByInterfaceId(devicePath).ToUsbPnPDevice();
+            try
+            {
+                devicePath = devicePath.ToLower();
+                var pnpDevice = PnPDevice.GetDeviceByInterfaceId(devicePath).ToUsbPnPDevice();
 
-            if (XboxWinUsbDevice.IsCompatibleDevice(pnpDevice))
-            {
-                var deviceControl = new XboxUsbDeviceControl(devicePath, pnpDevice, winusb: true);
-                deviceControl.DriverSwitchStart += DriverSwitchStart;
-                deviceControl.DriverSwitchEnd += DriverSwitchEnd;
-                winUsbDeviceList.Children.Add(deviceControl);
+                if (XboxWinUsbDevice.IsCompatibleDevice(pnpDevice))
+                {
+                    var deviceControl = new XboxUsbDeviceControl(devicePath, pnpDevice, winusb: true);
+                    deviceControl.DriverSwitchStart += DriverSwitchStart;
+                    deviceControl.DriverSwitchEnd += DriverSwitchEnd;
+                    winUsbDeviceList.Children.Add(deviceControl);
+                }
+                else if (XboxWinUsbDevice.IsXGIPDevice(pnpDevice))
+                {
+                    var deviceControl = new XboxUsbDeviceControl(devicePath, pnpDevice, winusb: false);
+                    deviceControl.DriverSwitchStart += DriverSwitchStart;
+                    deviceControl.DriverSwitchEnd += DriverSwitchEnd;
+                    xgipDeviceList.Children.Add(deviceControl);
+                }
             }
-            else if (XboxWinUsbDevice.IsXGIPDevice(pnpDevice))
+            catch (Exception ex)
             {
-                var deviceControl = new XboxUsbDeviceControl(devicePath, pnpDevice, winusb: false);
-                deviceControl.DriverSwitchStart += DriverSwitchStart;
-                deviceControl.DriverSwitchEnd += DriverSwitchEnd;
-                xgipDeviceList.Children.Add(deviceControl);
+                Logging.Main_WriteException(ex, $"Failed to add device {devicePath} to USB device window!");
+                return;
             }
         }
 
