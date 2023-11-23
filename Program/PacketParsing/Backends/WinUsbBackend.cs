@@ -105,6 +105,14 @@ namespace RB4InstrumentMapper.Parsing
             }
         }
 
+        // WinUSB devices are exclusive-access, so we need a helper method to get already-initialized devices
+        public static USBDevice GetUsbDevice(string devicePath)
+        {
+            if (devices.TryGetValue(devicePath, out var device))
+                return device.UsbDevice;
+            return USBDevice.GetSingleDeviceByPath(devicePath);
+        }
+
         public static bool SwitchDeviceToWinUSB(string instanceId)
         {
             try

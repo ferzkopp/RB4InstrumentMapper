@@ -14,7 +14,8 @@ namespace RB4InstrumentMapper.Parsing
         private const byte XBOX_INTERFACE_SUB_CLASS = 0x47;
         private const byte XBOX_INTERFACE_PROTOCOL = 0xD0;
 
-        private USBDevice usbDevice;
+        public USBDevice UsbDevice { get; private set; }
+
         private USBInterface mainInterface;
 
         private Thread readThread;
@@ -27,7 +28,7 @@ namespace RB4InstrumentMapper.Parsing
         private XboxWinUsbDevice(USBDevice usb, USBInterface @interface, MappingMode mode)
             : base(mode, BackendType.Usb, mapGuide: true, @interface.OutPipe.MaximumPacketSize)
         {
-            usbDevice = usb;
+            UsbDevice = usb;
             mainInterface = @interface;
         }
 
@@ -258,8 +259,8 @@ namespace RB4InstrumentMapper.Parsing
             if (readThread != null)
                 StopReading();
 
-            usbDevice?.Dispose();
-            usbDevice = null;
+            UsbDevice?.Dispose();
+            UsbDevice = null;
             mainInterface = null;
         }
     }

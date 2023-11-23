@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Nefarius.Drivers.WinUSB;
 using Nefarius.Utilities.DeviceManagement.PnP;
 using RB4InstrumentMapper.Parsing;
 
@@ -30,17 +29,37 @@ namespace RB4InstrumentMapper
 
             if (IsWinUsb)
             {
-                var usbDevice = USBDevice.GetSingleDeviceByPath(devicePath);
-                manufacturerLabel.Content = usbDevice.Descriptor.Manufacturer;
-                nameLabel.Content = usbDevice.Descriptor.Product;
+                try
+                {
+                    var usbDevice = WinUsbBackend.GetUsbDevice(devicePath);
+                    manufacturerLabel.Content = usbDevice.Descriptor.Manufacturer;
+                    nameLabel.Content = usbDevice.Descriptor.Product;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Main_WriteException(ex, $"Failed to get USB name/manufacturer for device '{devicePath}'!");
+                    manufacturerLabel.Content = "(Failed to get manufacturer)";
+                    nameLabel.Content = "(Failed to get name)";
+                }
+
                 switchDriverButton.Content = "Revert Driver";
                 xboxIconImage.Visibility = Visibility.Hidden;
                 usbIconImage.Visibility = Visibility.Visible;
             }
             else
             {
-                manufacturerLabel.Content = PnpDevice.GetProperty<string>(DevicePropertyKey.Device_Manufacturer);
-                nameLabel.Content = PnpDevice.GetProperty<string>(DevicePropertyKey.NAME);
+                try
+                {
+                    manufacturerLabel.Content = PnpDevice.GetProperty<string>(DevicePropertyKey.Device_Manufacturer);
+                    nameLabel.Content = PnpDevice.GetProperty<string>(DevicePropertyKey.NAME);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Main_WriteException(ex, $"Failed to get name/manufacturer for device '{devicePath}'!");
+                    manufacturerLabel.Content = "(Failed to get manufacturer)";
+                    nameLabel.Content = "(Failed to get name)";
+                }
+
                 switchDriverButton.Content = "Switch Driver";
                 xboxIconImage.Visibility = Visibility.Visible;
                 usbIconImage.Visibility = Visibility.Hidden;
