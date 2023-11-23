@@ -81,7 +81,7 @@ namespace RB4InstrumentMapper.Parsing
                 string path = pair.Key;
                 var device = pair.Value;
 
-                device.StopReading();
+                device?.StopReading();
                 devices[path] = null;
             }
 
