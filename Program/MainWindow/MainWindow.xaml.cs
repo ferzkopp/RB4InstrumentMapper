@@ -99,11 +99,6 @@ namespace RB4InstrumentMapper
             SetPacketDebugLog(Settings.Default.packetDebugLog);
             SetVerboseErrors(Settings.Default.verboseErrorLog);
 
-            // Load backend settings
-            SetPcapEnabled(Settings.Default.pcapEnabled);
-            SetUsbEnabled(Settings.Default.usbEnabled);
-            // Device type is set after initializing the clients
-
             // Check for vJoy
             bool vjoyFound = VjoyClient.Enabled;
             if (vjoyFound)
@@ -143,9 +138,11 @@ namespace RB4InstrumentMapper
                 vigemDeviceTypeOption.IsSelected = false;
             }
 
-            // Set device type
-            var deviceType = (ControllerType)Settings.Default.controllerDeviceType;
-            SetDeviceType(deviceType);
+            // Load backend settings
+            // Done after initializing virtual controller clients
+            SetDeviceType((ControllerType)Settings.Default.controllerDeviceType);
+            SetPcapEnabled(Settings.Default.pcapEnabled);
+            SetUsbEnabled(Settings.Default.usbEnabled);
 
             // Exit if neither ViGEmBus nor vJoy are installed
             if (!vjoyFound && !vigemFound)
