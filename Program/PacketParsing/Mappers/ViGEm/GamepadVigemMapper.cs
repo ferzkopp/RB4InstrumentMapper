@@ -35,10 +35,7 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
 
             HandleReport(device, gamepadReport);
-
-            // Send data
-            device.SubmitReport();
-            return XboxResult.Success;
+            return SubmitReport();
         }
 
         /// <summary>

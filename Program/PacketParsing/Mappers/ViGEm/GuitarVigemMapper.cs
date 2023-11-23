@@ -35,8 +35,7 @@ namespace RB4InstrumentMapper.Parsing
             HandleReport(device, guitarReport);
 
             // Send data
-            device.SubmitReport();
-            return XboxResult.Success;
+            return SubmitReport();
         }
 
         /// <summary>

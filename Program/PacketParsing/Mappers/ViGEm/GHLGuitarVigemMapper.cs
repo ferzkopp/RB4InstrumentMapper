@@ -40,10 +40,7 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
 
             HandleReport(device, guitarReport);
-
-            // Send data
-            device.SubmitReport();
-            return XboxResult.Success;
+            return SubmitReport();
         }
 
         private XboxGHLGuitarPlayerLeds GetPlayerLeds()

@@ -30,7 +30,7 @@ namespace RB4InstrumentMapper.Parsing
                         return XboxResult.InvalidMessage;
 
                     GHLGuitarVigemMapper.HandleReport(device, guitarReport);
-                    return XboxResult.Success;
+                    return SubmitReport();
 
                 default:
                     return XboxResult.Success;
@@ -64,9 +64,7 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.Success;
             }
 
-            // Send data
-            device.SubmitReport();
-            return XboxResult.Success;
+            return SubmitReport();
         }
     }
 }

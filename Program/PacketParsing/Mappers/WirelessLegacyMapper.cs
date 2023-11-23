@@ -105,6 +105,23 @@ namespace RB4InstrumentMapper.Parsing
         // Handled by the override above
         protected override void MapGuideButton(bool pressed) { }
 
+        public override void ResetReport()
+        {
+            foreach (var mapper in mappers.Values)
+            {
+                mapper.ResetReport();
+            }
+        }
+
+        public override void EnableInputs(bool enabled)
+        {
+            base.EnableInputs(enabled);
+            foreach (var mapper in mappers.Values)
+            {
+                mapper.EnableInputs(enabled);
+            }
+        }
+
         private DeviceMapper GetMapperForDevice(XboxWirelessLegacyDeviceConnect connect)
         {
             var subtype = connect.DeviceSubtype;

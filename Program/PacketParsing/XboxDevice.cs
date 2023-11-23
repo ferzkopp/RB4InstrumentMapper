@@ -182,6 +182,14 @@ namespace RB4InstrumentMapper.Parsing
             return XboxResult.Success;
         }
 
+        public virtual void EnableInputs(bool enabled)
+        {
+            foreach (var client in clients.Values)
+            {
+                client?.EnableInputs(enabled);
+            }
+        }
+
         /// <summary>
         /// Performs cleanup for the device.
         /// </summary>

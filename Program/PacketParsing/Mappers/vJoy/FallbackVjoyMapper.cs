@@ -60,9 +60,7 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.Success;
             }
 
-            // Send data
-            VjoyClient.UpdateDevice(deviceId, ref state);
-            return XboxResult.Success;
+            return SubmitReport();
         }
     }
 }

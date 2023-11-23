@@ -21,6 +21,9 @@ namespace RB4InstrumentMapper.Parsing
         private volatile bool readPackets = false;
         private volatile bool ioError = false;
 
+        private static volatile bool inputsEnabled = false;
+        private static bool previousInputsEnabled = false;
+
         private XboxWinUsbDevice(USBDevice usb, USBInterface @interface, MappingMode mode)
             : base(mode, BackendType.Usb, mapGuide: true, @interface.OutPipe.MaximumPacketSize)
         {
@@ -131,6 +134,12 @@ namespace RB4InstrumentMapper.Parsing
             readThread = null;
         }
 
+        public override void EnableInputs(bool enabled)
+        {
+            // Defer to read thread
+            inputsEnabled = enabled;
+        }
+
         private void ReadThread()
         {
             Span<byte> readBuffer = stackalloc byte[mainInterface.InPipe.MaximumPacketSize];
@@ -141,6 +150,13 @@ namespace RB4InstrumentMapper.Parsing
                 int bytesRead = ReadPacket(readBuffer);
                 if (bytesRead < 0)
                     break;
+
+                bool enabled = inputsEnabled;
+                if (enabled != previousInputsEnabled)
+                {
+                    previousInputsEnabled = enabled;
+                    base.EnableInputs(enabled);
+                }
 
                 // Process packet data
                 var packetData = readBuffer.Slice(0, bytesRead);

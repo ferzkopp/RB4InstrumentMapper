@@ -11,6 +11,7 @@ namespace RB4InstrumentMapper.Parsing
         protected readonly bool mapGuideButton;
 
         protected bool disposed = false;
+        protected bool inputsEnabled = true;
 
         /// <summary>
         /// Initializes a new device mapper with the given parent client,
@@ -54,6 +55,15 @@ namespace RB4InstrumentMapper.Parsing
 
         protected abstract XboxResult OnMessageReceived(byte command, ReadOnlySpan<byte> data);
         protected abstract void MapGuideButton(bool pressed);
+
+        public abstract void ResetReport();
+
+        public virtual void EnableInputs(bool enabled)
+        {
+            inputsEnabled = enabled;
+            if (!enabled)
+                ResetReport();
+        }
 
         /// <summary>
         /// Disposes the mapper and any resources it uses.

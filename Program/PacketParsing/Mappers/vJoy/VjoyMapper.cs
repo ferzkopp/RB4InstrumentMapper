@@ -107,13 +107,25 @@ namespace RB4InstrumentMapper.Parsing
             state.bHats = (uint)direction;
         }
 
-        protected override void DisposeUnmanagedResources()
+        protected XboxResult SubmitReport()
         {
-            // Reset report
+            if (!inputsEnabled)
+                return XboxResult.Success;
+
+            VjoyClient.UpdateDevice(deviceId, ref state);
+            return XboxResult.Success;
+        }
+
+        public override void ResetReport()
+        {
             state.Reset();
             VjoyClient.UpdateDevice(deviceId, ref state);
+        }
 
+        protected override void DisposeUnmanagedResources()
+        {
             // Free device
+            ResetReport();
             VjoyClient.ReleaseDevice(deviceId);
             deviceId = 0;
         }

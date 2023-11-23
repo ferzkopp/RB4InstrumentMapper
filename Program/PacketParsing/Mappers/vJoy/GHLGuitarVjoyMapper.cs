@@ -40,10 +40,7 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
 
             HandleReport(ref state, guitarReport);
-
-            // Send data
-            VjoyClient.UpdateDevice(deviceId, ref state);
-            return XboxResult.Success;
+            return SubmitReport();
         }
 
         private XboxGHLGuitarPlayerLeds GetPlayerLeds()

@@ -35,10 +35,7 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
 
             HandleReport(ref state, gamepadReport);
-
-            // Send data
-            VjoyClient.UpdateDevice(deviceId, ref state);
-            return XboxResult.Success;
+            return SubmitReport();
         }
 
         /// <summary>

@@ -1,4 +1,3 @@
-using System;
 using Nefarius.ViGEm.Client.Targets;
 using Nefarius.ViGEm.Client.Targets.Xbox360;
 using RB4InstrumentMapper.Vigem;
@@ -48,23 +47,32 @@ namespace RB4InstrumentMapper.Parsing
             (sender as IXbox360Controller).FeedbackReceived -= DeviceConnected;
         }
 
-        /// <summary>
-        /// Handles an incoming packet.
-        /// </summary>
-        public override XboxResult HandleMessage(byte command, ReadOnlySpan<byte> data)
-        {
-            CheckDisposed();
-
-            if (!deviceConnected)
-                return XboxResult.Pending;
-
-            return OnMessageReceived(command, data);
-        }
-
         protected override void MapGuideButton(bool pressed)
         {
             device.SetButtonState(Xbox360Button.Guide, pressed);
             device.SubmitReport();
+        }
+
+        protected XboxResult SubmitReport()
+        {
+            if (!deviceConnected)
+                return XboxResult.Pending;
+
+            if (!inputsEnabled)
+                return XboxResult.Success;
+
+            device.SubmitReport();
+            return XboxResult.Success;
+        }
+
+        public override void ResetReport()
+        {
+            try
+            {
+                device.ResetReport(); 
+                device.SubmitReport();
+            }
+            catch { }
         }
 
         protected override void DisposeManagedResources()
@@ -72,12 +80,7 @@ namespace RB4InstrumentMapper.Parsing
             if (device != null)
             {
                 // Reset report
-                try
-                {
-                    device.ResetReport(); 
-                    device.SubmitReport();
-                }
-                catch { }
+                ResetReport();
 
                 // Disconnect device
                 try

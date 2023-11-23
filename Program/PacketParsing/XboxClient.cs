@@ -281,6 +281,11 @@ namespace RB4InstrumentMapper.Parsing
             previousSendSequence[header.CommandId] = sequence;
         }
 
+        public void EnableInputs(bool enabled)
+        {
+            deviceMapper?.EnableInputs(enabled);
+        }
+
         public void Dispose()
         {
             Dispose(true);

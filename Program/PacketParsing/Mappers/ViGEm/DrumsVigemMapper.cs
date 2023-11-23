@@ -42,10 +42,7 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
 
             HandleReport(device, drumReport, ref previousDpadCymbals, ref dpadMask);
-
-            // Send data
-            device.SubmitReport();
-            return XboxResult.Success;
+            return SubmitReport();
         }
 
         /// <summary>
