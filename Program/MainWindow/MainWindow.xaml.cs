@@ -266,7 +266,7 @@ namespace RB4InstrumentMapper
             startEnabled &= !pcapBold;
 
             // Emulation type must be selected
-            bool emulationTypeSelected = BackendSettings.MapperMode != 0;
+            bool emulationTypeSelected = BackendSettings.MapperMode != MappingMode.NotSet;
             controllerDeviceTypeLabel.FontWeight = !emulationTypeSelected &&
                 controllerDeviceTypeLabel.IsEnabled ? FontWeights.Bold : FontWeights.Normal;
             startEnabled &= emulationTypeSelected;
@@ -557,7 +557,7 @@ namespace RB4InstrumentMapper
                     {
                         // Reset device type selection
                         // Setting this fires off the handler again, no extra handling is needed
-                        BackendSettings.MapperMode = 0;
+                        BackendSettings.MapperMode = MappingMode.NotSet;
                         controllerDeviceTypeCombo.SelectedIndex = -1;
                         return;
                     }
@@ -572,7 +572,7 @@ namespace RB4InstrumentMapper
                     {
                         // Reset device type selection
                         // Setting this fires off the handler again, no extra handling is needed
-                        BackendSettings.MapperMode = 0;
+                        BackendSettings.MapperMode = MappingMode.NotSet;
                         controllerDeviceTypeCombo.SelectedIndex = -1;
                         return;
                     }
@@ -580,7 +580,7 @@ namespace RB4InstrumentMapper
 
                 case ControllerType.None:
                 default:
-                    BackendSettings.MapperMode = 0;
+                    BackendSettings.MapperMode = MappingMode.NotSet;
                     break;
             }
 

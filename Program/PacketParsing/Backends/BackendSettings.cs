@@ -2,6 +2,7 @@ namespace RB4InstrumentMapper.Parsing
 {
     public enum MappingMode
     {
+        NotSet = 0,
         ViGEmBus = 1,
         vJoy = 2
     }
@@ -14,7 +15,7 @@ namespace RB4InstrumentMapper.Parsing
         /// <summary>
         /// The controller emulator to use.
         /// </summary>
-        public static MappingMode MapperMode { get; set; }
+        public static MappingMode MapperMode { get; set; } = MappingMode.NotSet;
 
         /// <summary>
         /// Whether or not packets should be logged to the console.

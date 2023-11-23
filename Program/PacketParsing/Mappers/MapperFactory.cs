@@ -111,6 +111,8 @@ namespace RB4InstrumentMapper.Parsing
                     if (mapper != null && !VjoyClient.AreDevicesAvailable)
                         PacketLogging.PrintMessage("vJoy device limit reached, no new devices will be handled.");
                     break;
+                case MappingMode.NotSet:
+                    throw new InvalidOperationException("Mapping mode is not set! Cannot create mapper.");
                 default:
                     throw new NotImplementedException($"Unhandled mapping mode {mode}!");
             }
