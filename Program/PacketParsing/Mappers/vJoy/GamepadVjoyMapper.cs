@@ -31,7 +31,7 @@ namespace RB4InstrumentMapper.Parsing
 
         private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
-            if (!MemoryMarshal.TryRead(data, out XboxGamepadInput gamepadReport))
+            if (!ParsingUtils.TryRead(data, out XboxGamepadInput gamepadReport))
                 return XboxResult.InvalidMessage;
 
             HandleReport(ref state, gamepadReport);

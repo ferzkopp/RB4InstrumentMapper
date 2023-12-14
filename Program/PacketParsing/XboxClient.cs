@@ -156,7 +156,7 @@ namespace RB4InstrumentMapper.Parsing
             if (Arrival.SerialNumber != 0)
                 return XboxResult.Success;
 
-            if (!MemoryMarshal.TryRead(data, out XboxArrival arrival))
+            if (!ParsingUtils.TryRead(data, out XboxArrival arrival))
                 return XboxResult.InvalidMessage;
 
             PacketLogging.PrintMessage($"New client connected with ID {arrival.SerialNumber:X12}");
@@ -171,7 +171,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         private unsafe XboxResult HandleStatus(ReadOnlySpan<byte> data)
         {
-            if (!MemoryMarshal.TryRead(data, out XboxStatus status))
+            if (!ParsingUtils.TryRead(data, out XboxStatus status))
                 return XboxResult.InvalidMessage;
 
             if (!status.Connected)

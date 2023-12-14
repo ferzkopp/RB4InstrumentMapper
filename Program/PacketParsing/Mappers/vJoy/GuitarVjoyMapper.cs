@@ -29,7 +29,7 @@ namespace RB4InstrumentMapper.Parsing
 
         private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
-            if (!MemoryMarshal.TryRead(data, out XboxGuitarInput guitarReport))
+            if (!ParsingUtils.TryRead(data, out XboxGuitarInput guitarReport))
                 return XboxResult.InvalidMessage;
 
             HandleReport(ref state, guitarReport);

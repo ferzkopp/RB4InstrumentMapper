@@ -67,7 +67,7 @@ namespace RB4InstrumentMapper.Parsing
                 throw new ArgumentNullException(nameof(data));
 
             // Descriptor header size
-            if (!MemoryMarshal.TryRead(data, out ushort headerSize))
+            if (!ParsingUtils.TryRead(data, out ushort headerSize))
             {
                 Debug.Fail($"Couldn't parse descriptor header size!  Buffer size: {data.Length}, element size: {sizeof(ushort)}");
                 return false;
@@ -81,7 +81,7 @@ namespace RB4InstrumentMapper.Parsing
             }
 
             // Descriptor header
-            if (!MemoryMarshal.TryRead(data, out Header header))
+            if (!ParsingUtils.TryRead(data, out Header header))
             {
                 Debug.Fail($"Couldn't parse descriptor header!  Buffer size: {data.Length}, header size: {headerSize}");
                 return false;
@@ -97,7 +97,7 @@ namespace RB4InstrumentMapper.Parsing
             data = data.Slice(header.HeaderLength);
 
             // Data offsets
-            if (!MemoryMarshal.TryRead(data, out Offsets offsets))
+            if (!ParsingUtils.TryRead(data, out Offsets offsets))
             {
                 Debug.Fail($"Couldn't parse descriptor offsets!  Buffer size: {data.Length}, offsets size: {sizeof(Offsets)}");
                 return false;
@@ -193,7 +193,7 @@ namespace RB4InstrumentMapper.Parsing
             for (byte index = 0; index < count; index++)
             {
                 // Get length
-                if (!MemoryMarshal.TryRead(buffer, out ushort length))
+                if (!ParsingUtils.TryRead(buffer, out ushort length))
                 {
                     set.TrimExcess();
                     break;

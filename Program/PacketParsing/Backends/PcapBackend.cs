@@ -108,7 +108,7 @@ namespace RB4InstrumentMapper.Parsing
             // Split header and packet data, and read header out
             var headerData = packet.Data.Slice(0, sizeof(QoSHeader));
             var packetData = packet.Data.Slice(sizeof(QoSHeader));
-            if (!MemoryMarshal.TryRead(packet.Data, out QoSHeader header))
+            if (!ParsingUtils.TryRead(packet.Data, out QoSHeader header))
             {
                 return;
             }

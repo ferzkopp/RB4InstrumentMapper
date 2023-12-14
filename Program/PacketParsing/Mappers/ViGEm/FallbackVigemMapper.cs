@@ -27,7 +27,7 @@ namespace RB4InstrumentMapper.Parsing
 
                 case XboxGHLGuitarInput.CommandId:
                     // Deliberately limit to the exact size
-                    if (data.Length != sizeof(XboxGHLGuitarInput) || !MemoryMarshal.TryRead(data, out XboxGHLGuitarInput guitarReport))
+                    if (data.Length != sizeof(XboxGHLGuitarInput) || !ParsingUtils.TryRead(data, out XboxGHLGuitarInput guitarReport))
                         return XboxResult.InvalidMessage;
 
                     GHLGuitarVigemMapper.HandleReport(device, guitarReport);
@@ -45,16 +45,16 @@ namespace RB4InstrumentMapper.Parsing
 
         private unsafe XboxResult ParseInput(ReadOnlySpan<byte> data)
         {
-            if (data.Length == sizeof(XboxGuitarInput) && MemoryMarshal.TryRead(data, out XboxGuitarInput guitarReport))
+            if (data.Length == sizeof(XboxGuitarInput) && ParsingUtils.TryRead(data, out XboxGuitarInput guitarReport))
             {
                 GuitarVigemMapper.HandleReport(device, guitarReport);
             }
-            else if (data.Length == sizeof(XboxDrumInput) && MemoryMarshal.TryRead(data, out XboxDrumInput drumReport))
+            else if (data.Length == sizeof(XboxDrumInput) && ParsingUtils.TryRead(data, out XboxDrumInput drumReport))
             {
                 DrumsVigemMapper.HandleReport(device, drumReport, ref previousDpadCymbals, ref dpadMask);
             }
 #if DEBUG
-            else if (data.Length == sizeof(XboxGamepadInput) && MemoryMarshal.TryRead(data, out XboxGamepadInput gamepadReport))
+            else if (data.Length == sizeof(XboxGamepadInput) && ParsingUtils.TryRead(data, out XboxGamepadInput gamepadReport))
             {
                 GamepadVigemMapper.HandleReport(device, gamepadReport);
             }

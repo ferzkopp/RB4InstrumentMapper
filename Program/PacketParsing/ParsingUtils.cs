@@ -1,5 +1,6 @@
 using System;
-using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace RB4InstrumentMapper.Parsing
 {
@@ -28,6 +29,21 @@ namespace RB4InstrumentMapper.Parsing
             stringBuffer = stringBuffer.Slice(0, stringBuffer.Length - 1);
 
             return stringBuffer.ToString();
+        }
+
+        // Re-implementation of MemoryMarshal.TryRead without the references check,
+        // since we have the unmanaged constraint
+        public static bool TryRead<T>(ReadOnlySpan<byte> source, out T value)
+            where T : unmanaged
+        {
+            if (source.Length < Unsafe.SizeOf<T>())
+            {
+                Unsafe.SkipInit(out value);
+                return false;
+            }
+
+            value = Unsafe.ReadUnaligned<T>(ref MemoryMarshal.GetReference(source));
+            return true;
         }
 
         /// <summary>
