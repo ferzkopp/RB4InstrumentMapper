@@ -38,8 +38,7 @@ namespace RB4InstrumentMapper.Parsing
 
         private unsafe XboxResult HandleInput(ReadOnlySpan<byte> data)
         {
-            if (data.Length < sizeof(XboxWirelessLegacyInputHeader) ||
-                !MemoryMarshal.TryRead(data, out XboxWirelessLegacyInputHeader header))
+            if (!MemoryMarshal.TryRead(data, out XboxWirelessLegacyInputHeader header))
                 return XboxResult.InvalidMessage;
 
             // Find the mapper for the given user index
@@ -73,8 +72,7 @@ namespace RB4InstrumentMapper.Parsing
 
         private unsafe XboxResult HandleDisconnection(ReadOnlySpan<byte> data)
         {
-            if (data.Length < sizeof(XboxWirelessLegacyDeviceDisconnect) ||
-                !MemoryMarshal.TryRead(data, out XboxWirelessLegacyDeviceDisconnect disconnect))
+            if (!MemoryMarshal.TryRead(data, out XboxWirelessLegacyDeviceDisconnect disconnect))
                 return XboxResult.InvalidMessage;
 
             // Find the mapper for the given user index

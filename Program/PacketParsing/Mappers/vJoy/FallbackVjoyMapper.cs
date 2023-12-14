@@ -27,6 +27,7 @@ namespace RB4InstrumentMapper.Parsing
                     return ParseInput(data);
 
                 case XboxGHLGuitarInput.CommandId:
+                    // Deliberately limit to the exact size
                     if (data.Length != sizeof(XboxGHLGuitarInput) || !MemoryMarshal.TryRead(data, out XboxGHLGuitarInput guitarReport))
                         return XboxResult.InvalidMessage;
 
