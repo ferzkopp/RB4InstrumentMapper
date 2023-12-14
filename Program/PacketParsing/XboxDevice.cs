@@ -13,10 +13,15 @@ namespace RB4InstrumentMapper.Parsing
 
     internal enum XboxResult
     {
+        /// <summary>The packet was processed successfully.</summary>
         Success,
+        /// <summary>More packet data is incoming and needs to be received.</summary>
         Pending,
+        /// <summary>The device was disconnected.</summary>
         Disconnected,
+        /// <summary>The packet contains an invalid message.</summary>
         InvalidMessage,
+        /// <summary>The device being connected is not supported.</summary>
         UnsupportedDevice,
     }
 
