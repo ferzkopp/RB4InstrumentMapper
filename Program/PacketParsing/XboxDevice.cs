@@ -19,6 +19,8 @@ namespace RB4InstrumentMapper.Parsing
         Pending,
         /// <summary>The device was disconnected.</summary>
         Disconnected,
+        /// <summary>The device was reconnected without a disconnection message.</summary>
+        Reconnected,
         /// <summary>The packet contains an invalid message.</summary>
         InvalidMessage,
         /// <summary>The device being connected is not supported.</summary>
@@ -113,6 +115,8 @@ namespace RB4InstrumentMapper.Parsing
                         clients.Remove(header.Client);
                         PacketLogging.PrintMessage($"Client {client.Arrival.SerialNumber:X12} disconnected");
                         break;
+                    case XboxResult.Reconnected:
+                        return clientResult;
                     default:
                         PacketLogging.PrintVerboseError($"Error handling message: {clientResult}");
                         break;

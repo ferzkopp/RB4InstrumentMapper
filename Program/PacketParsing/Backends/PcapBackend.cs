@@ -143,6 +143,7 @@ namespace RB4InstrumentMapper.Parsing
 
             try
             {
+            retry:
                 var result = device.HandlePacket(xboxPacket);
                 switch (result)
                 {
@@ -151,6 +152,14 @@ namespace RB4InstrumentMapper.Parsing
                         devices.Remove(deviceId);
                         PacketLogging.PrintMessage($"Device with ID {deviceId:X12} was disconnected");
                         break;
+
+                    case XboxResult.Reconnected:
+                        device.Dispose();
+                        devices.Remove(deviceId);
+                        device = new XboxDevice(BackendSettings.MapperMode, BackendType.Pcap);
+                        devices.Add(deviceId, device);
+                        PacketLogging.PrintMessage($"Device with ID {deviceId:X12} was reconnected");
+                        goto retry;
 
                     case XboxResult.UnsupportedDevice:
                         device.Dispose();

@@ -32,6 +32,8 @@ namespace RB4InstrumentMapper.Parsing
 
         private DeviceMapper deviceMapper;
 
+        private bool receivedFirstMessage;
+
         private readonly Dictionary<byte, byte> previousReceiveSequence = new Dictionary<byte, byte>();
         private readonly Dictionary<byte, byte> previousSendSequence = new Dictionary<byte, byte>();
         private readonly Dictionary<byte, XboxChunkBuffer> chunkBuffers = new Dictionary<byte, XboxChunkBuffer>()
@@ -108,24 +110,32 @@ namespace RB4InstrumentMapper.Parsing
             previousReceiveSequence[header.CommandId] = header.SequenceCount;
 
             // System commands are handled directly
+            XboxResult result;
             if ((header.Flags & XboxCommandFlags.SystemCommand) != 0)
-                return HandleSystemCommand(header.CommandId, commandData);
-
-            // Non-system commands are handled by the mapper
-            if (deviceMapper == null)
             {
-                deviceMapper = MapperFactory.GetFallbackMapper(this);
+                result = HandleSystemCommand(header.CommandId, commandData);
+            }
+            else
+            {
+                // Non-system commands are handled by the mapper
                 if (deviceMapper == null)
                 {
-                    // No more devices available, do nothing
-                    return XboxResult.Success;
+                    deviceMapper = MapperFactory.GetFallbackMapper(this);
+                    if (deviceMapper == null)
+                    {
+                        // No more devices available, do nothing
+                        return XboxResult.Success;
+                    }
+
+                    PacketLogging.PrintMessage("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
+                    PacketLogging.PrintMessage("Reconnect it (or hit Start before connecting it) to ensure correct behavior.");
                 }
 
-                PacketLogging.PrintMessage("Warning: This device was not encountered during its initial connection! It will use the fallback mapper instead of one specific to its device interface.");
-                PacketLogging.PrintMessage("Reconnect it (or hit Start before connecting it) to ensure correct behavior.");
+                result = deviceMapper.HandleMessage(header.CommandId, commandData);
             }
 
-            return deviceMapper.HandleMessage(header.CommandId, commandData);
+            receivedFirstMessage = true;
+            return result;
         }
 
         private XboxResult HandleSystemCommand(byte commandId, ReadOnlySpan<byte> commandData)
@@ -158,6 +168,11 @@ namespace RB4InstrumentMapper.Parsing
 
             if (!ParsingUtils.TryRead(data, out XboxArrival arrival))
                 return XboxResult.InvalidMessage;
+
+            // If we didn't receive the arrival as the first message, the device was likely reconnected
+            // This happens when removing the batteries to turn off wireless controllers
+            if (receivedFirstMessage)
+                return XboxResult.Reconnected;
 
             PacketLogging.PrintMessage($"New client connected with ID {arrival.SerialNumber:X12}");
             Arrival = arrival;
