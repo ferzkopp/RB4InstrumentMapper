@@ -12,7 +12,6 @@ namespace RB4InstrumentMapper.Parsing
 
         public ushort Buttons;
         public byte UserIndex;
-
-        private byte unknown;
+        public XboxWirelessLegacyDeviceType DeviceType;
     }
 }

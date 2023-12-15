@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace RB4InstrumentMapper.Parsing
 {
@@ -10,8 +8,14 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal class WirelessLegacyMapper : DeviceMapper
     {
+        private struct SubMapper
+        {
+            public XboxWirelessLegacyDeviceType DeviceType;
+            public DeviceMapper Mapper;
+        }
+
         // Mappers are not guaranteed to be created for each device, unknown subtypes will be ignored and have none
-        private readonly Dictionary<byte, DeviceMapper> mappers = new Dictionary<byte, DeviceMapper>();
+        private readonly Dictionary<byte, SubMapper> mappers = new Dictionary<byte, SubMapper>();
 
         public WirelessLegacyMapper(XboxClient client)
             : base(client)
@@ -43,14 +47,21 @@ namespace RB4InstrumentMapper.Parsing
 
             // Find the mapper for the given user index
             byte userIndex = header.UserIndex;
-            if (!mappers.TryGetValue(userIndex, out var mapper))
+            if (!mappers.TryGetValue(userIndex, out var subMapper))
             {
                 PacketLogging.PrintVerboseError($"Missing mapper for wireless legacy user index {userIndex}!");
                 return XboxResult.InvalidMessage;
             }
 
+            // Verify the device type
+            if (subMapper.DeviceType != header.DeviceType)
+            {
+                PacketLogging.PrintVerboseError($"Wrong input type for wireless legacy user index {userIndex}! Expected {subMapper.DeviceType}, got {header.DeviceType}");
+                return XboxResult.InvalidMessage;
+            }
+
             data = data.Slice(sizeof(XboxWirelessLegacyInputHeader));
-            return mapper?.HandleMessage(XboxWirelessLegacyInputHeader.CommandId, data) ?? XboxResult.Success;
+            return subMapper.Mapper?.HandleMessage(XboxWirelessLegacyInputHeader.CommandId, data) ?? XboxResult.Success;
         }
 
         private XboxResult HandleConnection(ReadOnlySpan<byte> data)
@@ -60,13 +71,13 @@ namespace RB4InstrumentMapper.Parsing
 
             // Find the mapper for the given user index
             byte userIndex = connect.UserIndex;
-            if (mappers.TryGetValue(userIndex, out var mapper))
+            if (mappers.TryGetValue(userIndex, out var subMapper))
             {
                 PacketLogging.PrintVerboseError($"Mapper already exists for legacy adapter user index {userIndex}! Overwriting.");
-                mapper?.Dispose();
+                subMapper.Mapper?.Dispose();
             }
 
-            mappers[userIndex] = GetMapperForDevice(connect);
+            mappers[userIndex] = new SubMapper() { DeviceType = connect.DeviceType, Mapper = GetMapperForDevice(connect) };
             return XboxResult.Success;
         }
 
@@ -77,22 +88,22 @@ namespace RB4InstrumentMapper.Parsing
 
             // Find the mapper for the given user index
             byte userIndex = disconnect.UserIndex;
-            if (!mappers.TryGetValue(userIndex, out var mapper))
+            if (!mappers.TryGetValue(userIndex, out var subMapper))
             {
                 PacketLogging.PrintVerboseError($"Missing mapper for legacy adapter user index {userIndex}!");
                 return XboxResult.InvalidMessage;
             }
 
-            mapper?.Dispose();
+            subMapper.Mapper?.Dispose();
             mappers.Remove(userIndex);
             return XboxResult.Success;
         }
 
         public override XboxResult HandleKeystroke(XboxKeystroke key)
         {
-            foreach (var mapper in mappers.Values)
+            foreach (var subMapper in mappers.Values)
             {
-                var result = mapper.HandleKeystroke(key);
+                var result = subMapper.Mapper.HandleKeystroke(key);
                 if (result != XboxResult.Success)
                     return result;
             }
@@ -105,41 +116,34 @@ namespace RB4InstrumentMapper.Parsing
 
         public override void ResetReport()
         {
-            foreach (var mapper in mappers.Values)
+            foreach (var subMapper in mappers.Values)
             {
-                mapper.ResetReport();
+                subMapper.Mapper.ResetReport();
             }
         }
 
         public override void EnableInputs(bool enabled)
         {
             base.EnableInputs(enabled);
-            foreach (var mapper in mappers.Values)
+            foreach (var subMapper in mappers.Values)
             {
-                mapper.EnableInputs(enabled);
+                subMapper.Mapper.EnableInputs(enabled);
             }
         }
 
         private DeviceMapper GetMapperForDevice(XboxWirelessLegacyDeviceConnect connect)
         {
-            var subtype = connect.DeviceSubtype;
-            switch (subtype)
+            var type = connect.DeviceType;
+            switch (type)
             {
-#if DEBUG
-                case XInputDeviceSubtype.Gamepad:
-                    return MapperFactory.GetGamepadMapper(client);
-#endif
-
-                case XInputDeviceSubtype.Guitar:
-                case XInputDeviceSubtype.GuitarAlternate:
-                case XInputDeviceSubtype.GuitarBass:
+                case XboxWirelessLegacyDeviceType.Guitar:
                     return MapperFactory.GetGuitarMapper(client);
 
-                case XInputDeviceSubtype.Drums:
-                    return MapperFactory.GetGuitarMapper(client);
+                case XboxWirelessLegacyDeviceType.Drums:
+                    return MapperFactory.GetDrumsMapper(client);
 
                 default:
-                    PacketLogging.PrintMessage($"User index {connect.UserIndex + 1} on the legacy adapter has an unsupported subtype ({subtype})!");
+                    PacketLogging.PrintMessage($"User index {connect.UserIndex + 1} on the legacy adapter has an unsupported device type {type} (XInput subtype {connect.XInputSubType})!");
                     PacketLogging.PrintMessage("If you think it should be supported, restart capture with packet logging to a file enabled, go through all of the inputs, and create a GitHub issue with the log file attached.");
                     return null;
             }
@@ -147,9 +151,9 @@ namespace RB4InstrumentMapper.Parsing
 
         protected override void DisposeManagedResources()
         {
-            foreach (var mapper in mappers.Values)
+            foreach (var subMapper in mappers.Values)
             {
-                mapper.Dispose();
+                subMapper.Mapper.Dispose();
             }
 
             mappers.Clear();

@@ -5,6 +5,15 @@ using System.Runtime.InteropServices;
 namespace RB4InstrumentMapper.Parsing
 {
     /// <summary>
+    /// Possible device types for the wireless legacy adapter.
+    /// </summary>
+    internal enum XboxWirelessLegacyDeviceType : byte
+    {
+        Guitar = 1,
+        Drums = 2,
+    }
+
+    /// <summary>
     /// Possible subtypes for XInput devices.
     /// </summary>
     internal enum XInputDeviceSubtype : byte
@@ -35,15 +44,16 @@ namespace RB4InstrumentMapper.Parsing
         public const int MinimumLength = 6;
 
         public byte UserIndex;
+        public XboxWirelessLegacyDeviceType DeviceType;
 
-        public byte DeviceType;
         private ushort vendorId; // big-endian
         private byte unknown;
-        private byte deviceSubtype;
+        private byte xinputSubype;
+
         private fixed char name[124];
 
         public ushort VendorId => (ushort)((vendorId & 0xFF) << 8 | (vendorId & 0xFF00) >> 8);
-        public XInputDeviceSubtype DeviceSubtype => (XInputDeviceSubtype)(deviceSubtype & 0x7F);
+        public XInputDeviceSubtype XInputSubType => (XInputDeviceSubtype)(xinputSubype & 0x7F);
 
         public static bool TryParse(ReadOnlySpan<byte> buffer, out XboxWirelessLegacyDeviceConnect connectInfo)
         {
