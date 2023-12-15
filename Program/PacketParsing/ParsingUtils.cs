@@ -9,7 +9,7 @@ namespace RB4InstrumentMapper.Parsing
     /// </summary>
     internal static class ParsingUtils
     {
-        public static string ToString(ReadOnlySpan<byte> buffer)
+        public static string ToHexString(ReadOnlySpan<byte> buffer)
         {
             const string characters = "0123456789ABCDEF";
 
@@ -29,6 +29,60 @@ namespace RB4InstrumentMapper.Parsing
             stringBuffer = stringBuffer.Slice(0, stringBuffer.Length - 1);
 
             return stringBuffer.ToString();
+        }
+
+        public static bool TryParseBytesFromHexString(ReadOnlySpan<char> input, out byte[] bytes)
+        {
+            bytes = null;
+            if (input.IsEmpty)
+                return false;
+
+            // Determine number of bytes based on character count
+            input.Trim(); // All whitespace must be removed for count to be correct
+            int charCount = input.Length + 1; // + 1 to account for removed '-'
+            int byteCount = Math.DivRem(charCount, 3, out int remainder);
+            if (remainder != 0)
+                return false;
+
+            bytes = new byte[byteCount];
+            for (int i = 0; i < byteCount; i++)
+            {
+                int inputIndex = i * 3;
+                if (!HexCharToNumber(input[inputIndex], out byte upper) ||
+                    !HexCharToNumber(input[inputIndex + 1], out byte lower))
+                    return false;
+
+                bytes[i] = (byte)((upper << 4) | (lower & 0x0F));
+
+                // Verify that '-' is present
+                int dashIndex = inputIndex + 2;
+                if (dashIndex < input.Length)
+                {
+                    char dashChar = input[dashIndex];
+                    if (dashChar != '-' && dashChar != ' ')
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool HexCharToNumber(char c, out byte b)
+        {
+            uint value = (uint)c - '0';
+            if (value > 0x0F)
+            {
+                const uint AsciiLowercaseFlag = 0x20;
+                value = (c | AsciiLowercaseFlag) - 'a' + 0x0A;
+                if (value > 0x0F)
+                {
+                    b = 0;
+                    return false;
+                }
+            }
+
+            b = (byte)value;
+            return true;
         }
 
         // Re-implementation of MemoryMarshal.TryRead without the references check,

@@ -164,7 +164,7 @@ namespace RB4InstrumentMapper.Parsing
             // Detect length sequences longer than 4 bytes
             if ((value & 0x80) != 0)
             {
-                Debug.Fail($"Variable-length value is greater than 4 bytes! Buffer: {ParsingUtils.ToString(data)}");
+                Debug.Fail($"Variable-length value is greater than 4 bytes! Buffer: {ParsingUtils.ToHexString(data)}");
                 byteLength = 0;
                 result = 0;
                 return false;
