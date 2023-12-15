@@ -13,6 +13,7 @@ namespace RB4InstrumentMapper
     {
         private const string WinUsbOption = "--winusb";
         private const string RevertOption = "--revert";
+        private const string ReplayOption = "--replay";
 
         [STAThread]
         public static int Main(string[] args)
@@ -31,18 +32,19 @@ namespace RB4InstrumentMapper
                 return -1;
             }
 
-            // We're swapping the driver of a USB device
-            // This has to be done through a new process, since a process can't change its privelege level
             string type = args[0];
-            string deviceInstance = args[1];
+            string path = args[1];
             int exitCode;
             switch (type)
             {
                 case WinUsbOption:
-                    exitCode = WinUsbBackend.SwitchDeviceToWinUSB(deviceInstance) ? 0 : -1;
+                    exitCode = WinUsbBackend.SwitchDeviceToWinUSB(path) ? 0 : -1;
                     break;
                 case RevertOption:
-                    exitCode = WinUsbBackend.RevertDevice(deviceInstance) ? 0 : -1;
+                    exitCode = WinUsbBackend.RevertDevice(path) ? 0 : -1;
+                    break;
+                case ReplayOption:
+                    exitCode = ReplayBackend.ReplayLog(path) ? 0 : -1;
                     break;
                 default:
                     Console.WriteLine($"Invalid option '{type}'!");

@@ -9,6 +9,7 @@ namespace RB4InstrumentMapper.Parsing
     {
         Pcap,
         Usb,
+        Replay,
     }
 
     internal enum XboxResult
