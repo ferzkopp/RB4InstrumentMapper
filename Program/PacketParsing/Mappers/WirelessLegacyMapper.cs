@@ -60,6 +60,8 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
             }
 
+            // Slice off the header and pass the rest of the data to the mapper
+            // The data afterwards has its own copy of the button mask, so we don't need to do anything else
             data = data.Slice(sizeof(XboxWirelessLegacyInputHeader));
             return subMapper.Mapper?.HandleMessage(XboxWirelessLegacyInputHeader.CommandId, data) ?? XboxResult.Success;
         }
@@ -69,7 +71,7 @@ namespace RB4InstrumentMapper.Parsing
             if (!XboxWirelessLegacyDeviceConnect.TryParse(data, out var connect))
                 return XboxResult.InvalidMessage;
 
-            // Find the mapper for the given user index
+            // Check if a mapper already exists for the given user index
             byte userIndex = connect.UserIndex;
             if (mappers.TryGetValue(userIndex, out var subMapper))
             {
@@ -77,6 +79,7 @@ namespace RB4InstrumentMapper.Parsing
                 subMapper.Mapper?.Dispose();
             }
 
+            // Add a new mapper for the device
             mappers[userIndex] = new SubMapper() { DeviceType = connect.DeviceType, Mapper = GetMapperForDevice(connect) };
             return XboxResult.Success;
         }
@@ -94,6 +97,7 @@ namespace RB4InstrumentMapper.Parsing
                 return XboxResult.InvalidMessage;
             }
 
+            // Remove the mapper
             subMapper.Mapper?.Dispose();
             mappers.Remove(userIndex);
             return XboxResult.Success;
