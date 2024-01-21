@@ -142,7 +142,7 @@ namespace RB4InstrumentMapper.Parsing
             => new GamepadVigemMapper(client);
 
         private static DeviceMapper VjoyGamepadMapper(XboxClient client)
-            => new GamepadVigemMapper(client);
+            => new GamepadVjoyMapper(client);
 #endif
 
         public static DeviceMapper GetGuitarMapper(XboxClient client)
@@ -152,7 +152,7 @@ namespace RB4InstrumentMapper.Parsing
             => new GuitarVigemMapper(client);
 
         private static DeviceMapper VjoyGuitarMapper(XboxClient client)
-            => new GuitarVigemMapper(client);
+            => new GuitarVjoyMapper(client);
 
         public static DeviceMapper GetDrumsMapper(XboxClient client)
             => GetMapper(client, VigemDrumsMapper, VjoyDrumsMapper);
@@ -161,7 +161,7 @@ namespace RB4InstrumentMapper.Parsing
             => new DrumsVigemMapper(client);
 
         private static DeviceMapper VjoyDrumsMapper(XboxClient client)
-            => new DrumsVigemMapper(client);
+            => new DrumsVjoyMapper(client);
 
         public static DeviceMapper GetGHLGuitarMapper(XboxClient client)
             => GetMapper(client, VigemGHLGuitarMapper, VjoyGHLGuitarMapper);
@@ -170,7 +170,7 @@ namespace RB4InstrumentMapper.Parsing
             => new GHLGuitarVigemMapper(client);
 
         private static DeviceMapper VjoyGHLGuitarMapper(XboxClient client)
-            => new GHLGuitarVigemMapper(client);
+            => new GHLGuitarVjoyMapper(client);
 
         public static DeviceMapper GetWirelessLegacyMapper(XboxClient client)
         {
@@ -186,6 +186,6 @@ namespace RB4InstrumentMapper.Parsing
             => new FallbackVigemMapper(client);
 
         private static DeviceMapper VjoyFallbackMapper(XboxClient client)
-            => new FallbackVigemMapper(client);
+            => new FallbackVjoyMapper(client);
     }
 }
