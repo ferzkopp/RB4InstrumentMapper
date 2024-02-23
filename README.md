@@ -1,113 +1,178 @@
 ﻿# RB4InstrumentMapper
 
-A utility that connects up to three Xbox One Rock Band 4 instruments (2 guitars and 1 drumkit) for use in [Clone Hero](https://clonehero.net/).
+A program that maps packets from Xbox One instrument peripherals to virtual controllers, for use in games such as [Clone Hero](https://clonehero.net/).
 
-![RB4InstrumentMapper Application Screenshot](/Docs/Images/ProgramScreenshot.png "RB4InstrumentMapper Application Screenshot")
+![RB4InstrumentMapper main menu](/Docs/Images/ProgramScreenshot.png "RB4InstrumentMapper main menu")
 
-Almost all features for guitars and drums are supported.
+All Xbox One instruments are supported (RB4 guitars/drums, GHL guitar), along with the RB4 wireless legacy adapter.
 
+## Table of Contents
 
+- [Requirements](#requirements)
+  - [Software](#software)
+  - [Hardware](#hardware)
+- [Installation](#installation)
+  - [Wireless Devices (Pcap)](#wireless-devices-pcap)
+  - [Wired Devices (USB)](#wired-devices-usb)
+  - [Controller Emulation Driver](#controller-emulation-driver)
+- [Usage](#usage)
+  - [Wireless Devices (Pcap)](#wireless-devices-pcap-1)
+  - [Wired Devices (USB)](#wired-devices-usb-1)
+  - [Starting the program](#starting-the-program)
+  - [Mapping your controls in Clone Hero](#mapping-your-controls-in-clone-hero)
+- [Packet Logs](#packet-logs)
+- [Error Logs](#error-logs)
+- [References](#references)
+- [Building](#building)
+- [License](#license)
 
 ## Requirements
 
-- Xbox One Wireless Receiver
-- Xbox One RB4 Guitars (up to 2)
-  - For Jaguar guitars, you will need to install a [firmware update](https://bit.ly/2UHzonU).
-- Xbox One RB4 Drums
-  - Note that PDP drums don't seem to work, they turn off after syncing to the receiver.
-- Windows 10 64-bit
-- Npcap in WinPcap compatibility mode, or WinPcap
-- USBPcap
-- vJoy or ViGEmBus
+### Software
+
+- Windows 10/11 64-bit
+- [WinPCap](https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe) (for wireless peripherals)
+- [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest) or [vJoy](https://github.com/jshafer817/vJoy/releases/latest)
+
+### Hardware
+
+- Xbox One wireless receiver (for wireless peripherals)
+  - This is *not* the same as Xbox 360 wireless receivers! You must get an Xbox One (or just "Xbox") receiver, such as [this one](https://amzn.to/2W7qQbt). Third-party receivers are untested, and they will not be deliberately supported.
 
 ## Installation
 
-1. Install [WinPCap](https://www.winpcap.org/install/default.htm) (recommended), or [Npcap](https://nmap.org/npcap/#download) in WinPCap compatibility mode.
-   - Make sure you only install one or the other. Installing both at the same time may cause issues.
-2. Install [USBPCap](https://desowin.org/usbpcap/).
-3. Install [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest) (recommended) or [vJoy](https://github.com/jshafer817/vJoy/releases/latest).
-   - If you installed vJoy, configure it:
-     1. Open your Start menu, find the `vJoy` folder, and open the `Configure vJoy` program inside it.
-     2. Configure devices 1, 2, and 3 with these settings:
-        - Number of Buttons: 16
-        - POV Hat Switch: Continuous, POVs: 1
-        - Axes: `X`, `Y`, `Z`
-     3. Click Apply.<!-- Backslash for a forced hard line break -->\
+### Wireless Devices (Pcap)
+
+Rock Band 4 guitars and drumkits, connected through an Xbox One receiver. This section of setup is not required if you will only be using USB devices.
+
+Install [WinPCap](https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe). This will be used to capture packets from the Xbox One receiver.
+
+*Note that the Guitar Hero Live guitar is not considered a wireless device to RB4InstrumentMapper, as its dongle acts as a wired device. See the section below for setup.*
+
+### Wired Devices (USB)
+
+Rock Band 4 wireless legacy adapter, Guitar Hero Live guitar/dongle. This section of setup is not required if you will only be using wireless devices through an Xbox One receiver.
+
+No additional software installation is needed for USB devices. However, you will need to install the WinUSB driver on each device you wish to use; covered later.
+
+### Controller Emulation Driver
+
+This is the part that allows RB4InstrumentMapper to send inputs based on the packets it receives. It is required for both wired and wireless devices.
+
+- Both of these can be installed simultaneously if desired, however RB4InstrumentMapper will only use one of them at a time.
+- Option 1: [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest)
+  - Recommended, as it requires no configuration and is significantly easier to use. All device outputs will match those of their Xbox 360 counterparts.
+- Option 2: [vJoy](https://github.com/jshafer817/vJoy/releases/latest)
+  - Supported as an alternative to ViGEmBus, in case of issues. Requires some setup:
+  1. Download and install vJoy.
+  2. After installing, open your Start menu, find the `vJoy` folder, and open the `Configure vJoy` program inside it.
+  3. Configure one device for each one of your controllers, using these settings:
+     - Number of Buttons: 16
+     - POV Hat Switch: Continuous, POVs: 1
+     - Axes: `X`, `Y`, `Z`
+
      ![vJoy Configuration Screenshot](/Docs/Images/vJoyConfiguration.png "vJoy Configuration Screenshot")
-   - If you installed ViGEmBus, there's no configuration required. Outputs for guitars and drums will match that of their Xbox 360 counterparts.
-4. Restart your PC.
-5. Download the latest release from the [Releases tab](https://github.com/ferzkopp/RB4InstrumentMapper/releases/latest) and install it.
-6. Install Pcap.Net dependencies
-   - [Microsoft Visual C++ 2010 Service Pack 1 Redistributable Package MFC Security Update](https://www.microsoft.com/en-us/download/details.aspx?id=26999)
-   - [Visual C++ Redistributable Packages for Visual Studio 2013 ](https://www.microsoft.com/en-us/download/details.aspx?id=40784)
+
+  4. Click Apply.
+
+### Jaguar Guitar Firmware Update
+
+Jaguar guitars require a firmware update in order to connect to Xbox One receivers.
+
+- [Instructions](https://bit.ly/2UHzonU)
+- [CH wiki re-host](https://wiki.clonehero.net/link/61), in case the above link goes down again
 
 ## Usage
 
-1. Configure the selected Pcap device:
-   - Click the `Auto-Detect Pcap` button and follow its instructions.
-   - If that doesn't work, then if you installed WinPcap, try installing Npcap instead, or vice versa.
-2. Configure the selected controller device for each guitar and drumkit:
-   - If you installed vJoy:
-     - Pick one of the vJoy devices that you configured for each instrument you will be using.
-   - If you installed ViGEmBus:
-     - Pick the `ViGEmBus Device` item in the dropdown for each instrument you will be using. One emulated Xbox 360 controller will be created for each instrument that has this selected.
-3. Connect your instruments if you haven't yet.
-4. Assign the instrument ID for each instrument:
-   - Click the `Auto-Detect ID` button next to each ID field.
-     - Guitars should auto-detect automatically as they are constantly sending packets. Retry if duplicate IDs were detected (and rejected).
-     - Drums require an action such as a button press on the instrument you are assigning within 2 seconds after 'Auto-Detect' was clicked.
-5. Click the Start button.
-   - Note: launch *joy.cpl* to check Controller inputs.
-6. Map the controls for each instrument in Clone Hero:
-   1. Press Space on the main menu.
-   2. Click the Assign Controller button and do an action on the instrument to be assigned.
-   3. Click the slots in the Controller column to map the controls for one of the instruments.
-   4. Repeat for Player 2 and 3.
-   5. Click `Done`.
+### Wireless Devices (Pcap)
 
-Selections and IDs are saved and should persist across program sessions.
+- Ensure the `Enable` checkbox under the Pcap group is checked.
+- Select your Xbox One receiver from the dropdown menu.
+  - Xbox receivers should be detected automatically. If they are not, click the `Auto-Detect Pcap` button and follow its instructions.
+- **Do not connect your instruments yet!** Hit the Start button first, or else devices may not function correctly.
+  - A best effort is made for devices connected before starting, but correct behavior cannot be ensured for them.
+- After hitting Start, connect your instruments. They will be picked up and mapped automatically as long as the program is running.
+
+Some guitars/drumkits might not sync properly when using just the sync button. This includes the PDP drumkit and occasionally the Jaguar guitar. Follow these steps to sync your device correctly:
+
+1. Go to Windows settings > Devices > Bluetooth & other devices
+2. Click `Add Bluetooth or other device` and pick the `Everything else` option.
+3. Press and hold the sync button until the Xbox button light flashes quickly.
+4. Select `Xbox compatible game controller` from the list once it appears.
+5. If that doesn't work, restart your PC and try again.
+
+### Wired Devices (USB)
+
+You will need to install the WinUSB driver onto each device you wish to use. **RB4InstrumentMapper is capable of doing this directly, through the `Configure Devices` button on its main menu.** However, if you run into any issues, there is an [alternative method](#alternate-winusb-install-instructions) of installing this driver.
+
+![Configure Devices example](/Docs/Images/ConfigureDevices.png "Configure Devices example")
+
+- Ensure the `Enable` checkbox under the USB group is checked.
+- **Ensure you have installed WinUSB on the devices you want to use! They will not be recognized otherwise!**
+  - You can do this easily by hitting the `Configure Devices` button under the USB group.
+- Devices will be detected automatically as they are connected/removed, though they will not be mapped until you hit Start.
+
+### Starting the program
+
+Select either ViGEmBus or vJoy in the Controller Type dropdown, then hit the Start button. Devices will be picked up and mapped automatically until you hit Stop or close the program.
+
+### Mapping your controls in Clone Hero
+
+Now that the program is running, map your controls for each instrument in Clone Hero:
+
+1. Press Space on the main menu.
+2. Click Assign Controller and press a button on the device for it to be assigned.
+3. Click the slots in the Controller column to map each of the controls.
+4. Repeat for each connected device.
+5. Click `Done`.
+
+## Packet Logs
+
+RB4InstrumentMapper is capable of logging packets to a file for debugging purposes. To do so, enable both the `Show Packets (for debugging)` and `Log packets to file` checkboxes, then hit Start. Packet logs get saved to a `RB4InstrumentMapper` > `PacketLogs` folder inside your Documents folder. Make sure to include it when getting help or creating an issue report for packet parsing issues.
+
+Note that these settings are meant for debugging purposes only, leaving them enabled can reduce the performance of the program somewhat.
 
 ## Error Logs
 
-In the case that the program crashes, an error log is saved to a `RB4InstrumentMapper` > `Logs` folder inside your Documents folder. Make sure to include it when creating an issue report for a crash or when getting help for a crash.
+In the case that the program crashes, an error log is saved to a `RB4InstrumentMapper` > `Logs` folder inside your Documents folder. Make sure to include it when getting help or creating an issue report for the crash.
 
-## Other Versions
+## Alternate WinUSB Install Instructions
 
-A fork of this code with an updated interface, 64bit version and other improvements is available at: https://github.com/TheNathannator/RB4InstrumentMapper
+RB4InstrumentMapper is capable of installing the WinUSB driver on Xbox One devices directly, through the `Configure Devices` button on its main menu. However, if you run into any issues with it, this method of installing the driver will work as an alternative.
+
+1. Download [Zadig](https://zadig.akeo.ie/) and run it.
+2. Under Options, select `List All Devices`.
+3. Select your device, then change the box to the right of the green/orange arrow to the `WinUSB` driver. Things should look like the example below:
+
+   ![Zadig example](/Docs/Images/Zadig.png "Zadig example")
+
+4. Hit `Replace Driver`, and repeat for any additional peripherals you wish to use.
+
+To undo this process, press Windows + X and select `Device Manager`, then find the device under the `Universal Serial Bus devices` category (*not `Universal Serial Bus controllers`*), right-click it and hit Uninstall, and check the checkbox that says `Uninstall driver software for this device.`.
+
+***DO NOT INSTALL THE DRIVER ON YOUR XBOX ONE RECEIVER!!!*** RB4InstrumentMapper is not capable of handling it in this state, and it will become nonfunctional until you uninstall the device in Device Manager!
+
+## Building
+
+To build this program, you will need:
+
+- Visual Studio, or MSBuild/[the .NET SDK](https://dotnet.microsoft.com/en-us/download) + your code editor of choice.
+- [WiX Toolset v4](https://wixtoolset.org/) if you wish to build the installer.
 
 ## References
+
+Predecessors:
 
 - [GuitarSniffer repository](https://github.com/artman41/guitarsniffer)
 - [DrumSniffer repository](https://github.com/Dunkalunk/guitarsniffer)
 
-Packet Data:
+Packet data:
 
 - [GuitarSniffer guitar packet logs](https://1drv.ms/f/s!AgQGk0OeTMLwhA-uDO9IQHEHqGhv)
 - GuitarSniffer guitar packet spreadsheets: [New](https://docs.google.com/spreadsheets/d/1ITZUvRniGpfS_HV_rBpSwlDdGukc3GC1CeOe7SavQBo/edit?usp=sharing), [Old](https://1drv.ms/x/s!AgQGk0OeTMLwg3GBDXFUC3Erj4Wb)
-- See [PacketFormats.md](PacketFormats.md) for a breakdown of the known packet data.
-
-## Build Tools
-
-Compile was done with Visual Studio 2019 Community edition.
-
-Installer was created using the following tools:
-
-- https://wixtoolset.org/
-  - https://wixtoolset.org/releases/v3.11.2/stable
-  - https://marketplace.visualstudio.com/items?itemName=WixToolset.WixToolsetVisualStudio2019Extension
-  - https://marketplace.visualstudio.com/items?itemName=TomEnglert.Wax
+- [rb4.app's Javascript source](https://rb4.app/js/app.js)
+- Original research, found in the [PlasticBand documentation repository](https://github.com/TheNathannator/PlasticBand).
 
 ## License
 
-Copyright (c) 2021 Andreas Schiffler
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), 
-to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-IN THE SOFTWARE.
+This program is licensed under the MIT license. See [LICENSE](LICENSE) for details.

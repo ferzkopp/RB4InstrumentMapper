@@ -1,24 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product
-    Id="*"
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package
     Name="RB4InstrumentMapper"
     Language="1033"
-    Version="1.22.0.0"
+    Version="4.0.4.0"
     Manufacturer="Andreas Schiffler"
-    UpgradeCode="94bef546-701f-4571-9828-d4fa39b2ea84">
-    
-    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+    UpgradeCode="94bef546-701f-4571-9828-d4fa39b2ea84"
+    InstallerVersion="200"
+    Scope="perMachine">
 
-    <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
-    
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+      DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
     <MediaTemplate EmbedCab="yes"/>
 
     <?define ResourcesDir = $(sys.CURRENTDIR)Resources\?>
     <Icon Id="FILE_Iconico" SourceFile="$(var.ResourcesDir)Icon.ico"/>
     <Property Id="ARPPRODUCTICON" Value="FILE_Iconico" />
 
-    <UIRef Id="WixUI_Minimal" />
+    <ui:WixUI Id="WixUI_Minimal" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.ResourcesDir)license.rtf" />
     <WixVariable Id="WixUIDialogBmp" Value="$(var.ResourcesDir)dialog.bmp" />
     <WixVariable Id="WixUIBannerBmp" Value="$(var.ResourcesDir)banner.bmp" />
@@ -26,42 +26,67 @@
     <Feature Id="ProductFeature" Title="MsiInstaller" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
       <ComponentRef Id="DesktopShortcut" />
+      <ComponentRef Id="StartMenuShortcut" />
     </Feature>
-  </Product>
+  </Package>
 
   <Fragment>
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLFOLDER" Name="RB4InstrumentMapper" />
-      </Directory>
-      <Directory Id="DesktopFolder" Name="Desktop" />
-    </Directory>
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="RB4InstrumentMapper" />
+    </StandardDirectory>
+    <StandardDirectory Id="DesktopFolder" />
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="RB4InstrumentMapper" />
+    </StandardDirectory>
   </Fragment>
   
   <Fragment>
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-      <?define BinariesDir = $(sys.CURRENTDIR)..\bin\x64\Release\?>
+      <?define BinariesDir = $(sys.CURRENTDIR)..\Program\bin\x64\Release\net472\?>
+      <Component Id="COMP_MicrosoftWin32Registrydll" Guid="0284DF1B-411B-45D5-A88A-267BFA7C6EBA">
+        <File Id="FILE_MicrosoftWin32Registrydll" Name="Microsoft.Win32.Registry.dll" Source="$(var.BinariesDir)Microsoft.Win32.Registry.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_NefariusDriversWinUSBdll" Guid="649361B1-8752-453B-B547-87E486249F59">
+        <File Id="FILE_NefariusDriversWinUSBdll" Name="Nefarius.Drivers.WinUSB.dll" Source="$(var.BinariesDir)Nefarius.Drivers.WinUSB.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_NefariusUtilitiesDeviceManagementdll" Guid="CA6FC63B-FF62-4296-A5BA-EE36B3DC2EF7">
+        <File Id="FILE_NefariusUtilitiesDeviceManagementdll" Name="Nefarius.Utilities.DeviceManagement.dll" Source="$(var.BinariesDir)Nefarius.Utilities.DeviceManagement.dll" KeyPath="yes" />
+      </Component>
       <Component Id="COMP_NefariusViGEmClientdll" Guid="04BB3091-EA32-4F10-8F2B-7BA22FF8309A">
         <File Id="FILE_NefariusViGEmClientdll" Name="Nefarius.ViGEm.Client.dll" Source="$(var.BinariesDir)Nefarius.ViGEm.Client.dll" KeyPath="yes" />
       </Component>
-      <Component Id="COMP_PcapDotNetBasedll" Guid="6A914948-A7EF-4A9D-BC33-7C9915A3ED32">
-        <File Id="FILE_PcapDotNetBasedll" Name="PcapDotNet.Base.dll" Source="$(var.BinariesDir)PcapDotNet.Base.dll" KeyPath="yes" />
-      </Component>
-      <Component Id="COMP_PcapDotNetCoredll" Guid="23E885D9-CD4C-4BCA-84F0-3D3369C3C035">
-        <File Id="FILE_PcapDotNetCoredll" Name="PcapDotNet.Core.dll" Source="$(var.BinariesDir)PcapDotNet.Core.dll" KeyPath="yes" />
-      </Component>
-      <Component Id="COMP_PcapDotNetCoreExtensionsdll" Guid="BBB69010-18C6-4AB4-8F2E-15257DC7433F">
-        <File Id="FILE_PcapDotNetCoreExtensionsdll" Name="PcapDotNet.Core.Extensions.dll" Source="$(var.BinariesDir)PcapDotNet.Core.Extensions.dll" KeyPath="yes" />
-      </Component>
-      <Component Id="COMP_PcapDotNetPacketsdll" Guid="C43DDB63-9F8E-4843-BFE9-0E60FC34B561">
-        <File Id="FILE_PcapDotNetPacketsdll" Name="PcapDotNet.Packets.dll" Source="$(var.BinariesDir)PcapDotNet.Packets.dll" KeyPath="yes" />
+      <Component Id="COMP_PacketDotNetdll" Guid="BA4A1B0F-9DE7-47C5-8F00-8C246EACFE03">
+        <File Id="FILE_PacketDotNetdll" Name="PacketDotNet.dll" Source="$(var.BinariesDir)PacketDotNet.dll" KeyPath="yes" />
       </Component>
       <Component Id="COMP_RB4InstrumentMapperexe" Guid="4D1C894A-DA1B-4C6F-AB06-0A89DE716835">
-        <File Id="FILE_RB4InstrumentMapperexe" Name="RB4InstrumentMapper.exe" Source="$(var.BinariesDir)RB4InstrumentMapper.exe" KeyPath="yes" >
-        </File>
+        <File Id="FILE_RB4InstrumentMapperexe" Name="RB4InstrumentMapper.exe" Source="$(var.BinariesDir)RB4InstrumentMapper.exe" KeyPath="yes" />
       </Component>
       <Component Id="COMP_RB4InstrumentMapperexeconfig" Guid="5DB2E840-D3B5-4B9D-AEF9-523A8C8CD09C">
         <File Id="FILE_RB4InstrumentMapperexeconfig" Name="RB4InstrumentMapper.exe.config" Source="$(var.BinariesDir)RB4InstrumentMapper.exe.config" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_SharpPcapdll" Guid="C0C8FEE8-8DD2-4CB4-B6E1-4EACE930B682">
+        <File Id="FILE_SharpPcapdll" Name="SharpPcap.dll" Source="$(var.BinariesDir)SharpPcap.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_SystemBuffersdll" Guid="7F40011E-7E13-4756-AB3D-C8805C1014E9">
+        <File Id="FILE_SystemBuffersdll" Name="System.Buffers.dll" Source="$(var.BinariesDir)System.Buffers.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_SystemMemorydll" Guid="EB825758-667F-4D27-9CC3-AB7FAAC423F9">
+        <File Id="FILE_SystemMemorydll" Name="System.Memory.dll" Source="$(var.BinariesDir)System.Memory.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_SystemNumericsVectorsdll" Guid="60F548E8-3F05-4046-BC55-07BA456DA02D">
+        <File Id="FILE_SystemNumericsVectorsdll" Name="System.Numerics.Vectors.dll" Source="$(var.BinariesDir)System.Numerics.Vectors.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_SystemRuntimeCompilerServicesUnsafedll" Guid="57876592-7661-4C2D-AB23-2FAD5BAACCF7">
+        <File Id="FILE_SystemRuntimeCompilerServicesUnsafedll" Name="System.Runtime.CompilerServices.Unsafe.dll" Source="$(var.BinariesDir)System.Runtime.CompilerServices.Unsafe.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_SystemSecurityAccessControldll" Guid="A55B55DF-DB95-4507-8944-27F966665656">
+        <File Id="FILE_SystemSecurityAccessControldll" Name="System.Security.AccessControl.dll" Source="$(var.BinariesDir)System.Security.AccessControl.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_SystemSecurityPrincipalWindowsdll" Guid="0E99BF08-F7AB-4623-9D6D-B62CC4B4E014">
+        <File Id="FILE_SystemSecurityPrincipalWindowsdll" Name="System.Security.Principal.Windows.dll" Source="$(var.BinariesDir)System.Security.Principal.Windows.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="COMP_SystemTextEncodingCodePagesdll" Guid="E21C634A-1279-4BB1-8194-DFAE5DA5CD23">
+        <File Id="FILE_SystemTextEncodingCodePagesdll" Name="System.Text.Encoding.CodePages.dll" Source="$(var.BinariesDir)System.Text.Encoding.CodePages.dll" KeyPath="yes" />
       </Component>
       <Component Id="COMP_vJoyInterfacedll" Guid="CB9CA948-3098-44B6-B5DA-3807C6C1CA97">
         <File Id="FILE_vJoyInterfacedll" Name="vJoyInterface.dll" Source="$(var.BinariesDir)vJoyInterface.dll" KeyPath="yes" />
@@ -73,6 +98,7 @@
   </Fragment>
 
   <Fragment>
+    <Icon Id="Icon.ico" SourceFile="$(var.ResourcesDir)Icon.ico" />
     <Component Id="DesktopShortcut" Directory="INSTALLFOLDER" Guid="BC673EF6-B5A1-4AA3-BAC4-EC0BAEBB6B98">
       <RegistryValue Id="RegShortcutDesktop"
               Root="HKCU"
@@ -87,9 +113,30 @@
               Directory="DesktopFolder"
               Icon="Icon.ico"
               Name="RB4InstrumentMapper"
-              Advertise="no" >
-        <Icon Id="Icon.ico" SourceFile="$(var.ResourcesDir)Icon.ico" />
-      </Shortcut>
+              Advertise="no" />
+      <RemoveFile Id="RemoveDesktopShortcut"
+              Directory="DesktopFolder"
+              Name="RB4InstrumentMapper"
+              On="uninstall" />
+    </Component>
+    <Component Id="StartMenuShortcut" Directory="INSTALLFOLDER" Guid="9E3ED7F2-4298-4334-9936-BC9983EEBAC7">
+      <RegistryValue Id="RegShortcutStartMenu"
+              Root="HKCU"
+              Key="Software\AndreasSchiffler\RB4InstrumentMapper"
+              Name="StartMenuShortcut"
+              Type="integer"
+              Value="1"
+              KeyPath="yes" />
+      <Shortcut Id="StartMenuShortcut"
+              Target="[INSTALLFOLDER]RB4InstrumentMapper.exe"
+              WorkingDirectory="INSTALLFOLDER"
+              Directory="ApplicationProgramsFolder"
+              Icon="Icon.ico"
+              Name="RB4InstrumentMapper"
+              Advertise="no" />
+      <RemoveFolder Id="RemoveStartMenuShortcut"
+              Directory="ApplicationProgramsFolder"
+              On="uninstall" />
     </Component>
   </Fragment>
 
