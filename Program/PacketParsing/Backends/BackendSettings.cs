@@ -4,7 +4,8 @@ namespace RB4InstrumentMapper.Parsing
     {
         NotSet = 0,
         ViGEmBus = 1,
-        vJoy = 2
+        vJoy = 2,
+        RPCS3 = 3,
     }
 
     /// <summary>

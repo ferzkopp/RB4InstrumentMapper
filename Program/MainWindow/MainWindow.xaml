@@ -39,6 +39,7 @@
                 <ComboBox x:Name="controllerDeviceTypeCombo" Height="30" Width="160" VerticalAlignment="Bottom" HorizontalAlignment="Left" SelectionChanged="controllerDeviceTypeCombo_SelectionChanged">
                     <ComboBoxItem x:Name="vjoyDeviceTypeOption" Content="vJoy" IsEnabled="False"/>
                     <ComboBoxItem x:Name="vigemDeviceTypeOption" Content="ViGEmBus" IsEnabled="False"/>
+                    <ComboBoxItem x:Name="rpcs3DeviceTypeOption" Content="ViGEmBus (RPCS3 compatibility)" IsEnabled="False"/>
                 </ComboBox>
                 <Button x:Name="startButton" Content="Start" FontSize="18" Width="250" VerticalAlignment="Stretch" HorizontalAlignment="Right" IsEnabled="False" Click="startButton_Click"/>
                 <CheckBox x:Name="packetDebugCheckBox" Content="Show packets (for debugging)" Height="22" Width="180" Margin="175,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Checked="packetDebugCheckBox_CheckedChanged" Unchecked="packetDebugCheckBox_CheckedChanged"/>

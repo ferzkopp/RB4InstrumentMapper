@@ -95,7 +95,8 @@ namespace RB4InstrumentMapper.Parsing
             }
         }
 
-        private static DeviceMapper GetMapper(XboxClient client, CreateMapper createVigem, CreateMapper createVjoy)
+        private static DeviceMapper GetMapper(XboxClient client, CreateMapper createVigem, CreateMapper createVjoy,
+            CreateMapper createRpcs3)
         {
             DeviceMapper mapper;
             bool devicesAvailable;
@@ -105,6 +106,11 @@ namespace RB4InstrumentMapper.Parsing
             {
                 case MappingMode.ViGEmBus:
                     mapper = VigemClient.AreDevicesAvailable ? createVigem(client) : null;
+                    devicesAvailable = VigemClient.AreDevicesAvailable;
+                    break;
+
+                case MappingMode.RPCS3:
+                    mapper = VigemClient.AreDevicesAvailable ? createRpcs3(client) : null;
                     devicesAvailable = VigemClient.AreDevicesAvailable;
                     break;
 
@@ -133,7 +139,9 @@ namespace RB4InstrumentMapper.Parsing
             PacketLogging.PrintMessage("Warning: Gamepads are only supported in debug mode for testing purposes, they will not work in release builds.");
             return GetMapper(client,
                 (c) => new GamepadVigemMapper(c),
-                (c) => new GamepadVjoyMapper(c)
+                (c) => new GamepadVjoyMapper(c),
+                // No RPCS3 mapper, as this is for testing only
+                (c) => new GamepadVigemMapper(c)
             );
 #else
             // Don't log a message if connected over Pcap, as they're most likely not trying to use it with the program
@@ -145,17 +153,21 @@ namespace RB4InstrumentMapper.Parsing
 
         public static DeviceMapper GetGuitarMapper(XboxClient client) => GetMapper(client,
             (c) => new GuitarVigemMapper(c),
-            (c) => new GuitarVjoyMapper(c)
+            (c) => new GuitarVjoyMapper(c),
+            (c) => new GuitarRPCS3Mapper(c)
         );
 
         public static DeviceMapper GetDrumsMapper(XboxClient client) => GetMapper(client,
             (c) => new DrumsVigemMapper(c),
-            (c) => new DrumsVjoyMapper(c)
+            (c) => new DrumsVjoyMapper(c),
+            (c) => new DrumsRPCS3Mapper(c)
         );
 
         public static DeviceMapper GetGHLGuitarMapper(XboxClient client) => GetMapper(client,
             (c) => new GHLGuitarVigemMapper(c),
-            (c) => new GHLGuitarVjoyMapper(c)
+            (c) => new GHLGuitarVjoyMapper(c),
+            // No mapping differences between RPCS3 and ViGEm modes
+            (c) => new GHLGuitarVigemMapper(c)
         );
 
         public static DeviceMapper GetWirelessLegacyMapper(XboxClient client)
@@ -167,7 +179,8 @@ namespace RB4InstrumentMapper.Parsing
 
         public static DeviceMapper GetFallbackMapper(XboxClient client) => GetMapper(client,
             (c) => new FallbackVigemMapper(c),
-            (c) => new FallbackVjoyMapper(c)
+            (c) => new FallbackVjoyMapper(c),
+            (c) => new FallbackRPCS3Mapper(c)
         );
     }
 }

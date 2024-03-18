@@ -109,6 +109,14 @@ namespace RB4InstrumentMapper.Parsing
         }
 
         /// <summary>
+        /// Scales a byte to a short, starting from 0 and spanning only the positive end.
+        /// </summary>
+        public static short ScaleToInt16Positive(this byte input)
+        {
+            return (short)((input << 7) | (input >> 1));
+        }
+
+        /// <summary>
         /// Scales a byte to an unsigned short.
         /// </summary>
         public static ushort ScaleToUInt16(this byte input)

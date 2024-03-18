@@ -52,7 +52,8 @@ namespace RB4InstrumentMapper
         {
             None = -1,
             vJoy = 0,
-            ViGEmBus = 1
+            ViGEmBus = 1,
+            RPCS3 = 2
         }
 
         public MainWindow()
@@ -130,12 +131,15 @@ namespace RB4InstrumentMapper
             {
                 Console.WriteLine("ViGEmBus found!");
                 vigemDeviceTypeOption.IsEnabled = true;
+                rpcs3DeviceTypeOption.IsEnabled = true;
             }
             else
             {
                 Console.WriteLine("ViGEmBus not found. ViGEmBus selection will be unavailable.");
                 vigemDeviceTypeOption.IsEnabled = false;
                 vigemDeviceTypeOption.IsSelected = false;
+                rpcs3DeviceTypeOption.IsEnabled = false;
+                rpcs3DeviceTypeOption.IsSelected = false;
             }
 
             // Load backend settings
@@ -575,9 +579,28 @@ namespace RB4InstrumentMapper
                     }
                     break;
 
+                case ControllerType.RPCS3:
+                    if (rpcs3DeviceTypeOption.IsEnabled && VigemClient.Initialized)
+                    {
+                        BackendSettings.MapperMode = MappingMode.RPCS3;
+                    }
+                    else
+                    {
+                        // Reset device type selection
+                        // Setting this fires off the handler again, no extra handling is needed
+                        BackendSettings.MapperMode = MappingMode.NotSet;
+                        controllerDeviceTypeCombo.SelectedIndex = -1;
+                        return;
+                    }
+                    break;
+
                 case ControllerType.None:
+                    BackendSettings.MapperMode = MappingMode.NotSet;
+                    break;
+
                 default:
                     BackendSettings.MapperMode = MappingMode.NotSet;
+                        controllerDeviceTypeCombo.SelectedIndex = -1;
                     break;
             }
 
