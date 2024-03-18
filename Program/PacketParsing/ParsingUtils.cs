@@ -70,7 +70,7 @@ namespace RB4InstrumentMapper.Parsing
         private static bool HexCharToNumber(char c, out byte b)
         {
             uint value = (uint)c - '0';
-            if (value > 0x0F)
+            if (value > 9)
             {
                 const uint AsciiLowercaseFlag = 0x20;
                 value = (c | AsciiLowercaseFlag) - 'a' + 0x0A;
