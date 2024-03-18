@@ -27,10 +27,6 @@ namespace RB4InstrumentMapper.Parsing
             }
         }
 
-        // Constants for the d-pad masks
-        private const int yellowBit = 0x01;
-        private const int blueBit = 0x02;
-
         // The previous state of the yellow/blue cymbals
         private int previousDpadCymbals;
         // The current state of the d-pad mask from the hit yellow/blue cymbals
@@ -56,10 +52,7 @@ namespace RB4InstrumentMapper.Parsing
             device.SetButtonState(Xbox360Button.Back, (buttons & XboxGamepadButton.Options) != 0);
 
             // Dpad
-            device.SetButtonState(Xbox360Button.Up, (buttons & XboxGamepadButton.DpadUp) != 0);
-            device.SetButtonState(Xbox360Button.Down, (buttons & XboxGamepadButton.DpadDown) != 0);
-            device.SetButtonState(Xbox360Button.Left, (buttons & XboxGamepadButton.DpadLeft) != 0);
-            device.SetButtonState(Xbox360Button.Right, (buttons & XboxGamepadButton.DpadRight) != 0);
+            MapDpad(device, report, ref previousDpadCymbals, ref dpadMask);
 
             // Pads and cymbals
             byte redPad    = report.RedPad;
@@ -70,43 +63,6 @@ namespace RB4InstrumentMapper.Parsing
             byte yellowCym = report.YellowCymbal;
             byte blueCym   = report.BlueCymbal;
             byte greenCym  = report.GreenCymbal;
-
-            // Yellow and blue cymbal trigger d-pad up and down respectively on the RB2/3 kit we're emulating
-            // However, they only trigger one or the other, not both at the same time, so we need to mimic that
-            int cymbalMask = (yellowCym != 0 ? yellowBit : 0) | (blueCym != 0 ? blueBit : 0);
-            if (cymbalMask != previousDpadCymbals)
-            {
-                if (cymbalMask == 0)
-                    dpadMask = 0;
-
-                // This could probably be done more simply, but this works
-                if (dpadMask != 0)
-                {
-                    // D-pad is already set
-                    // Only remove the set value
-                    if ((cymbalMask & yellowBit) == 0)
-                        dpadMask &= ~yellowBit;
-                    else if ((cymbalMask & blueBit) == 0)
-                        dpadMask &= ~blueBit;
-                }
-
-                // Explicitly check this so that if the d-pad is cleared but the other cymbal is still active,
-                // it will get set to that cymbal's d-pad
-                if (dpadMask == 0)
-                {
-                    // D-pad is not set
-                    // If both cymbals are hit at the same time, yellow takes priority
-                    if ((cymbalMask & yellowBit) != 0)
-                        dpadMask |= yellowBit;
-                    else if ((cymbalMask & blueBit) != 0)
-                        dpadMask |= blueBit;
-                }
-
-                previousDpadCymbals = cymbalMask;
-            }
-
-            device.SetButtonState(Xbox360Button.Up, ((dpadMask & yellowBit) != 0) || ((buttons & XboxGamepadButton.DpadUp) != 0));
-            device.SetButtonState(Xbox360Button.Down, ((dpadMask & blueBit) != 0) || ((buttons & XboxGamepadButton.DpadDown) != 0));
 
             // Color flags
             device.SetButtonState(Xbox360Button.B, (redPad != 0) || ((buttons & XboxGamepadButton.B) != 0));
@@ -144,6 +100,52 @@ namespace RB4InstrumentMapper.Parsing
                 Xbox360Axis.RightThumbY,
                 ByteToVelocityNegative((byte)(greenPad | greenCym))
             );
+        }
+
+        internal static void MapDpad(IXbox360Controller device, in XboxDrumInput report, ref int previousDpadCymbals, ref int dpadMask)
+        {
+            const int yellowBit = 0x01;
+            const int blueBit = 0x02;
+
+            // Yellow and blue cymbal trigger d-pad up and down respectively on the RB2/3 kit we're emulating
+            // However, they only trigger one or the other, not both at the same time, so we need to mimic that
+            int cymbalMask = (report.YellowCymbal != 0 ? yellowBit : 0) | (report.BlueCymbal != 0 ? blueBit : 0);
+            if (cymbalMask != previousDpadCymbals)
+            {
+                if (cymbalMask == 0)
+                    dpadMask = 0;
+
+                // This could probably be done more simply, but this works
+                if (dpadMask != 0)
+                {
+                    // D-pad is already set
+                    // Only remove the set value
+                    if ((cymbalMask & yellowBit) == 0)
+                        dpadMask &= ~yellowBit;
+                    else if ((cymbalMask & blueBit) == 0)
+                        dpadMask &= ~blueBit;
+                }
+
+                // Explicitly check this so that if the d-pad is cleared but the other cymbal is still active,
+                // it will get set to that cymbal's d-pad
+                if (dpadMask == 0)
+                {
+                    // D-pad is not set
+                    // If both cymbals are hit at the same time, yellow takes priority
+                    if ((cymbalMask & yellowBit) != 0)
+                        dpadMask |= yellowBit;
+                    else if ((cymbalMask & blueBit) != 0)
+                        dpadMask |= blueBit;
+                }
+
+                previousDpadCymbals = cymbalMask;
+            }
+
+            var buttons = (XboxGamepadButton)report.Buttons;
+            device.SetButtonState(Xbox360Button.Up, ((dpadMask & yellowBit) != 0) || ((buttons & XboxGamepadButton.DpadUp) != 0));
+            device.SetButtonState(Xbox360Button.Down, ((dpadMask & blueBit) != 0) || ((buttons & XboxGamepadButton.DpadDown) != 0));
+            device.SetButtonState(Xbox360Button.Left, (buttons & XboxGamepadButton.DpadLeft) != 0);
+            device.SetButtonState(Xbox360Button.Right, (buttons & XboxGamepadButton.DpadRight) != 0);
         }
 
         private static short ByteToVelocity(byte value)
