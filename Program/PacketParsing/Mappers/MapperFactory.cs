@@ -98,29 +98,32 @@ namespace RB4InstrumentMapper.Parsing
         private static DeviceMapper GetMapper(XboxClient client, CreateMapper createVigem, CreateMapper createVjoy)
         {
             DeviceMapper mapper;
+            bool devicesAvailable;
+
             var mode = client.Parent.MappingMode;
             switch (mode)
             {
                 case MappingMode.ViGEmBus:
                     mapper = VigemClient.AreDevicesAvailable ? createVigem(client) : null;
-                    // Check if all devices have been used
-                    if (mapper != null && !VigemClient.AreDevicesAvailable)
-                        PacketLogging.PrintMessage("ViGEmBus device limit reached, no new devices will be handled.");
+                    devicesAvailable = VigemClient.AreDevicesAvailable;
                     break;
+
                 case MappingMode.vJoy:
                     mapper = VjoyClient.AreDevicesAvailable ? createVjoy(client) : null;
-                    // Check if all devices have been used
-                    if (mapper != null && !VjoyClient.AreDevicesAvailable)
-                        PacketLogging.PrintMessage("vJoy device limit reached, no new devices will be handled.");
+                    devicesAvailable = VjoyClient.AreDevicesAvailable;
                     break;
-                case MappingMode.NotSet:
-                    throw new InvalidOperationException("Mapping mode is not set! Cannot create mapper.");
+
                 default:
                     throw new NotImplementedException($"Unhandled mapping mode {mode}!");
             }
 
             if (mapper != null)
+            {
                 PacketLogging.PrintMessage($"Created new {mapper.GetType().Name}");
+                if (!devicesAvailable)
+                    PacketLogging.PrintMessage("Device limit reached, no new devices will be handled.");
+            }
+
             return mapper;
         }
 
@@ -128,7 +131,10 @@ namespace RB4InstrumentMapper.Parsing
         {
 #if DEBUG
             PacketLogging.PrintMessage("Warning: Gamepads are only supported in debug mode for testing purposes, they will not work in release builds.");
-            return GetMapper(client, VigemGamepadMapper, VjoyGamepadMapper);
+            return GetMapper(client,
+                (c) => new GamepadVigemMapper(c),
+                (c) => new GamepadVjoyMapper(c)
+            );
 #else
             // Don't log a message if connected over Pcap, as they're most likely not trying to use it with the program
             if (client.Parent.Backend == BackendType.Usb)
@@ -137,40 +143,20 @@ namespace RB4InstrumentMapper.Parsing
 #endif
         }
 
-#if DEBUG
-        private static DeviceMapper VigemGamepadMapper(XboxClient client)
-            => new GamepadVigemMapper(client);
+        public static DeviceMapper GetGuitarMapper(XboxClient client) => GetMapper(client,
+            (c) => new GuitarVigemMapper(c),
+            (c) => new GuitarVjoyMapper(c)
+        );
 
-        private static DeviceMapper VjoyGamepadMapper(XboxClient client)
-            => new GamepadVjoyMapper(client);
-#endif
+        public static DeviceMapper GetDrumsMapper(XboxClient client) => GetMapper(client,
+            (c) => new DrumsVigemMapper(c),
+            (c) => new DrumsVjoyMapper(c)
+        );
 
-        public static DeviceMapper GetGuitarMapper(XboxClient client)
-            => GetMapper(client, VigemGuitarMapper, VjoyGuitarMapper);
-
-        private static DeviceMapper VigemGuitarMapper(XboxClient client)
-            => new GuitarVigemMapper(client);
-
-        private static DeviceMapper VjoyGuitarMapper(XboxClient client)
-            => new GuitarVjoyMapper(client);
-
-        public static DeviceMapper GetDrumsMapper(XboxClient client)
-            => GetMapper(client, VigemDrumsMapper, VjoyDrumsMapper);
-
-        private static DeviceMapper VigemDrumsMapper(XboxClient client)
-            => new DrumsVigemMapper(client);
-
-        private static DeviceMapper VjoyDrumsMapper(XboxClient client)
-            => new DrumsVjoyMapper(client);
-
-        public static DeviceMapper GetGHLGuitarMapper(XboxClient client)
-            => GetMapper(client, VigemGHLGuitarMapper, VjoyGHLGuitarMapper);
-
-        private static DeviceMapper VigemGHLGuitarMapper(XboxClient client)
-            => new GHLGuitarVigemMapper(client);
-
-        private static DeviceMapper VjoyGHLGuitarMapper(XboxClient client)
-            => new GHLGuitarVjoyMapper(client);
+        public static DeviceMapper GetGHLGuitarMapper(XboxClient client) => GetMapper(client,
+            (c) => new GHLGuitarVigemMapper(c),
+            (c) => new GHLGuitarVjoyMapper(c)
+        );
 
         public static DeviceMapper GetWirelessLegacyMapper(XboxClient client)
         {
@@ -179,13 +165,9 @@ namespace RB4InstrumentMapper.Parsing
             return mapper;
         }
 
-        public static DeviceMapper GetFallbackMapper(XboxClient client)
-            => GetMapper(client, VigemFallbackMapper, VjoyFallbackMapper);
-
-        private static DeviceMapper VigemFallbackMapper(XboxClient client)
-            => new FallbackVigemMapper(client);
-
-        private static DeviceMapper VjoyFallbackMapper(XboxClient client)
-            => new FallbackVjoyMapper(client);
+        public static DeviceMapper GetFallbackMapper(XboxClient client) => GetMapper(client,
+            (c) => new FallbackVigemMapper(c),
+            (c) => new FallbackVjoyMapper(c)
+        );
     }
 }
