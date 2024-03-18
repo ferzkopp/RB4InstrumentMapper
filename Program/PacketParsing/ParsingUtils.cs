@@ -105,9 +105,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public static short ScaleToInt16(this byte input)
         {
-            // Duplicate the input value to the higher 8-bit regions by multiplying by a number with the
-            // first bit of each region set to 1, then XOR with the negative bit to make the range start from the negative end
-            return (short)((input * 0x0101) ^ 0x8000);
+            return (short)(((input ^ 0x80) << 8) | input);
         }
 
         /// <summary>
@@ -115,9 +113,7 @@ namespace RB4InstrumentMapper.Parsing
         /// </summary>
         public static ushort ScaleToUInt16(this byte input)
         {
-            // Duplicate the input value to the higher 8-bit regions by multiplying by a number with the
-            // first bit of each region set to 1
-            return (ushort)(input * 0x0101);
+            return (ushort)((input << 8) | input);
         }
     }
 }
