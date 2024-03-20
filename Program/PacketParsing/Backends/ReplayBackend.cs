@@ -31,7 +31,7 @@ namespace RB4InstrumentMapper.Parsing
             }
             else if (VjoyClient.Enabled)
             {
-                mappingMode = MappingMode.ViGEmBus;
+                mappingMode = MappingMode.vJoy;
             }
             else
             {
