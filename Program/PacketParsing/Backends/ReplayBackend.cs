@@ -49,7 +49,12 @@ namespace RB4InstrumentMapper.Parsing
                 if (device == null)
                     break;
 
-                var lineSpan = line.AsSpan().Trim();
+                // Remove any comments
+                int spanEnd = line.IndexOf("//");
+                if (spanEnd < 0)
+                    spanEnd = line.Length;
+
+                var lineSpan = line.AsSpan().Slice(0, spanEnd).Trim();
                 if (lineSpan.IsEmpty)
                     continue;
 
