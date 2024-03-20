@@ -80,7 +80,8 @@ namespace RB4InstrumentMapper.Parsing
             device.SetButtonState(Xbox360Button.RightShoulder, report.Tilt >= 0xD0);
             // Pickup Switch
             // Right stick Y instead of left trigger
-            device.SetAxisValue(Xbox360Axis.RightThumbY, report.PickupSwitch);
+            device.SetAxisValue(Xbox360Axis.RightThumbY,
+                GuitarVigemMapper.CalculatePickupSwitch(report.PickupSwitch).ScaleToInt16());
         }
     }
 }

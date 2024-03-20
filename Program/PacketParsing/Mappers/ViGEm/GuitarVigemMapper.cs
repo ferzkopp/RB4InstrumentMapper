@@ -68,7 +68,19 @@ namespace RB4InstrumentMapper.Parsing
             // Tilt
             device.SetAxisValue(Xbox360Axis.RightThumbY, report.Tilt.ScaleToInt16());
             // Pickup Switch
-            device.SetSliderValue(Xbox360Slider.LeftTrigger, report.PickupSwitch);
+            device.SetSliderValue(Xbox360Slider.LeftTrigger, CalculatePickupSwitch(report.PickupSwitch));
+        }
+
+        internal static byte CalculatePickupSwitch(byte rawValue)
+        {
+            // Fix up value to be 1-5
+            rawValue >>= 4;
+            rawValue++;
+
+            // Divide the range of a byte into 5 equal ranges,
+            // and use the midpoints of those ranges as the final values
+            const byte rangeDivision = byte.MaxValue / 5;
+            return (byte)((rangeDivision * rawValue) - (rangeDivision / 2));
         }
     }
 }
