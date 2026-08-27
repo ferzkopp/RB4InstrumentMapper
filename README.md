@@ -1,113 +1,325 @@
 ﻿# RB4InstrumentMapper
+[![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/TheNathannator/RB4InstrumentMapper/blob/main/README.md)
+[![es](https://img.shields.io/badge/lang-es-yellow.svg)](https://github.com/TheNathannator/RB4InstrumentMapper/blob/main/README.es.md)
 
-A utility that connects up to three Xbox One Rock Band 4 instruments (2 guitars and 1 drumkit) for use in [Clone Hero](https://clonehero.net/).
+A program that maps packets from Xbox One instrument peripherals to virtual controllers, for use in games such as [Clone Hero](https://clonehero.net/).
 
-![RB4InstrumentMapper Application Screenshot](/Docs/Images/ProgramScreenshot.png "RB4InstrumentMapper Application Screenshot")
+![RB4InstrumentMapper main menu](Docs/Images/Readme/program-screenshot.png "RB4InstrumentMapper main menu")
 
-Almost all features for guitars and drums are supported.
+All Xbox One instruments are supported (RB4 guitars/drums, GHL guitar), along with the RB4 wireless legacy adapter.
 
+## Table of Contents
 
-
-## Requirements
-
-- Xbox One Wireless Receiver
-- Xbox One RB4 Guitars (up to 2)
-  - For Jaguar guitars, you will need to install a [firmware update](https://bit.ly/2UHzonU).
-- Xbox One RB4 Drums
-  - Note that PDP drums don't seem to work, they turn off after syncing to the receiver.
-- Windows 10 64-bit
-- Npcap in WinPcap compatibility mode, or WinPcap
-- USBPcap
-- vJoy or ViGEmBus
+- [Installation](#installation)
+  - [ViGEmBus Setup](#vigembus-setup)
+  - [vJoy Setup](#vjoy-setup)
+- [Using Rock Band 4 Guitars and Drums](#using-rock-band-4-guitars-and-drums)
+  - [Setup](#setup)
+    - [Stratocaster, Jaguar, Drums](#stratocaster-jaguar-drums)
+    - [Riffmaster](#riffmaster)
+  - [Usage](#usage)
+    - [Having Sync Issues?](#having-sync-issues)
+- [Using Guitar Hero Live Guitars and RB4 Wireless Legacy Adapters](#using-guitar-hero-live-guitars-and-rb4-wireless-legacy-adapters)
+  - [Setup](#setup-1)
+  - [Usage](#usage-1)
+- [Mapping your Controls](#mapping-your-controls)
+  - [Clone Hero](#clone-hero)
+  - [YARG](#yarg)
+  - [GHWT: Definitive Edition](#ghwt-definitive-edition)
+  - [RPCS3](#rpcs3)
+- [Troubleshooting](#troubleshooting)
+  - [FAQs](#faqs)
+  - [Packet Logs](#packet-logs)
+  - [Error Logs](#error-logs)
+- [Advanced Usage](#advanced-usage)
+  - [Command-Line Interface](#command-line-interface)
+  - [Building](#building)
+    - [With MSBuild](#with-msbuild)
+    - [With the .NET SDK](#with-the-net-sdk)
+      - [Manually](#manually)
+      - [Build Script](#build-script)
+- [References](#references)
+- [License](#license)
 
 ## Installation
 
-1. Install [WinPCap](https://www.winpcap.org/install/default.htm) (recommended), or [Npcap](https://nmap.org/npcap/#download) in WinPCap compatibility mode.
-   - Make sure you only install one or the other. Installing both at the same time may cause issues.
-2. Install [USBPCap](https://desowin.org/usbpcap/).
-3. Install [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest) (recommended) or [vJoy](https://github.com/jshafer817/vJoy/releases/latest).
-   - If you installed vJoy, configure it:
-     1. Open your Start menu, find the `vJoy` folder, and open the `Configure vJoy` program inside it.
-     2. Configure devices 1, 2, and 3 with these settings:
-        - Number of Buttons: 16
-        - POV Hat Switch: Continuous, POVs: 1
-        - Axes: `X`, `Y`, `Z`
-     3. Click Apply.<!-- Backslash for a forced hard line break -->\
-     ![vJoy Configuration Screenshot](/Docs/Images/vJoyConfiguration.png "vJoy Configuration Screenshot")
-   - If you installed ViGEmBus, there's no configuration required. Outputs for guitars and drums will match that of their Xbox 360 counterparts.
-4. Restart your PC.
-5. Download the latest release from the [Releases tab](https://github.com/ferzkopp/RB4InstrumentMapper/releases/latest) and install it.
-6. Install Pcap.Net dependencies
-   - [Microsoft Visual C++ 2010 Service Pack 1 Redistributable Package MFC Security Update](https://www.microsoft.com/en-us/download/details.aspx?id=26999)
-   - [Visual C++ Redistributable Packages for Visual Studio 2013 ](https://www.microsoft.com/en-us/download/details.aspx?id=40784)
+1. Download and install RB4InstrumentMapper from [the Releases page](https://github.com/TheNathannator/RB4InstrumentMapper/releases).
+2. Download and set up [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest) or [vJoy](https://github.com/jshafer817/vJoy/releases/latest) using the guides below.
+   - ViGEmBus is recommended, as it is significantly easier to use and requires no configuration. vJoy is supported as an alternative on the off-chance you run into issues with ViGEmBus.
+   - Both can be installed simultaneously if desired, however RB4InstrumentMapper will only use one of them at a time.
 
-## Usage
+### ViGEmBus Setup
 
-1. Configure the selected Pcap device:
-   - Click the `Auto-Detect Pcap` button and follow its instructions.
-   - If that doesn't work, then if you installed WinPcap, try installing Npcap instead, or vice versa.
-2. Configure the selected controller device for each guitar and drumkit:
-   - If you installed vJoy:
-     - Pick one of the vJoy devices that you configured for each instrument you will be using.
-   - If you installed ViGEmBus:
-     - Pick the `ViGEmBus Device` item in the dropdown for each instrument you will be using. One emulated Xbox 360 controller will be created for each instrument that has this selected.
-3. Connect your instruments if you haven't yet.
-4. Assign the instrument ID for each instrument:
-   - Click the `Auto-Detect ID` button next to each ID field.
-     - Guitars should auto-detect automatically as they are constantly sending packets. Retry if duplicate IDs were detected (and rejected).
-     - Drums require an action such as a button press on the instrument you are assigning within 2 seconds after 'Auto-Detect' was clicked.
-5. Click the Start button.
-   - Note: launch *joy.cpl* to check Controller inputs.
-6. Map the controls for each instrument in Clone Hero:
-   1. Press Space on the main menu.
-   2. Click the Assign Controller button and do an action on the instrument to be assigned.
-   3. Click the slots in the Controller column to map the controls for one of the instruments.
-   4. Repeat for Player 2 and 3.
-   5. Click `Done`.
+1. Download and install [ViGEmBus](https://github.com/ViGEm/ViGEmBus/releases/latest).
+2. That's all.
 
-Selections and IDs are saved and should persist across program sessions.
+### vJoy Setup
 
-## Error Logs
+1. Download and install [vJoy](https://github.com/jshafer817/vJoy/releases/latest).
+2. After installing, open your Start menu, find the `vJoy` folder, and open the `Configure vJoy` program inside it.
+3. Configure one device for each one of your controllers, using these settings:
+   - Number of Buttons: 16
+   - POV Hat Switch: Continuous, POVs: 1
+   - Axes: `X`, `Y`, `Z`
 
-In the case that the program crashes, an error log is saved to a `RB4InstrumentMapper` > `Logs` folder inside your Documents folder. Make sure to include it when creating an issue report for a crash or when getting help for a crash.
+   ![vJoy configuration screenshot](Docs/Images/Readme/vjoy-configuration.png "vJoy configuration screenshot")
 
-## Other Versions
+4. Click Apply.
+5. You're all set up!
 
-A fork of this code with an updated interface, 64bit version and other improvements is available at: https://github.com/TheNathannator/RB4InstrumentMapper
+---
+
+## Using Rock Band 4 Guitars and Drums
+
+![Rock Band 4 Stratocaster](Docs/Images/Peripherals/rock-band-4-stratocaster.png "Rock Band 4 Stratocaster")
+![Rock Band 4 Jaguar](Docs/Images/Peripherals/rock-band-4-jaguar.png "Rock Band 4 Jaguar")
+![Rock Band 4 drumkit](Docs/Images/Peripherals/rock-band-4-drums.png "Rock Band 4 drumkit")
+![Riffmaster guitar](Docs/Images/Peripherals/riffmaster.png "Riffmaster guitar")
+
+*Note that RB4InstrumentMapper is NOT required to use guitars in Fortnite!*
+
+### Setup
+
+#### Stratocaster, Jaguar, Drums
+
+![Rock Band 4 Stratocaster](Docs/Images/Peripherals/rock-band-4-stratocaster.png "Rock Band 4 Stratocaster")
+![Rock Band 4 Jaguar](Docs/Images/Peripherals/rock-band-4-jaguar.png "Rock Band 4 Jaguar")
+![Rock Band 4 drumkit](Docs/Images/Peripherals/rock-band-4-drums.png "Rock Band 4 drumkit")
+
+For wireless Rock Band 4 guitars and drums, you will need an Xbox One wireless receiver. Both versions of the official one are shown here:
+
+![Xbox One receiver, original](Docs/Images/Peripherals/xbox-one-receiver-gen-1.png "Xbox One receiver, original")
+![Xbox One receiver, revision](Docs/Images/Peripherals/xbox-one-receiver-gen-2.png "Xbox One receiver, revision")
+
+- This is *not* the same as an Xbox 360 wireless receiver! You must get an Xbox One (or just "Xbox") receiver, as shown above.
+- Third-party receivers are untested, and they will not be deliberately supported.
+
+Additionally, Jaguar guitars ![Rock Band 4 Jaguar](Docs/Images/Peripherals/rock-band-4-jaguar-small.png "Rock Band 4 Jaguar") require a firmware update in order to connect to Xbox One receivers.
+
+- [Instructions](https://bit.ly/2UHzonU)
+- [Clone Hero wiki re-host](https://wiki.clonehero.net/link/61), in case the above link goes down again.
+
+#### Riffmaster
+
+![Riffmaster guitar](Docs/Images/Peripherals/riffmaster.png "Riffmaster guitar")
+
+For the Riffmaster, you will need its dedicated wireless dongle, pictured below:
+
+![Riffmaster dongle](Docs/Images/Peripherals/riffmaster-dongle-front.png "Riffmaster dongle")
+
+### Usage
+
+1. In the `Controller Emulation Mode` dropdown, select the controller emulation mode you want to use.
+
+   ![Controller emulation mode selection](Docs/Images/Readme/controller-emulation-mode.png)
+
+2. Hit the `Start` button to begin reading inputs.
+3. Connect your instruments. They will be picked up and read automatically until you hit `Stop` or close the program.
+   - Instruments can be connected before or after hitting Start, the ordering doesn't matter.
+4. [Map your controls in the game you'll be playing](#mapping-your-controls).
+
+#### Having Sync Issues?
+
+Some guitars/drumkits might not sync properly when using just the sync button. This includes the PDP drumkit and occasionally the Jaguar guitar. Follow these steps to sync your device correctly:
+
+1. Go to Windows settings > Devices > Bluetooth & other devices
+2. Click `Add Bluetooth or other device` and pick the `Everything else` option.
+3. Press and hold the sync button until the Xbox button light flashes quickly.
+4. Select `Xbox compatible game controller` from the list once it appears.
+5. If that doesn't work, restart your PC and try again.
+
+---
+
+## Using Guitar Hero Live Guitars and RB4 Wireless Legacy Adapters
+
+![Guitar Hero Live guitar](Docs/Images/Peripherals/guitar-hero-live-guitar.png "Guitar Hero Live guitar")
+![Rock Band 4 wireless legacy adapter](Docs/Images/Peripherals/rock-band-4-wireless-legacy.png "Rock Band 4 wireless legacy adapter")
+
+### Setup
+
+You will need to install the WinUSB driver onto the Guitar Hero Live dongle or Rock Band 4 wireless legacy adapter before using it. RB4InstrumentMapper is capable of doing this directly, through the `Configure Devices` button on its main menu:
+
+1. Click the `Configure Devices` button under the `USB` group.
+
+   ![USB enable checkbox](Docs/Images/Readme/usb-configure-button.png)
+
+2. Find the device you want to use on the left side of the menu.
+
+   ![WinUSB configuration, left side](Docs/Images/Readme/usb-configure-left.png)
+
+3. Click the `Switch Driver` button and wait for it to switch the driver. The device will show up on the right side of the menu once it's done.
+
+   ![WinUSB configuration, right side](Docs/Images/Readme/usb-configure-right.png)
+
+   - Note that games that natively support the device will no longer work directly with it until you uninstall the WinUSB driver. Hit the `Revert Driver` button on the device to do so, after which those games will work with it again.
+
+If you run into any issues with this process, you may try [installing the driver manually](Docs/WinUSB/manual-winusb-install.md). This is not recommended for normal use, it should only be used if the Configure Devices menu is not working.
+- This also covers [uninstalling manually](Docs/WinUSB/manual-winusb-install.md#remove-winusb), in case a device gets stuck with the driver installed and RB4InstrumentMapper stops picking it up.
+
+### Usage
+
+1. **Ensure you have [installed WinUSB](#setup-1) on the devices you want to use! They will not be recognized otherwise!**
+2. In the `Controller Emulation Mode` dropdown, select the controller emulation mode you want to use.
+
+   ![Controller emulation mode selection](Docs/Images/Readme/controller-emulation-mode.png)
+
+3. Hit the `Start` button to begin reading inputs.
+4. [Map your controls in the game you'll be playing](#mapping-your-controls).
+
+Devices will be detected automatically as they are connected/removed, though they will not be read until you hit Start.
+
+If you are having issues with inputs not being registered or other general weirdness, try unplugging and replugging the dongle/cable. Unfortunately this backend is still finnicky, so things may not work the smoothest.
+
+---
+
+## Mapping your Controls
+
+Now that RB4InstrumentMapper is set up and running, map your controls for each instrument in the game you'll be playing.
+
+### Clone Hero
+
+If you're using a guitar in ViGEmBus mode, Clone Hero will automatically map your controls. You shouldn't need to do any manual mapping, unless you're using a Guitar Hero Live guitar, in which case you may need to swap your whammy and tilt bindings.
+
+- This automatic mapping will also apply to drumkits, however here the bindings will not be correct, as they are meant for guitars. You will need to remove the default bindings and do them manually.
+
+For drumkits, vJoy mode, or if you otherwise need to customize your controls:
+
+1. Press Space on the main menu.
+
+   !["Press Space For Controls" label](Docs/Images/Readme/clone-hero-press-space.png)
+
+2. Click Assign Controller and press a button on the device for it to be assigned.
+
+   !["Assign Controller" button](Docs/Images/Readme/clone-hero-assign-controller.png)
+
+3. Click the slots in the `Controller` column to map each of the controls.
+
+   ![Controls bound under the "Controller" column](Docs/Images/Readme/clone-hero-bind-controls.png)
+
+4. Repeat for each connected device.
+5. Click `Done`.
+
+If you require further help with mapping, you can ask in the [Clone Hero Discord server](https://discord.gg/Hsn4Cgu).
+
+### YARG
+
+Refer to the [official documentation](https://docs.yarg.in/en/profiles).
+
+### GHWT: Definitive Edition
+
+Refer to the [official documentation](https://ghwt.de/wiki/#/wtde/binding?id=binding-controllers).
+
+### RPCS3
+
+1. For RPCS3, use the `ViGEmBus (RPCS3 compatibility)` controller mode. This will change the mappings that RB4InstrumentMapper outputs so that little to no remapping is required to use instruments in RPCS3.
+
+   ![Controller emulation mode selection](Docs/Images/Readme/controller-emulation-mode.png)
+
+2. Open the Gamepad Configuration Menu in RPCS3
+
+   ![RPCS3 Pads icon](Docs/Images/Readme/rpcs3-pads-icon.png)
+
+3. Change the `Handlers` to "XInput", pick your instrument under `Devices`, and set `Device Class` to "Rock Band - Guitar" if you're using a guitar or 'Rock Band - Drums' if you're using drums.
+
+   ![RPCS3 Gamepad settings](Docs/Images/Readme/rpcs3-gamepad-settings.png)
+
+4. Repeat for each connected device in the other Player tabs.
+5. Click `Done`.
+
+## Troubleshooting
+
+### FAQs
+
+- "I see an XInput gamepad after hitting Start, but no inputs respond!"
+
+If you haven't restarted your PC since installing ViGEmBus, do so now. Sometimes it doesn't fully work until after a reboot.
+
+### Error Logs
+
+In the case that the program crashes, an error log is saved to a `RB4InstrumentMapper` > `Logs` folder inside your Documents folder. Make sure to include it when getting help or creating an issue report for the crash.
+
+### Packet Logs
+
+RB4InstrumentMapper is capable of logging packets to a file for debugging purposes. To do so, enable both the `Show Packets (for debugging)` and `Log packets to file` checkboxes, then hit Start. Packet logs get saved to a `RB4InstrumentMapper` > `PacketLogs` folder inside your Documents folder. Make sure to include it when getting help or creating an issue report for packet parsing issues.
+
+Note that these settings are meant for debugging purposes only, leaving them enabled can reduce the performance of the program somewhat.
+
+## Advanced Usage
+
+### Command-Line Interface
+
+A command-line interface version of RB4InstrumentMapper is included alongside the GUI version. This is useful for scenarios where you want to run it without user interaction, such as a custom arcade cabinet or other startup automation scenarios.
+
+The CLI is available both standalone and alongside the installed version of the GUI. Additionaly, [an example startup script](cli_script_example.bat) is provided in the repository which can be quickly customized to suit specific needs.
+
+Example usage:
+
+```
+.\RB4InstrumentMapper.CLI.exe --mode vigem
+```
+
+For available options/arguments, run it without arguments or use the `--help` option.
+
+### Building
+
+To build this program, you will need:
+
+- Visual Studio, or MSBuild/[the .NET SDK](https://dotnet.microsoft.com/en-us/download).
+- [WiX Toolset v4](https://wixtoolset.org/) if you wish to build the installer.
+
+#### With MSBuild
+
+With MSBuild, use the following commands in the project folder:
+
+```
+msbuild -t:Restore -verbosity:minimal
+msbuild "-p:Configuration=Release;Platform=x64" -verbosity:minimal
+```
+
+This will result in the following build output paths:
+
+- CLI: `RB4InstrumentMapper.CLI\bin\x64\Release\net472`
+- GUI: `RB4InstrumentMapper.GUI\bin\x64\Release\net472`
+- GUI+CLI installer: `RB4InstrumentMapper.Installer\bin\x64\Release`
+
+#### With the .NET SDK
+
+##### Manually
+
+With the .NET SDK, use the following command in the project folder:
+
+```
+dotnet build "-p:Configuration=Release;Platform=x64" -verbosity:minimal
+```
+
+This will result in the following build output paths:
+
+- CLI: `RB4InstrumentMapper.CLI\bin\x64\Release\net472`
+- GUI: `RB4InstrumentMapper.GUI\bin\x64\Release\net472`
+- GUI+CLI installer: `RB4InstrumentMapper.Installer\bin\x64\Release`
+
+##### Build Script
+
+The `publish.bat` script is provided to help make publishing new releases easier. This script will produce the same output as a manual build, along with the following additional output:
+
+- Standalone CLI package: `publish\RB4InstrumentMapper.CLI.zip`
+- Standalone GUI package: `publish\RB4InstrumentMapper.GUI.zip`
+- GUI+CLI installer: `publish\RB4InstrumentMapper.Installer.exe`
 
 ## References
+
+Predecessors:
 
 - [GuitarSniffer repository](https://github.com/artman41/guitarsniffer)
 - [DrumSniffer repository](https://github.com/Dunkalunk/guitarsniffer)
 
-Packet Data:
+Packet data:
 
 - [GuitarSniffer guitar packet logs](https://1drv.ms/f/s!AgQGk0OeTMLwhA-uDO9IQHEHqGhv)
 - GuitarSniffer guitar packet spreadsheets: [New](https://docs.google.com/spreadsheets/d/1ITZUvRniGpfS_HV_rBpSwlDdGukc3GC1CeOe7SavQBo/edit?usp=sharing), [Old](https://1drv.ms/x/s!AgQGk0OeTMLwg3GBDXFUC3Erj4Wb)
-- See [PacketFormats.md](PacketFormats.md) for a breakdown of the known packet data.
-
-## Build Tools
-
-Compile was done with Visual Studio 2019 Community edition.
-
-Installer was created using the following tools:
-
-- https://wixtoolset.org/
-  - https://wixtoolset.org/releases/v3.11.2/stable
-  - https://marketplace.visualstudio.com/items?itemName=WixToolset.WixToolsetVisualStudio2019Extension
-  - https://marketplace.visualstudio.com/items?itemName=TomEnglert.Wax
+- [rb4.app's Javascript source](https://rb4.app/js/app.js)
+- Original research, found in the [PlasticBand documentation repository](https://github.com/TheNathannator/PlasticBand).
 
 ## License
 
-Copyright (c) 2021 Andreas Schiffler
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), 
-to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
-IN THE SOFTWARE.
+This program is licensed under the MIT license. See [LICENSE](LICENSE) for details.
